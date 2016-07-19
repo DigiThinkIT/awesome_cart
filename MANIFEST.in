@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include awesome_cart *.css
+recursive-include awesome_cart *.csv
+recursive-include awesome_cart *.html
+recursive-include awesome_cart *.ico
+recursive-include awesome_cart *.js
+recursive-include awesome_cart *.json
+recursive-include awesome_cart *.md
+recursive-include awesome_cart *.png
+recursive-include awesome_cart *.py
+recursive-include awesome_cart *.svg
+recursive-include awesome_cart *.txt
+recursive-exclude awesome_cart *.pyc
