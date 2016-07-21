@@ -1,0 +1,64 @@
+.dti-form .field {
+    padding: .2em;
+    border: 1px solid #bbb;
+    background: #fff;
+    border-radius: 4px;
+    margin: .2em;
+}
+
+.dti-form .field.noborder {
+    border: none;
+    background: transparent;
+}
+
+.dti-form .field label {
+    display: none;
+    font-weight: normal;
+}
+
+.dti-form .field label.visible {
+    display: initial;
+}
+
+.dti-form .field input {
+    border: none;
+    background: transparent;
+    width: 100%;
+}
+
+.dti-form .field input.minimal {
+    width: initial;
+}
+
+.dti-form .field.required.error {
+    border-color: #f00;
+    box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);
+}
+
+/** bof - Colorize placeholder on error **/
+/* webkit */
+.dti-form .field.required.error input::-webkit-input-placeholder {
+    color: #f00;
+}
+/* FF 19+ */
+.dti-form .field.required.error input::-moz-placeholder {
+    color: #f00;
+}
+/* MS 10+ */
+.dti-form .field.required.error input:-ms-input-placeholder {
+    color: #f00;
+}
+/* FF18- */
+.dti-form .field.required.error input:-moz-placeholder {
+    color: #f00;
+}
+
+.nohpad {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.nohmargin {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}

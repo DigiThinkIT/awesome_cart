@@ -12,6 +12,9 @@ import traceback
 import json
 import os
 
+from erpnext.templates.pages import cart as exrnext_cart
+from .templates.pages import cart
+
 __version__ = '0.0.1'
 
 try:
@@ -52,7 +55,7 @@ try:
     monkey.patch_method(frappe.website.render, "render_page", x_render_page)
 
     # monkey patch erpnext cart get_context with our version so we may modify cart
-    # monkey.patch_method(erpnext_cart, "get_context", dti_cart.get_context)
+    monkey.patch_method(erpnext_cart, "get_context", cart.get_context)
 
 except Exception as ex:
     log(traceback.format_exc())
