@@ -145,6 +145,29 @@
 <script>{% include "templates/includes/cart.js" %}</script>
 <script type="text/javascript">
 
+$('#login-form .btn-login').click(function() {
+	var email = $('#customer_email').val();
+	var pass = $('#customer_password').val();
+	console.log("Sending login call");
+	frappe.call({
+		method: "awesome_cart.cart.login",
+		args: {
+			"email": email, 
+			"password": pass,
+		},
+		callback: function(r) {
+			console.log("Got callback:", r);
+			result = r.message;
+			if ( result.success ) {
+				alert("Logged in successfully");
+			} else {
+				alert(result.msg);
+			}
+		}
+	});
+
+});
+
 $('#register-form .btn-register').click(function() {
 
 	console.log("About to register");
