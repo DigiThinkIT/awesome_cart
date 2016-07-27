@@ -12,12 +12,13 @@ import traceback
 import json
 import os
 
-from erpnext.templates.pages import cart as exrnext_cart
-from .templates.pages import cart
-
 __version__ = '0.0.1'
 
 try:
+    from erpnext.templates.pages import cart as exrnext_cart
+    from .templates.pages import cart
+
+
     log("-- Attempting to monkey patch ---")
 
     def x_render_page(path):
