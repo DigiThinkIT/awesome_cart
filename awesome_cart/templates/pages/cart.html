@@ -2,7 +2,7 @@
 
 {% block title %} {{ "Shopping Cart" }} {% endblock %}
 
-{% block header %}<h2>{{ _("My Cart") }}</h2>{% endblock %}
+{% block header %}{% endblock %}
 
 {% block style %}
 <style>
@@ -11,14 +11,7 @@
 </style>
 {% endblock %}
 
-
-{% block header_actions %}
-{% if doc.items %}
-<button class="btn btn-primary btn-place-order btn-sm"
-    type="button">
-    {{ _("Place Order") }}</button>
-{% endif %}
-{% endblock %}
+{% block header_actions %}{% endblock %}
 
 {% block page_content %}
 
@@ -26,7 +19,7 @@
 
 <div class="row">
 	<div class="col-sm-6">
-
+		<h2>{{ _("My Cart") }}</h2>
 		<div class="cart-content">
 			<div id="cart-container">
 				<div id="cart-error" class="alert alert-danger"
@@ -72,7 +65,7 @@
 		</div>
 
 	</div>
-	<div class="col-sm-6">
+	<div class="col-sm-6 focus-column right-col">
 		<div class="checkout-page" id="checkout-login">
 			<div id="login-form" class="dti-form">
 				<h3>Returning Customer</h3>
@@ -88,8 +81,17 @@
 					<button class="btn btn-primary btn-login">Login</button>
 				</div>
 			</div>
+			<div id="register-prompt" class="dti-form">
+				<h3>New Customers</h3>
+				<div class="actions">
+					<button class="btn btn-primary btn-create-account">Create Account</button>
+				</div>
+			</div>
+		</div>
+		<div class="checkout-page" id="register">
 			<div id="register-form" class="dti-form">
-				<h3>New Customer</h3>
+				<h3>Create Account</h3>
+				<div class="title">Contact Info</div>
 				<div class="row nohpading">
 					<div class="col-sm-6">
 						<div class="field required">
@@ -110,6 +112,8 @@
 					<label for="guest_email">Email</label>
 					<input id="guest_email" name="guest_email" type="text" placeholder="Email Address"/>
 				</div>
+
+				<div class="title">Your Password</div>
 				<div class="field required">
 					<label for="guest_password">Password</label>
 					<input id="guest_password" name="guest_password" type="password" placeholder="Password"/>
@@ -123,6 +127,7 @@
 				</div>
 
 			</div>
+
 		</div>
 		<div class="checkout-page" id="checkout-billing">
 		</div>
