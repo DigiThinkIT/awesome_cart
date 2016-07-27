@@ -14,7 +14,7 @@ def login (email, password):
 	user = frappe.get_doc("User", email)
 	if user:
 		frappe.local.login_manager.login_as(email)
-	                frappe.set_user(email)
+		frappe.set_user(email)
 		result["success"] = True
 		result["msg"] = ""
 	else:
