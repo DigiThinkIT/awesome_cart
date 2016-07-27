@@ -3,6 +3,26 @@ from __future__ import unicode_literals
 import json
 import frappe
 
+# GV code of logi
+@frappe.whitelist(allow_guest=True, xss_safe=True)
+def login (email, password):
+	result = dict(
+		success=False,
+		msg="Internal Unhandled Error"
+	)
+	
+	user = frappe.get_doc("User", email)
+	if user:
+		frappe.local.login_manager.login_as(email)
+	                frappe.set_user(email)
+		result["success"] = True
+		result["msg"] = ""
+	else:
+		result["msg"] = "Internal Error, could not fetch the user, or the user does not exist: %s" % email
+
+	return json.dumps(result)
+# end of GV code
+	
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def register(email, password, password_check, first_name, last_name):
 	result = dict(
