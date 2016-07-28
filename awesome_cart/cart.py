@@ -3,7 +3,15 @@ from __future__ import unicode_literals
 import json
 import frappe
 
-# GV code of logi
+def is_logged():
+	session_user = frappe.get_user()
+	user = frappe.get_doc("User", session_user.name)
+	
+	if user and user.email[-12:] == "#guest.local":
+		return False
+
+	return True
+	
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def login (email, password):
 	result = dict(
@@ -20,9 +28,8 @@ def login (email, password):
 	else:
 		result["msg"] = "Internal Error, could not fetch the user, or the user does not exist: %s" % email
 
-	return json.dumps(result)
-# end of GV code
-	
+	return result
+
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def register(email, password, password_check, first_name, last_name):
 	result = dict(
@@ -80,5 +87,5 @@ def register(email, password, password_check, first_name, last_name):
 	else:
 		result["msg"] = "Internal Error, could not fetch user: %s" % guest_user.name
 
-	return json.dumps(result)
+	return result
 	

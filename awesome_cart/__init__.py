@@ -15,7 +15,7 @@ import os
 __version__ = '0.0.1'
 
 try:
-    from erpnext.templates.pages import cart as exrnext_cart
+    from erpnext.templates.pages import cart as erpnext_cart
     from .templates.pages import cart
 
 
@@ -29,11 +29,12 @@ try:
             if ext not in [".js", ".css"]:
                 user = frappe.get_user()
                 if user.name == "Guest":
-                    email = random_string(20) + "@guest.local"
+                    rnd = random_string(20)
+                    email = rnd + "@guest.local"
                     user = frappe.get_doc({
                         "doctype": "User",
                         "email": email,
-                        "first_name": "Guest User",
+                        "first_name": rnd,
                         "enabled": 1,
                         "new_password": random_string(10),
                         "user_type": "Website User"

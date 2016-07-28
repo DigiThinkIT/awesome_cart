@@ -1,4 +1,7 @@
 {% extends "templates/web.html" %}
+{% from "dti_gateway_manager/templates/includes/gateway_macros.html" import embed_gateways %}
+{% from "dti_gateway_manager/templates/includes/gateway_macros.html" import embed_gateways_scripts %}
+{% from "dti_gateway_manager/templates/includes/gateway_macros.html" import embed_gateways_styles %}
 
 {% block title %} {{ "Shopping Cart" }} {% endblock %}
 
@@ -8,6 +11,7 @@
 <style>
     {% include "templates/includes/dti-forms.css" %}
     {% include "templates/includes/cart.css" %}
+    {{ embed_gateways_styles(gateway_forms) }}
 </style>
 {% endblock %}
 
@@ -16,6 +20,7 @@
 {% block content %}
 
 {% from "templates/includes/macros.html" import item_name_and_description %}
+
 <div class="row aw-row">
 	<div class="col-sm-6 aw-col-left">
 		<h2>{{ _("My Cart") }}</h2>
@@ -69,6 +74,11 @@
 	</div>
 	<div class="col-sm-6 aw-col-right">
 		<div class="col-content focus-column right-col">
+			<div class="checkout-breadcrumb">
+				<h1>Check Out</h1>
+				<div class="page-titles">
+				</div>
+			</div>
 			<div class="checkout-page" id="checkout-login">
 				<div id="login-form" class="dti-form">
 					<h3>Returning Customer</h3>
@@ -82,12 +92,13 @@
 					</div>
 					<div class="actions">
 						<button class="btn btn-primary btn-login">Login</button>
+						<div class="action-spinner"></div>
 					</div>
 				</div>
 				<div id="register-prompt" class="dti-form">
 					<h3>New Customers</h3>
 					<div class="actions">
-						<button class="btn btn-primary btn-create-account">Create Account</button>
+						<button data-aw-goto="#register" class="btn btn-primary btn-create-account">Create Account</button>
 					</div>
 				</div>
 			</div>
@@ -127,12 +138,14 @@
 					</div>
 					<div class="actions">
 						<button class="btn btn-primary btn-register">Register</button>
+						<div class="action-spinner"></div>
 					</div>
 
 				</div>
 
 			</div>
 			<div class="checkout-page" id="checkout-billing">
+				{{ embed_gateways(gateway_forms, stored_payments, enable_billing_address, "checkout-shipping") }}
 			</div>
 			<div class="checkout-page" id="checkout-shipping">
 			</div>
@@ -147,12 +160,59 @@
 
 {% block script %}
 <script>{% include "templates/includes/cart.js" %}</script>
+<script>{% include "templates/includes/awesome_cart.js" %}</script>
 <script type="text/javascript">
 
+function aw_action_error($btn, reset) {
+	if ( reset ) {
+		$btn.parent().find('.action-error').slideUp('fast').empty();
+	} else {
+		$btn.parent().find('.action-error').slideDown('fast');
+	}
+}
+
+function aw_action_wait($btn, reset) {
+	if ( reset ) {
+		$btn.slideDown('fast');
+		$btn.parent().find('.action-spinner').slideUp('fast');
+	} else {
+		aw_action_error($btn, True); // reset error msg
+		$btn.slideUp('fast');
+		$btn.parent().find('.action-spinner').slideDown('fast');
+	}
+}
+
+{% if is_logged %}
+aw_goto('#checkout-billing');
+{% else %}
+aw_goto('#checkout-login');
+{% endif %}
+
+/*
+frappe.call({
+	method: "awesome_cart.is_logged",
+	args: {},
+	callback: function(r) {
+		var result = r.message;
+		if ( result.success ) {
+			if ( result.result ) {
+				aw_goto('#checkout-billing');
+			} else {
+				aw_goto('#checkout-login');
+			}
+		} else {
+			aw_goto('#checkout-login');
+		}
+	});
+*/
+
 $('#login-form .btn-login').click(function() {
+	
+	var $btn = $(this);
 	var email = $('#customer_email').val();
 	var pass = $('#customer_password').val();
-	console.log("Sending login call");
+
+	aw_action_wait($btn); // show spinner
 	frappe.call({
 		method: "awesome_cart.cart.login",
 		args: {
@@ -160,13 +220,13 @@ $('#login-form .btn-login').click(function() {
 			"password": pass,
 		},
 		callback: function(r) {
-			console.log("Got callback:", r);
-			result = r.message;
+			var result = r.message;
 			if ( result.success ) {
-				alert("Logged in successfully");
+				aw_goto('#checkout-billing');
 			} else {
-				alert(result.msg);
+				aw_action_error($btn, result.msg);
 			}
+			aw_action_wait($btn, true);
 		}
 	});
 
@@ -175,6 +235,7 @@ $('#login-form .btn-login').click(function() {
 $('#register-form .btn-register').click(function() {
 
 	console.log("About to register");
+	var $btn = $(this);
 	var $form = $('#register-form');
 	var email = $('#guest_email').val();
 	var pass = $('#guest_password').val();
@@ -182,7 +243,8 @@ $('#register-form .btn-register').click(function() {
 	var first = $("#guest_first").val();
 	var last = $("#guest_last").val();
 
-	console.log("Sending call");
+	aw_action_wait($btn); // show spinner
+
 	frappe.call({
 		method: "awesome_cart.cart.register",
 		args: {
@@ -193,18 +255,21 @@ $('#register-form .btn-register').click(function() {
 			"last_name": last
 		},
 		callback: function(r) {
-			console.log("Got callback:", r);
 			result = r.message;
 			if ( result.success ) {
-				alert("Registered");
+				aw_goto('#checkout-billing');
 			} else {
-				alert(result.msg);
+				aw_action_error($btn, result.msg);
 			}
+
+			aw_action_wait($btn, true); // reset spinner
 		}
 	});
 
 });
 
 </script>
+
+{{ embed_gateways_scripts(gateway_forms) }}
 
 {% endblock %}
