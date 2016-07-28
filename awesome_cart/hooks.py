@@ -11,3 +11,4 @@ app_color = "grey"
 app_email = "forellana@digithinkit.com"
 app_license = "GPL-v3"
 
+web_include_js = [ "/assets/js/awesome_cart.js" ]

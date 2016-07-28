@@ -24,10 +24,6 @@
 	margin-bottom: 60px;
 }
 
-#login-form, #register-form {
-	padding: 0 8em;
-}
-
-#login-form .actions, #register-form .actions {
+.focus-column.right-col .checkout-page .actions {
 	text-align: center;
 }

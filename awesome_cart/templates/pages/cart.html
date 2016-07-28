@@ -13,12 +13,11 @@
 
 {% block header_actions %}{% endblock %}
 
-{% block page_content %}
+{% block content %}
 
 {% from "templates/includes/macros.html" import item_name_and_description %}
-
-<div class="row">
-	<div class="col-sm-6">
+<div class="row aw-row">
+	<div class="col-sm-6 aw-col-left">
 		<h2>{{ _("My Cart") }}</h2>
 		<div class="cart-content">
 			<div id="cart-container">
@@ -54,86 +53,91 @@
 			</div>
 			<div id="cart-totals">
 			</div>
+<!--
 			<div class="cart-addresses">
 			    {% include "templates/includes/cart/cart_address.html" %}
 			</div>
 			<p class="cart-footer text-right">
 			    <button class="btn btn-primary btn-place-order btn-sm" type="button">
 				{{ _("Place Order") }}</button></p>
+ -->
 			{% endif %}
+
 		    </div>
 		</div>
 
 	</div>
-	<div class="col-sm-6 focus-column right-col">
-		<div class="checkout-page" id="checkout-login">
-			<div id="login-form" class="dti-form">
-				<h3>Returning Customer</h3>
-				<div class="field required">
-					<label for="customer_email">Email</label>
-					<input id="customer_email" name="customer_email" type="text" placeholder="Email Address"/>
-				</div>
-				<div class="field required">
-					<label for="customer_password">Password</label>
-					<input id="customer_password" name="customer_password" type="password" placeholder="Password"/>
-				</div>
-				<div class="actions">
-					<button class="btn btn-primary btn-login">Login</button>
-				</div>
-			</div>
-			<div id="register-prompt" class="dti-form">
-				<h3>New Customers</h3>
-				<div class="actions">
-					<button class="btn btn-primary btn-create-account">Create Account</button>
-				</div>
-			</div>
-		</div>
-		<div class="checkout-page" id="register">
-			<div id="register-form" class="dti-form">
-				<h3>Create Account</h3>
-				<div class="title">Contact Info</div>
-				<div class="row nohpading">
-					<div class="col-sm-6">
-						<div class="field required">
-							<label for="guest_first">First Name</label>
-							<input id="guest_first" name="guest_first" type="text" placeholder="First Name"/>
-						</div>
-
+	<div class="col-sm-6 aw-col-right">
+		<div class="col-content focus-column right-col">
+			<div class="checkout-page" id="checkout-login">
+				<div id="login-form" class="dti-form">
+					<h3>Returning Customer</h3>
+					<div class="field required">
+						<label for="customer_email">Email</label>
+						<input id="customer_email" name="customer_email" type="text" placeholder="Email Address"/>
 					</div>
-					<div class="col-sm-6">
-						<div class="field required">
-							<label for="guest_last">Last Name</label>
-							<input id="guest_last" name="guest_last" type="text" placeholder="Last Name"/>
-						</div>
-
+					<div class="field required">
+						<label for="customer_password">Password</label>
+						<input id="customer_password" name="customer_password" type="password" placeholder="Password"/>
+					</div>
+					<div class="actions">
+						<button class="btn btn-primary btn-login">Login</button>
 					</div>
 				</div>
-				<div class="field required">
-					<label for="guest_email">Email</label>
-					<input id="guest_email" name="guest_email" type="text" placeholder="Email Address"/>
+				<div id="register-prompt" class="dti-form">
+					<h3>New Customers</h3>
+					<div class="actions">
+						<button class="btn btn-primary btn-create-account">Create Account</button>
+					</div>
 				</div>
+			</div>
+			<div class="checkout-page" id="register">
+				<div id="register-form" class="dti-form">
+					<h3>Create Account</h3>
+					<div class="title">Contact Info</div>
+					<div class="row nohpading">
+						<div class="col-sm-6">
+							<div class="field required">
+								<label for="guest_first">First Name</label>
+								<input id="guest_first" name="guest_first" type="text" placeholder="First Name"/>
+							</div>
 
-				<div class="title">Your Password</div>
-				<div class="field required">
-					<label for="guest_password">Password</label>
-					<input id="guest_password" name="guest_password" type="password" placeholder="Password"/>
-				</div>
-				<div class="field required" data-match-val="#guest_password">
-					<label for="guest_password_check">Retype Password</label>
-					<input id="guest_password_check" name="guest_password_check" type="password" placeholder="Retype Password"/>
-				</div>
-				<div class="actions">
-					<button class="btn btn-primary btn-register">Register</button>
+						</div>
+						<div class="col-sm-6">
+							<div class="field required">
+								<label for="guest_last">Last Name</label>
+								<input id="guest_last" name="guest_last" type="text" placeholder="Last Name"/>
+							</div>
+
+						</div>
+					</div>
+					<div class="field required">
+						<label for="guest_email">Email</label>
+						<input id="guest_email" name="guest_email" type="text" placeholder="Email Address"/>
+					</div>
+
+					<div class="title">Your Password</div>
+					<div class="field required">
+						<label for="guest_password">Password</label>
+						<input id="guest_password" name="guest_password" type="password" placeholder="Password"/>
+					</div>
+					<div class="field required" data-match-val="#guest_password">
+						<label for="guest_password_check">Retype Password</label>
+						<input id="guest_password_check" name="guest_password_check" type="password" placeholder="Retype Password"/>
+					</div>
+					<div class="actions">
+						<button class="btn btn-primary btn-register">Register</button>
+					</div>
+
 				</div>
 
 			</div>
-
-		</div>
-		<div class="checkout-page" id="checkout-billing">
-		</div>
-		<div class="checkout-page" id="checkout-shipping">
-		</div>
-		<div class="checkout-page" id="checkout-confirmation">
+			<div class="checkout-page" id="checkout-billing">
+			</div>
+			<div class="checkout-page" id="checkout-shipping">
+			</div>
+			<div class="checkout-page" id="checkout-confirmation">
+			</div>
 		</div>
 	</div>
 </div>
