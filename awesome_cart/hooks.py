@@ -11,6 +11,17 @@ app_color = "grey"
 app_email = "forellana@digithinkit.com"
 app_license = "GPL-v3"
 
+# keep track of country->region field changes
+fixtures = [
+	{
+		"dt": "Custom Field", 
+		"filters": [
+			["dt", "=", "Country"],
+			["fieldname", "=", "region"]
+		]
+	}
+]
+
 update_website_context = "awesome_cart.utils.update_context"
 web_include_js = [ "/assets/js/awesome_cart.js" ]
 

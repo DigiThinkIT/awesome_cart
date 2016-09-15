@@ -130,7 +130,7 @@
 
 			</div>
 			<div class="checkout-page" id="checkout-billing">
-				{{ embed_gateways(gateway_forms, stored_payments, enable_billing_address, "checkout-shipping") }}
+				{{ embed_gateways(gateway_forms, stored_payments, enable_billing_address, "checkout-shipping", countries=countries) }}
 			</div>
 			<div class="checkout-page" id="checkout-shipping">
 			</div>

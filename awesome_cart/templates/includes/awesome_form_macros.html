@@ -29,7 +29,7 @@
     {% endcall %}
 {%- endmacro %}
 
-{% macro address_form(title, display_name=False, require_name=True, field_prefix="") -%}
+{% macro address_form(title, display_name=False, require_name=True, field_prefix="", countries=[]) -%}
 
 <div class="title">{{ title }}</div>
 <div class="content">
@@ -65,7 +65,16 @@
     </div>
 
     <div class="row nohmargin">
-        {{ awinput("text", field_prefix + "country", "Country", cls="required") }}
+	{% if countries|length == 0 %}
+            {{ awinput("text", field_prefix + "country", "Country", cls="required") }}
+	{% else %}
+	    {% call awselect(field_prefix + "country", "Country", cls="required") %}
+		<option value> - Select Country - </option>
+                {% for country in countries.countries %}
+                    <option value="{{country.code}}" {% if country.code == countries.default %}selected{% endif %}>{{country.country_name}}</option>
+                {% endfor %}
+            {% endcall %}
+        {% endif %}
     </div>
 
     <div class="row nohmargin">

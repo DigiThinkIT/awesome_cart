@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import frappe
 import json
+from dbug import log
 
 """
 def get_gateway_forms():
@@ -22,8 +23,18 @@ def get_gateway_plugins():
 	hooks = frappe.get_hooks("awc_gateways") or []
 	plugins = {}
 	for hook in hooks:
-		for key, value in hook.items():
-			plugins[key] = value
+		for key, value in hooks.items():
+			plugins[key] = {
+				'name': key,
+				'title': value.get('title')[-1],
+				'small_title': value.get('small_title')[-1],
+				'supports_stored_payments': value.get('supports_stored_payments', [False])[-1],
+				'requires_billing_address': value.get('requires_billing_address', [False])[-1],
+				'template': value.get('template')[-1],
+				'icon': value.get('icon')[-1]
+			}
+
+	log(json.dumps(plugins, indent=2))
 
 	return plugins
 
