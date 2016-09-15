@@ -1,0 +1,169 @@
+#gateway-selectors {
+
+}
+
+#gateway-selectors .selector {
+    display: inline-block;
+    width: 16.5em;
+    vertical-align: top;
+    padding: 4px;
+    border-radius: 5px;
+    font-size: .8em;
+    line-height: 1em;
+}
+
+#gateway-selectors .selector .icon {
+    display: inline-block;
+    width: 40px;
+    height: 25px;
+    margin: 0;
+}
+
+#gateway-selectors .selector .small-title {
+    display: inline-block;
+    vertical-align: top;
+    text-align: left;
+    font-weight: normal;
+    margin: .5em .2em .2em .2em;
+}
+
+#gateway-selectors .selector label {
+    vertical-align: top;
+    margin-top: .7em;
+    color: #888;
+    font-weight: normal;
+}
+
+#gateway-selectors .selector.selected {
+    border: 1px solid #bbb;
+    background: #fff;
+}
+
+.icon.authnet_icons {
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    background-size: contain;
+}
+
+.icon.authnet_icons.cards {
+    background-image: url(/assets/dti_gateway_manager/images/icon-gateway-cc.png) !important;
+}
+.icon.authnet_icons.echeck {
+    background-image: url(/assets/dti_gateway_manager/images/icon-gateway-echeck.png) !important;
+}
+.icon.authnet_icons.magnetic {
+    background-image: url(/assets/dti_gateway_manager/images/icon-gateway-swipe.svg) !important;
+}
+
+#billing-fields .title, #gateway-selectors .title, #stored-payments .title , #gateway-fields .title {
+    font-size: 1.3em;
+    color: #888;
+    margin: .4em;
+    font-weight: bolder;
+    border-bottom: 1px solid #ccc;
+}
+
+#gateway-fields {
+    position: relative;
+}
+
+.dti-form .field {
+    padding: .2em;
+    border: 1px solid #bbb;
+    background: #fff;
+    border-radius: 4px;
+    margin: .2em;
+    overflow: none;
+}
+
+.dti-form .field.noborder {
+    border: none;
+    background: transparent;
+}
+
+.dti-form .field label {
+    display: none;
+    font-weight: normal;
+}
+
+.dti-form .field label.visible {
+    display: initial;
+}
+
+.dti-form .field input, .dti-form .field select {
+    display: block;
+    border: none;
+    background: transparent;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.dti-form .field input[type=radio], .dti-form .field input[type=checkbox] {
+    display: initial;
+    width: initial;
+    height: initial;
+}
+
+.dti-form .field.rtl input, .dti-form .field.rtl select {
+    direction: rtl;
+}
+
+.dti-form .field.align-right input, .dti-form .field.align-right select {
+    text-align: right;
+}
+
+.dti-form .field.minimal select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    text-indent: 1px;
+    text-overflow: '';
+}
+
+.dti-form .field.minimal select::-ms-expand {
+    display: none;
+}
+
+.dti-form .field input.minimal {
+    width: initial;
+}
+
+.dti-form .field.required.error {
+    border-color: #f00;
+    box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);
+}
+
+/** bof - Colorize placeholder on error **/
+/* webkit */
+.dti-form .field.required.error input::-webkit-input-placeholder {
+    color: #f00;
+}
+/* FF 19+ */
+.dti-form .field.required.error input::-moz-placeholder {
+    color: #f00;
+}
+/* MS 10+ */
+.dti-form .field.required.error input:-ms-input-placeholder {
+    color: #f00;
+}
+/* FF18- */
+.dti-form .field.required.error input:-moz-placeholder {
+    color: #f00;
+}
+/** eof - Colorize placeholder on error **/
+
+.dti-form.incomplete .btn-primary {
+    background: #aaa !important;
+}
+
+.nohpad {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.nohmargin {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}

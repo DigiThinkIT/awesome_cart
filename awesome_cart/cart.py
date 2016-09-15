@@ -7,7 +7,7 @@ def is_logged():
 	session_user = frappe.get_user()
 	user = frappe.get_doc("User", session_user.name)
 	
-	if user and user.email[-12:] == "#guest.local":
+	if user and user.email[-12:] == "@guest.local":
 		return False
 
 	return True

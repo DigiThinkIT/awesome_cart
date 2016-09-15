@@ -10,6 +10,8 @@ function aw_goto(selector) {
 
 $('.checkout-page').hide();
 $('[data-aw-goto]').click(function() {
-	var selector = $(this).attr('data-aw-goto');
-	aw_goto(selector);
+	if ( !$(this).closest('.dti-form').hasClass('incomplete') ) {
+		var selector = $(this).attr('data-aw-goto');
+		aw_goto(selector);
+	}
 });

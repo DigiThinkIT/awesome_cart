@@ -1,7 +1,8 @@
 {% extends "templates/web.html" %}
-{% from "dti_gateway_manager/templates/includes/gateway_macros.html" import embed_gateways %}
-{% from "dti_gateway_manager/templates/includes/gateway_macros.html" import embed_gateways_scripts %}
-{% from "dti_gateway_manager/templates/includes/gateway_macros.html" import embed_gateways_styles %}
+{% from "awesome_cart/templates/includes/gateway_macros.html" import embed_gateways %}
+{% from "awesome_cart/templates/includes/gateway_macros.html" import embed_gateways_scripts %}
+{% from "awesome_cart/templates/includes/gateway_macros.html" import embed_gateways_styles %}
+{% import "awesome_cart/templates/includes/awesome_form_macros.html" as form %}
 
 {% block title %} {{ "Shopping Cart" }} {% endblock %}
 
@@ -22,7 +23,7 @@
 {% from "templates/includes/macros.html" import item_name_and_description %}
 
 <div class="row aw-row">
-	<div class="col-sm-6 aw-col-left">
+	<div class="col-sm-7 aw-col-left">
 		<h2>{{ _("My Cart") }}</h2>
 		<div class="cart-content">
 			<div id="cart-container">
@@ -72,7 +73,7 @@
 		</div>
 
 	</div>
-	<div class="col-sm-6 aw-col-right">
+	<div class="col-sm-5 aw-col-right">
 		<div class="col-content focus-column right-col">
 			<div class="checkout-breadcrumb">
 				<h1>Check Out</h1>
@@ -84,11 +85,11 @@
 					<h3>Returning Customer</h3>
 					<div class="field required">
 						<label for="customer_email">Email</label>
-						<input id="customer_email" name="customer_email" type="text" placeholder="Email Address"/>
+						<input id="customer_email" name="customer_email" type="text" placeholder="Email Address" class="awi"/>
 					</div>
 					<div class="field required">
 						<label for="customer_password">Password</label>
-						<input id="customer_password" name="customer_password" type="password" placeholder="Password"/>
+						<input id="customer_password" name="customer_password" type="password" placeholder="Password" class="awi"/>
 					</div>
 					<div class="actions">
 						<button class="btn btn-primary btn-login">Login</button>
@@ -108,34 +109,18 @@
 					<div class="title">Contact Info</div>
 					<div class="row nohpading">
 						<div class="col-sm-6">
-							<div class="field required">
-								<label for="guest_first">First Name</label>
-								<input id="guest_first" name="guest_first" type="text" placeholder="First Name"/>
-							</div>
-
+							{{ form.awinput("text", "guest_first", "First Name") }}
 						</div>
 						<div class="col-sm-6">
-							<div class="field required">
-								<label for="guest_last">Last Name</label>
-								<input id="guest_last" name="guest_last" type="text" placeholder="Last Name"/>
-							</div>
-
+							{{ form.awinput("text", "guest_last", "Last Name") }}
 						</div>
 					</div>
-					<div class="field required">
-						<label for="guest_email">Email</label>
-						<input id="guest_email" name="guest_email" type="text" placeholder="Email Address"/>
-					</div>
+					{{ form.awinput("text", "guest_email", "Email Address") }}
 
 					<div class="title">Your Password</div>
-					<div class="field required">
-						<label for="guest_password">Password</label>
-						<input id="guest_password" name="guest_password" type="password" placeholder="Password"/>
-					</div>
-					<div class="field required" data-match-val="#guest_password">
-						<label for="guest_password_check">Retype Password</label>
-						<input id="guest_password_check" name="guest_password_check" type="password" placeholder="Retype Password"/>
-					</div>
+					{{ form.awpassword("guest_password", "Password") }}
+					{{ form.awpassword("guest_password_check", "Retype Password", match_val="#guest_password") }}
+
 					<div class="actions">
 						<button class="btn btn-primary btn-register">Register</button>
 						<div class="action-spinner"></div>
@@ -163,6 +148,12 @@
 <script>{% include "templates/includes/awesome_cart.js" %}</script>
 <script type="text/javascript">
 
+// initialize gateway form ui
+//awc_gateway_ui.gateway_setup_form($('#gateway-form'));
+var login_form = new awc.Form($('#login-form'));
+var register_form = new awc.Form($('#register-form'));
+awc.gateway.init($('#gateway-form'));
+
 function aw_action_error($btn, reset) {
 	if ( reset ) {
 		$btn.parent().find('.action-error').slideUp('fast').empty();
@@ -176,7 +167,7 @@ function aw_action_wait($btn, reset) {
 		$btn.slideDown('fast');
 		$btn.parent().find('.action-spinner').slideUp('fast');
 	} else {
-		aw_action_error($btn, True); // reset error msg
+		aw_action_error($btn, true); // reset error msg
 		$btn.slideUp('fast');
 		$btn.parent().find('.action-spinner').slideDown('fast');
 	}
@@ -188,26 +179,11 @@ aw_goto('#checkout-billing');
 aw_goto('#checkout-login');
 {% endif %}
 
-/*
-frappe.call({
-	method: "awesome_cart.is_logged",
-	args: {},
-	callback: function(r) {
-		var result = r.message;
-		if ( result.success ) {
-			if ( result.result ) {
-				aw_goto('#checkout-billing');
-			} else {
-				aw_goto('#checkout-login');
-			}
-		} else {
-			aw_goto('#checkout-login');
-		}
-	});
-*/
-
 $('#login-form .btn-login').click(function() {
-	
+	if ( $(this).closest('.dti-form').hasClass('incomplete') ) {
+		return;
+	}	
+
 	var $btn = $(this);
 	var email = $('#customer_email').val();
 	var pass = $('#customer_password').val();

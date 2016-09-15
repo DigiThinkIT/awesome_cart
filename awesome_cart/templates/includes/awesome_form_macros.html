@@ -1,0 +1,91 @@
+{% macro awfield(name, id=None, cls="", reverse_label=False, match_val=None) -%}
+<div class="field {{ cls }}" {% if match_val %}data-match-val="{{ match_val }}"{% endif %} >
+	{% if reverse_label %}
+	    {{ caller() }}
+            <label for="{{ id or name }}">{{ label }}</label>
+	{% else %}
+            <label for="{{ id or name }}">{{ label }}</label>
+	    {{ caller() }}
+	{% endif %}
+    </div>
+{%- endmacro %}
+
+{% macro awinput(type, name, label, id=None, cls="", title="", reverse_label=False, match_val=None) -%}
+    {% call awfield(name, id, cls, reverse_label, match_val) %}
+	<input name="{{ name }}" id="{{ id or name }}" class="awi" type="{{ type }}" placeholder="{{ label }}" title="{{ title }}"/>
+    {% endcall %}
+{%- endmacro %}
+
+{% macro awpassword(name, label, id=None, cls="", title="", reverse_label=False, match_val=None) -%}
+    {{ awinput("password", name=name, label=label, id=id, cls=cls, title=title, reverse_label=reverse_label, match_val=match_val) }}
+{%- endmacro %}
+
+{% macro awselect(name, label, id=None, cls="", title="", reverse_label=False) -%}
+    {% set content=caller() %}
+    {% call awfield(name, id, cls, reverse_label) %}
+        <select name="{{ name }}" id={{ id or name }} class="awi">
+            {{ content }}
+        </select>
+    {% endcall %}
+{%- endmacro %}
+
+{% macro address_form(title, display_name=False, require_name=True, field_prefix="") -%}
+
+<div class="title">{{ title }}</div>
+<div class="content">
+
+{% if display_name %}
+    {% set name_require = "" %}
+    {% if require_name %}
+        {% set name_require = "require" %}
+    {% endif %}
+    <div class="row nohmargin">
+        <div class="col-sm-6 nohpad">
+            {{ awinput("text", field_prefix + "first_name", "First Name", cls=name_require) }}
+        </div>
+        <div class="col-sm-6 nohpad">
+            {{ awinput("text", field_prefix + "last_name", "Last Name", cls=name_require) }}
+        </div>
+    </div>
+{% endif %}
+
+    <div class="row nohmargin">
+        <div class="col-sm-12 nohpad">
+            {{ awinput("text", field_prefix + "company", "Company (optional)") }}
+        </div>
+    </div>
+
+    <div class="row nohmargin">
+        <div class="col-sm-8 nohpad">
+            {{ awinput("text", field_prefix + "address_1", "Address", cls="required") }}
+        </div>
+        <div class="col-sm-4 nohpad">
+            {{ awinput("text", field_prefix + "address_2", "Apt. suite, etc. (optional)") }}
+        </div>
+    </div>
+
+    <div class="row nohmargin">
+        {{ awinput("text", field_prefix + "country", "Country", cls="required") }}
+    </div>
+
+    <div class="row nohmargin">
+        <div class="col-sm-4 nohpad">
+            {{ awinput("text", field_prefix + "city", "City", cls="required") }}
+        </div>
+        <div class="col-sm-4 nohpad">
+            {{ awinput("text", field_prefix + "state", "State", cls="required") }}
+        </div>
+        <div class="col-sm-4 nohpad">
+            {{ awinput("text", field_prefix + "zip", "Zip", cls="required") }}
+        </div>
+    </div>
+
+    <div class="row nohmargin">
+        <div class="col-sm-12 nohpad">
+            {{ awinput("text", field_prefix + "phone", "Phone") }}
+        </div>
+    </div>
+
+</div>
+
+{%- endmacro %}

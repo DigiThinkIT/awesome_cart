@@ -1,0 +1,301 @@
+{% extends "templates/web.html" %}
+
+{% block title %}Payment{% endblock %}
+
+{%- block header -%}
+
+<h2>Payment Details<h2>
+
+{% endblock %}
+
+{%- block page_content -%}
+
+
+<div class="row">
+    <div class="col-sm-6">
+
+        <div id="gateway-form" class="dti-form">
+            <div id="gateway-selectors">
+                <div class="title">Select Payment Method</div>
+
+                {% set default_class = "selected" %}
+
+                {% for name, gateway in gateway_forms.items() %}
+
+                    {% set gateway_id = name.strip().lower().replace(" ", "_") %}
+
+                    <div id="gateway-{{ gateway_id }}" 
+                         class="selector {{ default_class }}" 
+                         data-ref="#fields-{{ gateway_id }}">
+
+                        <div class="icon {{ gateway.icon }}"></div>
+                        <input type="radio"
+                               name="gateway" 
+                               class="small-title" 
+                               value="{{ gateway_id }}" 
+                               id="selector-{{ gateway_id}}">
+
+                        <label for="selector-{{ gateway_id }}">{{ gateway.small_title }}</label>
+                    </div>
+
+                    {% set default_class = "" %}
+                {% endfor %}
+            </div>
+
+            {% if stored_payments|length > 0 %}
+            <div id="stored-payments">
+                <div class="title">Or Select Stored Payment Information</div>
+                {% for payment in stored_payment %}
+                    <div id="stored-{{ payment.name }}"
+                         class="selector">
+                        
+                        <div class="stored-payment-line">
+                            <input type="radio"
+                                   name="gateway"
+                                   class="small-title"
+                                   value="stored:{{ payment.name }}"
+                                   id="selector-{{ payment.name }}">
+                            <label for="selector-{{ payment.name }}">{{ payment.label }}</label>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div id="gateway-fields">
+                {% for name, gateway in gateway_forms.items() %}
+                    {% set gateway_id = name.strip().lower().replace(" ", "_") %}
+                    <div id="fields-{{ gateway_id }}" 
+                         class="gateway" 
+                         data-gateway="{{ name }}"
+                        {% if gateway.requires_billing_address %}
+                         data-display-on-show="#billing-fields"
+                        {% endif %}
+                         >
+                        <div class="content">
+                            <div class="title">{{ gateway.title }}</div>
+                            {% include gateway.template %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div id="actions">
+                <button class="btn btn-primary pay-btn">Make Payment</button>
+            </div>
+        </div>
+
+        <div id="gateway-processing" class="pay-step">
+            <p class="lead">Processing...</p>
+        </div>
+
+        <div id="gateway-success" class="pay-step">
+            <p class="lead">Your payment was successful</p>
+            <p><a href="/" class="btn btn-default">Back to Home</a></p>
+        </div>
+
+        <div id="gateway-error" class="pay-step">
+            <p class="error">Something went wrong during processing.</p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block style %}
+    <style type="text/css">
+        {% include "templates/includes/gateway_form.css" %}
+    </style>
+    {% for name, gateway in gateway_forms.items() %}
+        {% if gateway.get("styles", False) %}
+            {% for src in gateway.scripts %}
+                <link href="{{ href }}" rel="stylesheet" type="text/css"/>
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+
+{% endblock %}
+
+{% block script %}
+
+<script type="text/javascript">
+
+// ugly hack, move this to css
+$('.pay-step').hide();
+$('.gateway').hide();
+
+// Dynamically display selector on field value change
+$('[data-display-on-val]').each(function() {
+    var selector = $(this).attr("data-display-on-val");
+    var $base = $(this);
+    $(selector).change(function() {
+        var toggleValue = false;
+        if ( $(this).is(':checkbox') ) {
+            toggleValue = $(this).is(':checked');
+        } else {
+            toggleValue = $(this).val()?true:false;
+        }
+
+        if ( toggleValue ) {
+            $base.slideDown('fast');
+        } else {
+            $base.slideUp('fast');
+        }
+    });
+    $(this).hide();
+});
+/*
+// Dynamically add field to required fields on field value change
+$('[data-required-on-val]').each(function() {
+    var selector = $(this).attr("data-display-on-val");
+    var $base = $(this);
+    $(selector).change(function() {
+        var toggleValue = false;
+        if ( $(this).is(':checkbox') ) {
+            toggleValue = $(this).is(':checked');
+        } else {
+            toggleValue = $(this).val()?true:false;
+        }
+
+        if ( toggleValue ) {
+            $base.addClass('required');
+        } else {
+            $base.removeClass('required');
+        }
+
+        $base.find('input').trigger('blur');
+    });
+});
+*/
+// handles gateway selector click toggle
+$('#gateway-selectors .selector').click(function() {
+    $('#gateway-selectors .selector').not($(this)).each(function() {
+        $(this).removeClass('selected');
+        var ref = $(this).attr('data-ref');
+        $(ref).slideUp('fast');
+        $(this).find('input').prop("checked", false);
+    });
+    var ref = $(this).attr('data-ref');
+    $(ref).slideDown('fast');
+    $(this).addClass('selected');
+    $(this).find('input').prop("checked", true);
+});
+
+// makes sure gateway selector radio value is updated
+$('#gateway-selectors .selected').each(function() {
+    var ref = $(this).attr('data-ref');
+    $(ref).show();
+    $(this).find('input').prop("checked", true);
+});
+
+// Handler, used to check if required fields are filled to
+// enable/disable pay button.
+function check_required() {
+    var $this = $(this);
+    var $parent = $this.closest('.gateway');
+
+    var all_required_filled = true;
+    $parent.find('.content:first .required input').each(function() {
+        if ( !$(this).val() ) {
+            all_required_filled = false;
+        }
+    });
+
+    if ( all_required_filled ) {
+        $parent.find('.pay-btn').removeClass('disabled');
+    } else {
+        $parent.find('.pay-btn').addClass('disabled');
+    }
+
+    if ( $this.closest('.field').hasClass('required') ) {
+        if ( $this.val() ) {
+            $this.closest(".required").removeClass("error");
+        } else {
+            $this.closest(".required").addClass("error");
+        }
+    } else {
+        $this.closest('.field').removeClass("error");
+    }
+    
+}
+
+function gateway_update_fields() {
+//    $(".gateway:visible input").each(check_required);
+}
+/*
+// Setup field required values check
+$('.dti-form .field').each(function() {
+    $(this).find('input').on('blur', check_required);
+});
+*/
+
+// Handle pay button click
+$('.pay-btn').click(function() {
+/*
+    if ( $(this).hasClass('disabled') ) {
+
+        $('.required input').each(function() {
+            if ( !$(this).val() ) {
+                $(this).closest('.required:first').addClass('error');
+            }
+        });
+
+        return;
+    }
+*/
+
+    $(".required .error").removeClass("error");
+
+    var $parent = $(".gateway:visible");
+//    var $parent = $(this).parent().parent();
+    console.log($parent);
+    var $content = $parent.find('.content:first');
+    var fields = {};
+    $content.find('input').each(function() {
+        $input = $(this);
+        fields[$input.attr('name')] = $input.val();
+    });
+
+    $('#gateway-form').slideUp('fast');
+    $('#gateway-processing').slideDown('fast');
+    $('#gateway-error .error').empty();
+    $('#gateway-error').slideUp('fast');
+
+    var gateway_name = $parent.attr('data-gateway');
+    var method = "dti_gateway_manager.embed.process_payment";
+
+    console.log("Gateway name", gateway_name);
+
+    frappe.call(
+        {
+            method: method, 
+            "args": { "gateway_name": gateway_name, "name": "{{ iname }}", "source": "{{ isource }}", "info": fields }, 
+            callback: function(r) {
+                console.log(r);
+                //r = $.parseJSON(r.message);
+                r = r.message;
+                $('#gateway-processing').slideUp('fast');
+                if ( r.success ) {
+                    $('#gateway-success').slideDown('fast');
+                } else {
+                    $('#gateway-form').slideDown('fast');
+                    $('#gateway-error').slideDown('fast');
+                    var $pre = $('<pre></pre>');
+                    $pre.text(r.msg);
+                    $('#gateway-error .error').empty().append($pre);
+                }
+            }
+        }); 
+});
+
+</script>
+
+    {% for name, gateway in gateway_forms.items() %}
+        {% if gateway.get("scripts", False) %}
+            {% for src in gateway.scripts %}
+                <script src="{{ src }}" type="text/javascript"></script>
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+
+{% endblock %}
