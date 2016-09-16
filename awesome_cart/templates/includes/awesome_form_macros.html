@@ -1,4 +1,4 @@
-{% macro awfield(name, id=None, cls="", reverse_label=False, match_val=None) -%}
+{% macro awfield(name, label="", id=None, cls="", reverse_label=False, match_val=None) -%}
 <div class="field {{ cls }}" {% if match_val %}data-match-val="{{ match_val }}"{% endif %} >
 	{% if reverse_label %}
 	    {{ caller() }}
@@ -11,7 +11,7 @@
 {%- endmacro %}
 
 {% macro awinput(type, name, label, id=None, cls="", title="", reverse_label=False, match_val=None) -%}
-    {% call awfield(name, id, cls, reverse_label, match_val) %}
+    {% call awfield(name, label, id, cls, reverse_label, match_val) %}
 	<input name="{{ name }}" id="{{ id or name }}" class="awi" type="{{ type }}" placeholder="{{ label }}" title="{{ title }}"/>
     {% endcall %}
 {%- endmacro %}
@@ -22,11 +22,27 @@
 
 {% macro awselect(name, label, id=None, cls="", title="", reverse_label=False) -%}
     {% set content=caller() %}
-    {% call awfield(name, id, cls, reverse_label) %}
+    {% call awfield(name, label, id, cls, reverse_label) %}
         <select name="{{ name }}" id={{ id or name }} class="awi">
             {{ content }}
         </select>
     {% endcall %}
+{%- endmacro %}
+
+{% macro awactions() -%}
+    {% set content=caller() %}
+    <div class="action">
+        {{ content }}
+        <div class="action-spinner"></div>
+    </div>
+{%- endmacro %}
+
+{% macro awbutton(label, is_primary=0, cls="", id=None, data={}) -%}
+    <button{% if id %} id="{{id}}"{% endif %} class="btn{% if is_primary %} btn-primary {% endif %}{{cls}}"
+        {% for k, v in data.items() %}
+	data-{{k}}="{{v}}"
+	{% endfor %}
+    >{{label}}</button>
 {%- endmacro %}
 
 {% macro address_form(title, display_name=False, require_name=True, field_prefix="", countries=[]) -%}

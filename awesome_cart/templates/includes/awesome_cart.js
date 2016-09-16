@@ -1,5 +1,6 @@
+frappe.provide("awc.ui");
 
-function aw_goto(selector) {
+awc.ui.goto = function(selector) {
 	if ( $(selector).length == 0 ) {
 		console.error("!aw page selector does not exist:", selector);
 	}
@@ -8,10 +9,11 @@ function aw_goto(selector) {
 	$(selector).slideDown('fast').addClass('active');
 }
 
+
 $('.checkout-page').hide();
 $('[data-aw-goto]').click(function() {
 	if ( !$(this).closest('.dti-form').hasClass('incomplete') ) {
 		var selector = $(this).attr('data-aw-goto');
-		aw_goto(selector);
+		awc.ui.goto(selector);
 	}
 });

@@ -58,6 +58,14 @@
     padding-right: 0 !important;
 }
 
+.nolpad {
+    padding-left: 0 !important;
+}
+
+.norpad {
+    padding-right: 0 !important;
+}
+
 .nohmargin {
     margin-left: 0 !important;
     margin-right: 0 !important;

@@ -83,48 +83,40 @@
 			<div class="checkout-page" id="checkout-login">
 				<div id="login-form" class="dti-form">
 					<h3>Returning Customer</h3>
-					<div class="field required">
-						<label for="customer_email">Email</label>
-						<input id="customer_email" name="customer_email" type="text" placeholder="Email Address" class="awi"/>
-					</div>
-					<div class="field required">
-						<label for="customer_password">Password</label>
-						<input id="customer_password" name="customer_password" type="password" placeholder="Password" class="awi"/>
-					</div>
-					<div class="actions">
-						<button class="btn btn-primary btn-login">Login</button>
-						<div class="action-spinner"></div>
-					</div>
+					{{ form.awinput("text", "customer_email", "Email Address", cls="required") }}
+					{{ form.awinput("password", "customer_password", "Password", cls="required submit-on-enter") }}
+					{% call form.awactions() %}
+						{{ form.awbutton("Login", 1, "btn-login") }}
+					{% endcall %}
 				</div>
 				<div id="register-prompt" class="dti-form">
 					<h3>New Customers</h3>
-					<div class="actions">
-						<button data-aw-goto="#register" class="btn btn-primary btn-create-account">Create Account</button>
-					</div>
+					{% call form.awactions() %}
+						{{ form.awbutton("Create Account", 1, "btn-create-account", data={"aw-goto": "#register"}) }}
+					{% endcall %}
 				</div>
 			</div>
 			<div class="checkout-page" id="register">
 				<div id="register-form" class="dti-form">
 					<h3>Create Account</h3>
 					<div class="title">Contact Info</div>
-					<div class="row nohpading">
-						<div class="col-sm-6">
-							{{ form.awinput("text", "guest_first", "First Name") }}
+					<div class="row nohpad">
+						<div class="col-sm-6 norpad">
+							{{ form.awinput("text", "guest_first", "First Name", cls="required") }}
 						</div>
-						<div class="col-sm-6">
-							{{ form.awinput("text", "guest_last", "Last Name") }}
+						<div class="col-sm-6 nolpad">
+							{{ form.awinput("text", "guest_last", "Last Name", cls="required") }}
 						</div>
 					</div>
-					{{ form.awinput("text", "guest_email", "Email Address") }}
+					{{ form.awinput("text", "guest_email", "Email Address", cls="required") }}
 
 					<div class="title">Your Password</div>
-					{{ form.awpassword("guest_password", "Password") }}
-					{{ form.awpassword("guest_password_check", "Retype Password", match_val="#guest_password") }}
+					{{ form.awpassword("guest_password", "Password", cls="required") }}
+					{{ form.awpassword("guest_password_check", "Retype Password", cls="required submit-on-enter", match_val="#guest_password") }}
 
-					<div class="actions">
-						<button class="btn btn-primary btn-register">Register</button>
-						<div class="action-spinner"></div>
-					</div>
+					{% call form.awactions() %}
+						{{ form.awbutton("Register", 1, "btn-register") }}
+					{% endcall %}
 
 				</div>
 
@@ -149,12 +141,11 @@
 <script type="text/javascript">
 
 // initialize gateway form ui
-//awc_gateway_ui.gateway_setup_form($('#gateway-form'));
 var login_form = new awc.Form($('#login-form'));
 var register_form = new awc.Form($('#register-form'));
 awc.gateway.init($('#gateway-form'));
 
-function aw_action_error($btn, reset) {
+awc.ui.action_error = function($btn, reset) {
 	if ( reset ) {
 		$btn.parent().find('.action-error').slideUp('fast').empty();
 	} else {
@@ -162,21 +153,21 @@ function aw_action_error($btn, reset) {
 	}
 }
 
-function aw_action_wait($btn, reset) {
+awc.ui.action_wait = function($btn, reset) {
 	if ( reset ) {
 		$btn.slideDown('fast');
 		$btn.parent().find('.action-spinner').slideUp('fast');
 	} else {
-		aw_action_error($btn, true); // reset error msg
+		awc.ui.action_error($btn, true); // reset error msg
 		$btn.slideUp('fast');
 		$btn.parent().find('.action-spinner').slideDown('fast');
 	}
 }
 
 {% if is_logged %}
-aw_goto('#checkout-billing');
+awc.ui.goto('#checkout-billing');
 {% else %}
-aw_goto('#checkout-login');
+awc.ui.goto('#checkout-login');
 {% endif %}
 
 $('#login-form .btn-login').click(function() {
@@ -188,7 +179,7 @@ $('#login-form .btn-login').click(function() {
 	var email = $('#customer_email').val();
 	var pass = $('#customer_password').val();
 
-	aw_action_wait($btn); // show spinner
+	awc.ui.action_wait($btn); // show spinner
 	frappe.call({
 		method: "awesome_cart.cart.login",
 		args: {
@@ -198,11 +189,11 @@ $('#login-form .btn-login').click(function() {
 		callback: function(r) {
 			var result = r.message;
 			if ( result.success ) {
-				aw_goto('#checkout-billing');
+				awc.ui.goto('#checkout-billing');
 			} else {
-				aw_action_error($btn, result.msg);
+				awc.ui.action_error($btn, result.msg);
 			}
-			aw_action_wait($btn, true);
+			awc.ui.action_wait($btn, true);
 		}
 	});
 
@@ -219,7 +210,10 @@ $('#register-form .btn-register').click(function() {
 	var first = $("#guest_first").val();
 	var last = $("#guest_last").val();
 
-	aw_action_wait($btn); // show spinner
+	var form = $form.data('awc_form');
+
+	//awc.ui.action_wait($btn); // show spinner
+	form.on_action_wait();
 
 	frappe.call({
 		method: "awesome_cart.cart.register",
@@ -233,12 +227,14 @@ $('#register-form .btn-register').click(function() {
 		callback: function(r) {
 			result = r.message;
 			if ( result.success ) {
-				aw_goto('#checkout-billing');
+				awc.ui.goto('#checkout-billing');
 			} else {
-				aw_action_error($btn, result.msg);
+				form.on_action_error(result.msg);
+				//awc.ui.action_error($btn, result.msg);
 			}
 
-			aw_action_wait($btn, true); // reset spinner
+			form.on_action_wait(true);
+			//awc.ui.action_wait($btn, true); // reset spinner
 		}
 	});
 
