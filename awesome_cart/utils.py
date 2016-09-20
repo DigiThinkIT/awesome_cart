@@ -5,8 +5,11 @@ import os
 
 import frappe
 import traceback
+
+from frappe import _
 from frappe.utils import random_string
 from .dbug import log, json_default
+from .cart import start_checkout, validate_transaction_currency
 
 def on_render_page(path):
         log("-- on render_page(%s)" % path)
@@ -67,3 +70,19 @@ class DictCopy:
 
 		if src_key in self.src:
 			self.dst[dst_key] = self.src[src_key]
+
+def get_payment_url(doc, method):
+	if doc.status == 1:
+		start_checkout(doc.grand_total, doc.currency, {
+			"doctype": doc.doctype,
+			"docname": doc.name})
+		frappe.respond_as_web_page(
+			_("Invalid Payment Gateway Request: %s" % doc.docstatus),
+			_("Payment Request has been canceled."),
+			success=False,
+			http_status_code=frappe.ValidationError.http_status_code)
+
+def validate_price_list_currency(doc, method):
+	if doc.enabled and doc.enabled_checkout:
+		if not doc.payment_gateway_account:
+			doc.enable.checkout = 0

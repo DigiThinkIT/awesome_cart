@@ -20,6 +20,10 @@
     display: initial;
 }
 
+.dti-form .field.label-visible label {
+    display: initial;
+}
+
 .dti-form .field input {
     border: none;
     background: transparent;

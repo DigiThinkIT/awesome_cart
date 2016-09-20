@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import json
 import frappe
+from frappe.utils.password import check_password
 
 def is_logged():
 	session_user = frappe.get_user()
@@ -13,20 +14,36 @@ def is_logged():
 	return True
 	
 @frappe.whitelist(allow_guest=True, xss_safe=True)
-def login (email, password):
+def login(email, password):
 	result = dict(
 		success=False,
 		msg="Internal Unhandled Error"
 	)
 	
-	user = frappe.get_doc("User", email)
-	if user:
+	try:
+		user_doc = check_password(email, password)
 		frappe.local.login_manager.login_as(email)
 		frappe.set_user(email)
+
 		result["success"] = True
 		result["msg"] = ""
-	else:
-		result["msg"] = "Internal Error, could not fetch the user, or the user does not exist: %s" % email
+	except frappe.AuthenticationError as ex:
+		result["success"] = False
+		result["msg"] = str(ex)
+
+	return result
+
+@frappe.whitelist(allow_guest=False, xss_safe=True)
+def checkout(form):
+
+	result = {
+		"success": False,
+		"msg": "Not Implemented",
+		"errors": {}
+	}
+
+	
+	
 
 	return result
 

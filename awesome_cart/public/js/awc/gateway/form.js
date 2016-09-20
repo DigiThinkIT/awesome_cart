@@ -27,6 +27,7 @@ awc.gateway.Form = awc.Form.extend({
 awc.gateway.init = function($container) {
 	// handles gateway selector click toggle
 	
+	awc.gateway.$container = $container;
 	var $gateway_selectors = $container.find('#gateway-selectors .selector');
 	awc.gateway.selectors = $gateway_selectors;
 	
@@ -60,7 +61,8 @@ awc.gateway.init = function($container) {
 	});
 };
 
-awc.gateway.get_selected_form = function($gwform) {
+awc.gateway.get_selected_form = function() {
+	var $gwform = awc.gateway.$container;
 	var $selected = $gwform.find('#gateway-selectors .selected:first input:checked');
 	return { $el: $selected, value: $selected.val() };
 };
@@ -70,9 +72,9 @@ awc.gateway.update_fields = function($form) {
 	$form.data("awc_form").check_required();
 };
 
-awc.gateway.get_selected_fields = function($gwform) {
-	var gateway = awc.gateway.get_selected_form($gwform);
-	var $gateway_form = $gwform.find("[data-gateway-id='"+gateway.value+"']");
+awc.gateway.get_selected_fields = function() {
+	var gateway = awc.gateway.get_selected_form();
+	var $gateway_form = awc.gateway.$container.find("[data-gateway-id='"+gateway.value+"']");
 	return $gateway_form.data("awc_form").get_fields();
 };
 

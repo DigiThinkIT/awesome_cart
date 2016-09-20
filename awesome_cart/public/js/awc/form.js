@@ -77,22 +77,22 @@ awc.Form = Class.extend({
 		// Handle pay button click
 		this.$form.find('.btn-primary')
 			.click(function() {
-				//var $form = $(this).closest('.dti-form');
+				var fields = scope.check_required(true); 
 				if ( scope.$form.hasClass('incomplete') ) {
-					scope.$form
-						.find('.required .awi')
-						.each(function() {
-							if ( !$(this).val() ) {
-								$(this).closest('.required:first')
-									.addClass('error');
-							}
-						});
-
 					return;
 				}
 
-				//$(this).trigger('submit_action');
-				scope.$form.trigger('submit_action');
+				var done = function() {
+					scope.on_action_wait(true);
+				};
+
+				var error = function(msg) {
+					scope.on_action_error(msg);
+				};
+
+				//scope.on_action_error(false);	// reset form
+				scope.on_action_wait();
+				scope.$form.trigger('submit_action', [fields, done, error]);
 			});
 
 		this.$form.find('.btn')
@@ -101,10 +101,8 @@ awc.Form = Class.extend({
 				scope.$form.trigger('awc_action', $(this));
 			});
 
-		// Setup field required values check
-		//this.$form.find('.field .awi').on('blur', function() { scope.check_required(false, $(this).closest('.field')); });
 		this.$form.find('.field .awi')
-			.on('blur keyup', function(e) { 
+			.on('blur keyup change', function(e) { 
 				var keyCode = e.keyCode || e.which;
 				var $field = $(this).closest('.field');
 				if ( e.type == 'keyup' ) {
@@ -114,7 +112,7 @@ awc.Form = Class.extend({
 							scope.$form.find('.btn-primary').click();
 						}
 					}
-				} else if ( e.type == 'blur' ) {
+				} else {
 					scope.check_required(false, true, $field); 
 				}
 			});
@@ -162,6 +160,8 @@ awc.Form = Class.extend({
 		} else {
 			this.$form.addClass('incomplete');
 		}
+
+		return result;
 	},
 
 	get_fields: function(update_ui, ignore_focused, $update_field) {
@@ -179,12 +179,46 @@ awc.Form = Class.extend({
 
 		var fields = {};
 		var all_required_filled = true;
+		var fields_meta = {};
 		this.$form.find('.field .awi').each(function() {
 			var $this = $(this);
 			var $field = $(this).closest('.field');
-			fields[$this.attr('name')] = $this.val();
 
-			if ( $this.closest('.field').hasClass('required') && !$this.val() ) {
+			var has_value = false;
+			var field_value = $this.val();
+			var field_human_value = field_value;
+			var field_name = $this.attr('name');
+			var type = $this.attr('type');
+
+			if ( $this.is(':checkbox') ) {
+				if ( $this.is(':checked') ) {
+					has_value = true;
+				} else {
+					field_value = null;
+				}
+			} else {
+				if ( $this.val() ) {
+					has_value = true;
+				}
+			}
+
+			if ( $this.is('select') ) {
+				type = 'select';
+				field_human_value = $this.find("option[value='"+field_value+"']").text();
+			}
+
+			fields_meta[field_name] = {
+				type: $this.attr('type'),
+				is_required: $this.closest(".required").length > 0,
+				has_value: has_value,
+				value: field_value,
+				human_value: field_human_value,
+				label: $field.attr('data-label')
+			}
+
+			fields[$this.attr('name')] = field_value;
+
+			if ( $this.closest('.field').hasClass('required') && !has_value ) {
 				all_required_filled = false;
 			}
 
@@ -203,30 +237,32 @@ awc.Form = Class.extend({
 				}
 			}
 		});
-		
-		return { valid: all_required_filled, fields: fields };
+	
+		return { valid: all_required_filled, fields: fields, meta: fields_meta };
 
 	},
 
-	on_action_error: function(reset) {
+	on_action_error: function(msg) {
 		var $error = this.$form.find('.action-error');
-		if ( reset ) {
+		if ( !msg ) {
 			$error.slideUp('fast').empty();
 		} else {
 			$error.slideDown('fast');
+			$error.html(msg);
 		}
 	},
 
 	on_action_wait: function(reset) {
 		var $error = this.$form.find('.action-error');
-		var $btn = this.$form.find('.btn-primary');
+		var $actions = this.$form.find('.action-content');
+		var $spinner = this.$form.find('.action-spinner');
 		if ( reset ) {
-			$btn.slideDown('fast')
-			$error.slideUp('fast');
+			$actions.slideDown('slow')
+			$spinner.slideUp('slow');
 		} else {
 			this.on_action_error(true); // reset error msg
-			$btn.slideUp('fast');
-			$error.slideDown('fast');
+			$actions.slideUp('fast');
+			$spinner.slideDown('fast');
 		}
 	}
 

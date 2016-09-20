@@ -1,5 +1,5 @@
 {% macro awfield(name, label="", id=None, cls="", reverse_label=False, match_val=None) -%}
-<div class="field {{ cls }}" {% if match_val %}data-match-val="{{ match_val }}"{% endif %} >
+<div class="field {{ cls }}" data-label="{{ label }}" {% if match_val %}data-match-val="{{ match_val }}"{% endif %} >
 	{% if reverse_label %}
 	    {{ caller() }}
             <label for="{{ id or name }}">{{ label }}</label>
@@ -10,9 +10,15 @@
     </div>
 {%- endmacro %}
 
-{% macro awinput(type, name, label, id=None, cls="", title="", reverse_label=False, match_val=None) -%}
+{% macro awinput(type, name, label, id=None, cls="", title="", reverse_label=False, match_val=None, value=None, atts={} ) -%}
     {% call awfield(name, label, id, cls, reverse_label, match_val) %}
-	<input name="{{ name }}" id="{{ id or name }}" class="awi" type="{{ type }}" placeholder="{{ label }}" title="{{ title }}"/>
+	<input name="{{ name }}" 
+               id="{{ id or name }}" 
+               class="awi" 
+               type="{{ type }}" 
+               placeholder="{{ label }}"
+               title="{{ title }}" {% if value %}value="{{value}}"{% endif %}
+               {% for k, v in atts.items() %}{{ k }}="{{ v }}" {% endfor %} />
     {% endcall %}
 {%- endmacro %}
 
@@ -32,13 +38,14 @@
 {% macro awactions() -%}
     {% set content=caller() %}
     <div class="action">
-        {{ content }}
+	<div class="action-error"></div>
+	<div class="action-content">{{ content }}</div>
         <div class="action-spinner"></div>
     </div>
 {%- endmacro %}
 
 {% macro awbutton(label, is_primary=0, cls="", id=None, data={}) -%}
-    <button{% if id %} id="{{id}}"{% endif %} class="btn{% if is_primary %} btn-primary {% endif %}{{cls}}"
+    <button{% if id %} id="{{id}}"{% endif %} class="btn{% if is_primary %} btn-primary{% endif %} {{cls}}"
         {% for k, v in data.items() %}
 	data-{{k}}="{{v}}"
 	{% endfor %}

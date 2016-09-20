@@ -16,7 +16,7 @@ def get_context(context):
 
 	settings = frappe.db.get("Awc Settings")
 
-	context.shipping_enabled = settings.awc_shipping_enabled
+	context.shipping_enabled = 1 if settings.awc_shipping_enabled else 0
 
 	#context.update(get_cart_quotation())
 	context.is_logged = cart.is_logged()

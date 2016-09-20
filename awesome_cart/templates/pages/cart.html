@@ -116,6 +116,7 @@
 						{{ form.awpassword("guest_password_check", "Retype Password", cls="required submit-on-enter", match_val="#guest_password") }}
 
 						{% call form.awactions() %}
+							{{ form.awbutton("Back", 0, "btn-back", data={ "aw-goto": "!back" }) }}
 							{{ form.awbutton("Register", 1, "btn-register") }}
 						{% endcall %}
 
@@ -133,9 +134,32 @@
 				</div>
 				<div  id="checkout-confirmation" data-next="#checkout-processing">
 					<p>Please check review your information before once more before completing checkout</p>
+					<div class="confirm-box dti-form" id="checkout-confirm-billing">
+						<h4>Billing Information</h4>
+						<div class="content"></div>
+						{{ form.awbutton("Edit", 1, data={ "aw-goto": "#checkout-billing" }) }}
+					</div>
+
+					{% if shipping_enabled %}
+					<div class="confirm-box dti-form" id="checkout-confirm-shipping">
+						<h4>Shipping Information</h4>
+						<div class="content"></div>
+						{{ form.awbutton("Edit", 1, data={ "aw-goto": "#checkout-billing" }) }}
+					</div>
+					{% endif %}
+
+					<div class="dti-form" id="confirm-form">
+						{{ form.awinput("checkbox", "terms", "I agree with the Terms and Conditions", cls="required label-visible", value="1", reverse_label=1 ) }}
+						{{ form.awbutton("Confirm and Pay", 1, "btn-confirm") }}
+					</div>
 				</div>
-				<div id="checkout-processing">
+				<div id="checkout-processing" class="dti-form">
 					<p>Processing, please wait...</p>
+					<div class="feedback">
+						<div class="msg"></div>
+						{{ form.awbutton("Back", 1, data={ "aw-goto": "#checkout-billing" }) }}
+					</div>
+					<div class="spinner"></div>
 				</div>
 			</div>
 		</div>
@@ -150,45 +174,92 @@
 <script type="text/javascript">
 
 // initialize gateway form ui
-var login_form = new awc.Form($('#login-form'));
-var register_form = new awc.Form($('#register-form'));
+awc.login_form = new awc.Form($('#login-form'));
+awc.register_form = new awc.Form($('#register-form'));
+awc.confirm_billing_form = new awc.Form($('#checkout-confirm-billing'));
+awc.confirm_shipping_form = new awc.Form($('#checkout-confirm-shipping'));
+awc.confirm_form = new awc.Form($('#confirm-form'));
 awc.gateway.init($('#gateway-form'));
-/*
-awc.ui.action_error = function($btn, reset) {
-	if ( reset ) {
-		$btn.parent().find('.action-error').slideUp('fast').empty();
-	} else {
-		$btn.parent().find('.action-error').slideDown('fast');
-	}
-}
-
-awc.ui.action_wait = function($btn, reset) {
-	if ( reset ) {
-		$btn.slideDown('fast');
-		$btn.parent().find('.action-spinner').slideUp('fast');
-	} else {
-		awc.ui.action_error($btn, true); // reset error msg
-		$btn.slideUp('fast');
-		$btn.parent().find('.action-spinner').slideDown('fast');
-	}
-}
-*/
+awc.shipping_enabled = {{ shipping_enabled }};
 
 awc.checkout_pages = new awc.PagesPanel(
 	$('#awc-checkout-panel'), 
 	{% if is_logged %}'#checkout-billing'{% else %}'#checkout-login'{% endif %}
 );
 
-$('#login-form .btn-login').click(function() {
-	if ( $(this).closest('.dti-form').hasClass('incomplete') ) {
-		return;
-	}	
+awc.checkout_pages.on_show('#checkout-confirmation', function() {
+	var billing_fields = awc.gateway.get_selected_fields();
+	var $content = $('#checkout-confirm-billing .content').empty();
+	$.each(billing_fields.meta, function(name, meta) {
+		if ( meta.has_value ) {
+			var $line = $(
+				'<div class="confirm-line">'+
+					'<span class="label">'+meta.label+'</span>: <span class="value">'+meta.human_value+'</span>'+
+				'</div>');
+			$content.append($line);
+		}
+	});
+});
 
-	var $btn = $(this);
-	var email = $('#customer_email').val();
-	var pass = $('#customer_password').val();
+awc.confirm_form.$form.on('submit_action', function(e, fields, done, error) {
 
-	awc.ui.action_wait($btn); // show spinner
+	var billing_gateway = awc.gateway.get_selected_form();
+	var billing_fields = awc.gateway.get_selected_fields();
+	var confirm_fields = awc.confirm_form.get_fields();
+	var form = {
+		billing: {
+			gateway: billing_gateway.value,
+			fields: billing_fields.fields
+		},
+		shipping: null,
+		confim: {
+			fields: confirm_fields.fields
+		}
+	}
+
+	if ( awc.shipping_enabled ) {
+		var shipping_fields = awc.shipping.get_selected_fields();
+		form.shipping = {
+			carrier: '',
+			fields: shipping_fields.fields
+		};
+	}
+
+	console.log('SUBMIT', form);
+
+	awc.checkout_pages.show('#checkout-processing');
+	$('#checkout-processing .msg').empty();
+	$('#checkout-processing .feedback').hide();
+	$('#checkout-processing .spinner').show();
+
+	frappe.call({
+		method: "awesome_cart.cart.checkout",
+		args: { form: form },
+		callback: function(r) {
+			var result = r.message;
+			if ( result.success ) {
+				awc.checkout_pages.show('#checkout-success');
+				window.location = '/cart_success';
+			} else {
+				//error(result.msg); Don't show error back in confirm form
+
+				$("#checkout-processing .msg").html(result.msg);
+				$("#checkout-processing .feedback").slideDown('fast');
+				$('#checkout-processing .spinner').slideUp('fast');
+				
+			}
+		}
+	});
+
+	done(); // spinner will appear on processing page
+
+});
+
+awc.login_form.$form.on('submit_action', function(e, fields, done, error) {
+	console.log(fields, done, error);
+	var email = fields.fields.customer_email;
+	var pass = fields.fields.customer_password;
+
 	frappe.call({
 		method: "awesome_cart.cart.login",
 		args: {
@@ -198,31 +269,24 @@ $('#login-form .btn-login').click(function() {
 		callback: function(r) {
 			var result = r.message;
 			if ( result.success ) {
-				awc.ui.goto('#checkout-billing');
+				awc.checkout_pages.show('#checkout-billing');
 			} else {
-				awc.ui.action_error($btn, result.msg);
+				error(result.msg);
 			}
-			awc.ui.action_wait($btn, true);
+			done();
 		}
 	});
 
 });
 
-$('#register-form .btn-register').click(function() {
+awc.register_form.$form.on('submit_action', function(e, fields, done, error) {
 
-	console.log("About to register");
-	var $btn = $(this);
 	var $form = $('#register-form');
 	var email = $('#guest_email').val();
 	var pass = $('#guest_password').val();
 	var pass_check = $('#guest_password_check').val();
 	var first = $("#guest_first").val();
 	var last = $("#guest_last").val();
-
-	var form = $form.data('awc_form');
-
-	//awc.ui.action_wait($btn); // show spinner
-	form.on_action_wait();
 
 	frappe.call({
 		method: "awesome_cart.cart.register",
@@ -236,14 +300,12 @@ $('#register-form .btn-register').click(function() {
 		callback: function(r) {
 			result = r.message;
 			if ( result.success ) {
-				awc.ui.goto('#checkout-billing');
+				awc.checkout_pages.show('#checkout-billing');
 			} else {
-				form.on_action_error(result.msg);
-				//awc.ui.action_error($btn, result.msg);
+				error(result.msg);
 			}
 
-			form.on_action_wait(true);
-			//awc.ui.action_wait($btn, true); // reset spinner
+			done();
 		}
 	});
 
