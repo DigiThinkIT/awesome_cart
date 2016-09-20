@@ -27,7 +27,7 @@ web_include_js = [ "/assets/js/awesome_cart.js" ]
 
 on_render_page = [ "awesome_cart.utils.on_render_page" ]
 
-extend_controller_context = {
+extend_website_page_controller_context = {
 	"erpnext.templates.pages.cart": "awesome_cart.templates.pages.cart"
 }
 
