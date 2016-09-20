@@ -105,4 +105,10 @@ def register(email, password, password_check, first_name, last_name):
 		result["msg"] = "Internal Error, could not fetch user: %s" % guest_user.name
 
 	return result
+
+def start_checkout():
+	pass
+
+def validate_transaction_currency():
+	pass
 	
