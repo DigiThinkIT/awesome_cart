@@ -2,6 +2,7 @@
 	"js/awesome_cart.js": [
 		"public/js/shopping_cart.js",
 		"public/js/awc/form.js",
+		"public/js/awc/pagespanel.js",
 		"public/js/awc/gateway/form.js"
 	]
 }

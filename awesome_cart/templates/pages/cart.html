@@ -80,53 +80,63 @@
 				<div class="page-titles">
 				</div>
 			</div>
-			<div class="checkout-page" id="checkout-login">
-				<div id="login-form" class="dti-form">
-					<h3>Returning Customer</h3>
-					{{ form.awinput("text", "customer_email", "Email Address", cls="required") }}
-					{{ form.awinput("password", "customer_password", "Password", cls="required submit-on-enter") }}
-					{% call form.awactions() %}
-						{{ form.awbutton("Login", 1, "btn-login") }}
-					{% endcall %}
-				</div>
-				<div id="register-prompt" class="dti-form">
-					<h3>New Customers</h3>
-					{% call form.awactions() %}
-						{{ form.awbutton("Create Account", 1, "btn-create-account", data={"aw-goto": "#register"}) }}
-					{% endcall %}
-				</div>
-			</div>
-			<div class="checkout-page" id="register">
-				<div id="register-form" class="dti-form">
-					<h3>Create Account</h3>
-					<div class="title">Contact Info</div>
-					<div class="row nohpad">
-						<div class="col-sm-6 norpad">
-							{{ form.awinput("text", "guest_first", "First Name", cls="required") }}
-						</div>
-						<div class="col-sm-6 nolpad">
-							{{ form.awinput("text", "guest_last", "Last Name", cls="required") }}
-						</div>
+			<div id="awc-checkout-panel">
+				<div  id="checkout-login">
+					<div id="login-form" class="dti-form">
+						<h3>Returning Customer</h3>
+						{{ form.awinput("text", "customer_email", "Email Address", cls="required") }}
+						{{ form.awinput("password", "customer_password", "Password", cls="required submit-on-enter") }}
+						{% call form.awactions() %}
+							{{ form.awbutton("Login", 1, "btn-login") }}
+						{% endcall %}
 					</div>
-					{{ form.awinput("text", "guest_email", "Email Address", cls="required") }}
-
-					<div class="title">Your Password</div>
-					{{ form.awpassword("guest_password", "Password", cls="required") }}
-					{{ form.awpassword("guest_password_check", "Retype Password", cls="required submit-on-enter", match_val="#guest_password") }}
-
-					{% call form.awactions() %}
-						{{ form.awbutton("Register", 1, "btn-register") }}
-					{% endcall %}
-
+					<div id="register-prompt" class="dti-form">
+						<h3>New Customers</h3>
+						{% call form.awactions() %}
+							{{ form.awbutton("Create Account", 1, "btn-create-account", data={"aw-goto": "#register"}) }}
+						{% endcall %}
+					</div>
 				</div>
+				<div  id="register">
+					<div id="register-form" class="dti-form">
+						<h3>Create Account</h3>
+						<div class="title">Contact Info</div>
+						<div class="row nohpad">
+							<div class="col-sm-6 norpad">
+								{{ form.awinput("text", "guest_first", "First Name", cls="required") }}
+							</div>
+							<div class="col-sm-6 nolpad">
+								{{ form.awinput("text", "guest_last", "Last Name", cls="required") }}
+							</div>
+						</div>
+						{{ form.awinput("text", "guest_email", "Email Address", cls="required") }}
 
-			</div>
-			<div class="checkout-page" id="checkout-billing">
-				{{ embed_gateways(gateway_forms, stored_payments, enable_billing_address, "checkout-shipping", countries=countries) }}
-			</div>
-			<div class="checkout-page" id="checkout-shipping">
-			</div>
-			<div class="checkout-page" id="checkout-confirmation">
+						<div class="title">Your Password</div>
+						{{ form.awpassword("guest_password", "Password", cls="required") }}
+						{{ form.awpassword("guest_password_check", "Retype Password", cls="required submit-on-enter", match_val="#guest_password") }}
+
+						{% call form.awactions() %}
+							{{ form.awbutton("Register", 1, "btn-register") }}
+						{% endcall %}
+
+					</div>
+				</div>
+				<div  id="checkout-billing" data-next="#checkout-shiping">
+					{% if gateway_forms|length > 0 %}
+					{{ embed_gateways(gateway_forms, stored_payments, enable_billing_address, "!next", countries=countries) }}
+					{% else %}
+					<p>No payment/gateway modules available</p>
+					<p>Enable at least one gateway module to continue</p>
+					{% endif %}
+				</div>
+				<div  id="checkout-shiping" data-next="#checkout-confirmation" class="disabled">
+				</div>
+				<div  id="checkout-confirmation" data-next="#checkout-processing">
+					<p>Please check review your information before once more before completing checkout</p>
+				</div>
+				<div id="checkout-processing">
+					<p>Processing, please wait...</p>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -137,14 +147,13 @@
 
 {% block script %}
 <script>{% include "templates/includes/cart.js" %}</script>
-<script>{% include "templates/includes/awesome_cart.js" %}</script>
 <script type="text/javascript">
 
 // initialize gateway form ui
 var login_form = new awc.Form($('#login-form'));
 var register_form = new awc.Form($('#register-form'));
 awc.gateway.init($('#gateway-form'));
-
+/*
 awc.ui.action_error = function($btn, reset) {
 	if ( reset ) {
 		$btn.parent().find('.action-error').slideUp('fast').empty();
@@ -163,12 +172,12 @@ awc.ui.action_wait = function($btn, reset) {
 		$btn.parent().find('.action-spinner').slideDown('fast');
 	}
 }
+*/
 
-{% if is_logged %}
-awc.ui.goto('#checkout-billing');
-{% else %}
-awc.ui.goto('#checkout-login');
-{% endif %}
+awc.checkout_pages = new awc.PagesPanel(
+	$('#awc-checkout-panel'), 
+	{% if is_logged %}'#checkout-billing'{% else %}'#checkout-login'{% endif %}
+);
 
 $('#login-form .btn-login').click(function() {
 	if ( $(this).closest('.dti-form').hasClass('incomplete') ) {

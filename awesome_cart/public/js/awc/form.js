@@ -110,7 +110,6 @@ awc.Form = Class.extend({
 				if ( e.type == 'keyup' ) {
 					if ( keyCode != 9 ) {
 						scope.check_required(false, true); 
-						console.log(keyCode);
 						if ( keyCode == 13 && $field.is('.submit-on-enter') ) {
 							scope.$form.find('.btn-primary').click();
 						}
@@ -177,8 +176,6 @@ awc.Form = Class.extend({
 		if ( $update_field == undefined ) {
 			$update_field = false;
 		}
-
-		console.log($update_field);
 
 		var fields = {};
 		var all_required_filled = true;

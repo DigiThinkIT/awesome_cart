@@ -14,6 +14,10 @@ from awesome_cart.dbug import log
 def get_context(context):
 	"""This is a controller extension for erpnext.templates.pages.cart"""
 
+	settings = frappe.db.get("Awc Settings")
+
+	context.shipping_enabled = settings.awc_shipping_enabled
+
 	#context.update(get_cart_quotation())
 	context.is_logged = cart.is_logged()
 	# update context with gateway setup
