@@ -78,7 +78,7 @@ awc.Form = Class.extend({
 		this.$form.find('.btn-primary')
 			.click(function() {
 				var fields = scope.check_required(true); 
-				if ( scope.$form.hasClass('incomplete') ) {
+				if ( !fields.valid ) {
 					return;
 				}
 

@@ -11,6 +11,12 @@ awc.PagesPanel = Class.extend({
 		this.$panel.data("awc_pagespanel", this);
 		this.$panel.children().addClass('awc-pagespanel-page').hide();
 		this.$panel.find('[data-aw-goto]').click(function() {
+			var $form = $(this).closest('.dti-form');
+
+			if ( $form.length > 0 && $form.hasClass("incomplete") && $(this).hasClass('btn-primary') ) {
+				return; // ignore click on incomplete dti forms for primary buttons
+			}
+
 			var selector = $(this).attr('data-aw-goto');
 			if ( selector == '!next' ) {
 				scope.next();

@@ -17,8 +17,9 @@ awc.gateway.Form = awc.Form.extend({
 			$(this).find('input').prop("checked", true);
 		});
 
-		$gwform.find('.btn-action').on('submit_action', function() {
+		this.$form.on('submit_action', function(e, fields, done, error) {
 			$(window).trigger('gateway_pay_action');
+			done();
 		});
 	}
 

@@ -1,102 +1,101 @@
 {% macro embed_gateways_styles(gateway_forms) %}
 
-    <style type="text/css">
-        {% include "templates/includes/gateway_form.css" %}
-    </style>
-    {% for name, gateway in gateway_forms.items() %}
-        {% if gateway.get("styles", False) %}
-            {% for src in gateway.scripts %}
-                <link href="{{ href }}" rel="stylesheet" type="text/css"/>
-            {% endfor %}
-        {% endif %}
-    {% endfor %}
+	<style type="text/css">
+	    {% include "templates/includes/gateway_form.css" %}
+	</style>
+	{% for name, gateway in gateway_forms.items() %}
+	    {% if gateway.get("styles", False) %}
+	        {% for src in gateway.scripts %}
+	            <link href="{{ href }}" rel="stylesheet" type="text/css"/>
+	        {% endfor %}
+	    {% endif %}
+	{% endfor %}
 
 {% endmacro %}
 
 {% macro embed_gateways_scripts(gateway_forms) %}
 
-    {% for name, gateway in gateway_forms.items() %}
-        {% if gateway.get("scripts", False) %}
-            {% for src in gateway.scripts %}
-                <script src="{{ src }}" type="text/javascript"></script>
-            {% endfor %}
-        {% endif %}
-    {% endfor %}
+	{% for name, gateway in gateway_forms.items() %}
+	    {% if gateway.get("scripts", False) %}
+	        {% for src in gateway.scripts %}
+	            <script src="{{ src }}" type="text/javascript"></script>
+	        {% endfor %}
+	    {% endif %}
+	{% endfor %}
 
 {% endmacro %}
 
 {% macro embed_gateways(gateway_forms, stored_payments, enable_billing_address, aw_goto, current_date, submit_label="Continue", countries=[]) -%}
 
 <div id="gateway-form">
-    <div id="gateway-selectors">
+	<div id="gateway-selectors">
 	<div class="title">Select Payment Method</div>
 
 	{% set default_class = "selected" %}
 
 	{% for name, gateway in gateway_forms.items() %}
 
-	    {% set gateway_id = name.strip().lower().replace(" ", "_") %}
+		{% set gateway_id = name.strip().lower().replace(" ", "_") %}
 
-	    <div id="gateway-{{ gateway_id }}"
+		<div id="gateway-{{ gateway_id }}"
 		 class="selector {{ default_class }}"
 		 data-ref="#fields-{{ gateway_id }}">
 
 		<div class="icon {{ gateway.icon }}"></div>
 		<input type="radio"
-		       name="gateway"
-		       class="small-title"
-		       value="{{ gateway_id }}"
-		       id="selector-{{ gateway_id}}">
+			   name="gateway"
+			   class="small-title"
+			   value="{{ gateway_id }}"
+			   id="selector-{{ gateway_id}}">
 
 		<label for="selector-{{ gateway_id }}">{{ gateway.small_title }}</label>
-	    </div>
+		</div>
 
-	    {% set default_class = "" %}
+		{% set default_class = "" %}
 	{% endfor %}
-    </div>
+	</div>
 
-    {% if stored_payments|length > 0 %}
-    <div id="stored-payments">
+	{% if stored_payments|length > 0 %}
+	<div id="stored-payments">
 	<div class="title">Or Select Stored Payment Information</div>
 	{% for payment in stored_payment %}
-	    <div id="stored-{{ payment.name }}"
+		<div id="stored-{{ payment.name }}"
 		 class="selector">
 
 		<div class="stored-payment-line">
-		    <input type="radio"
+			<input type="radio"
 			   name="gateway"
 			   class="small-title"
 			   value="stored:{{ payment.name }}"
 			   id="selector-{{ payment.name }}">
-		    <label for="selector-{{ payment.name }}">{{ payment.label }}</label>
+			<label for="selector-{{ payment.name }}">{{ payment.label }}</label>
 		</div>
-	    </div>
+		</div>
 	{% endfor %}
-    </div>
-    {% endif %}
+	</div>
+	{% endif %}
 
-    <div id="gateway-fields">
+	<div id="gateway-fields">
 	{% for name, gateway in gateway_forms.items() %}
-	    {% set gateway_id = name.strip().lower().replace(" ", "_") %}
-	    <div id="fields-{{ gateway_id }}"
-            class="gateway dti-form"
-            data-on-visible-focus=".field:first"
-            data-gateway-id="{{ gateway_id }}"
-            data-gateway="{{ name }}"
-		    {% if gateway.requires_billing_address %}
-		    data-display-on-show="#billing-fields"
-		    {% endif %}
-		 >
-		<div class="content">
-		    <div class="title">{{ gateway.title }}</div>
-		    {% include gateway.template %}
-            <div id="actions">
-                <button {% if aw_goto %}data-aw-goto="{{ aw_goto }}"{% endif %} class="btn btn-primary pay-btn">{{ submit_label }}</button>
-            </div>
+		{% set gateway_id = name.strip().lower().replace(" ", "_") %}
+		<div id="fields-{{ gateway_id }}"
+			class="gateway dti-form"
+			data-on-visible-focus=".field:first"
+			data-gateway-id="{{ gateway_id }}"
+			data-gateway="{{ name }}"
+			{% if gateway.requires_billing_address %}
+			data-display-on-show="#billing-fields"
+			{% endif %}>
+			<div class="content">
+				<div class="title">{{ gateway.title }}</div>
+				{% include gateway.template %}
+				<div id="actions">
+				    <button {% if aw_goto %}data-aw-goto="{{ aw_goto }}"{% endif %} class="btn btn-primary pay-btn">{{ submit_label }}</button>
+				</div>
+			</div>
 		</div>
-	    </div>
 	{% endfor %}
-    </div>
+	</div>
 
 </div>
 
