@@ -22,12 +22,24 @@ fixtures = [
 	}
 ]
 
-update_website_context = "awesome_cart.utils.update_context"
+#update_website_context = "awesome_cart.utils.update_context"
 web_include_js = [ "/assets/js/awesome_cart.js" ]
 
+# page prerender override to generate guest users
 on_render_page = [ "awesome_cart.utils.on_render_page" ]
 
+# cart context override
 extend_website_page_controller_context = {
 	"erpnext.templates.pages.cart": "awesome_cart.templates.pages.cart"
 }
+
+doc_events = {
+	"Payment Request": {
+		"get_payment_url": "awesome_cart.utils.get_payment_url"
+	},
+	"Shopping Cart Settings": {
+		"validate": "awesome_cart.utils.validate_price_list_currency"
+	}
+}
+
 
