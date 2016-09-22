@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import json
 import frappe
 from frappe.utils.password import check_password
+from erpnext.shopping_cart import cart
 
 def is_logged():
 	session_user = frappe.get_user()
@@ -21,9 +22,16 @@ def login(email, password):
 	)
 	
 	try:
+
+		quotation = cart.get_cart_quotation()["doc"]
+
 		user_doc = check_password(email, password)
 		frappe.local.login_manager.login_as(email)
 		frappe.set_user(email)
+
+		# move quotation to logged in user
+		quotation.customer = email
+		quotation.save()
 
 		result["success"] = True
 		result["msg"] = ""

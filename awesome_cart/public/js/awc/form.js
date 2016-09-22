@@ -90,7 +90,6 @@ awc.Form = Class.extend({
 					scope.on_action_error(msg);
 				};
 
-				//scope.on_action_error(false);	// reset form
 				scope.on_action_wait();
 				scope.$form.trigger('submit_action', [fields, done, error]);
 			});
@@ -260,7 +259,7 @@ awc.Form = Class.extend({
 			$actions.slideDown('slow')
 			$spinner.slideUp('slow');
 		} else {
-			this.on_action_error(true); // reset error msg
+			this.on_action_error(); // reset error msg
 			$actions.slideUp('fast');
 			$spinner.slideDown('fast');
 		}
