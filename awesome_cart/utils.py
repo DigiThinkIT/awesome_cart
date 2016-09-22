@@ -24,7 +24,8 @@ def on_render_page(path):
                     user = frappe.get_doc({
                         "doctype": "User",
                         "email": email,
-                        "first_name": rnd,
+			"name": rnd,
+                        "first_name": "Guest",
                         "enabled": 1,
                         "new_password": random_string(10),
                         "user_type": "Website User"

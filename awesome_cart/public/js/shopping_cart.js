@@ -1,45 +1,27 @@
 // Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
-
 // shopping cart
 frappe.provide("shopping_cart");
 
-frappe.ready(function() {
-	// update user
-	if(full_name) {
-		$('.navbar li[data-label="User"] a')
-			.html('<i class="icon-fixed-width icon-user"></i> ' + full_name);
-	}
-	// update login
-	shopping_cart.set_cart_count();
-});
+// seting up a wrapper on original update_cart method so we can inject
+// our changes
+var update_cart_bak = shopping_cart.update_cart.bind(shopping_cart);
 
 $.extend(shopping_cart, {
 	update_cart: function(opts) {
-		if(!full_name || full_name==="Guest") {
-			if(localStorage) {
-				localStorage.setItem("last_visited", window.location.pathname);
-			}
-			window.location.href = "/login";
-		} else {
-			return frappe.call({
-				type: "POST",
-				method: "erpnext.shopping_cart.cart.update_cart",
-				args: {
-					item_code: opts.item_code,
-					qty: opts.qty,
-					with_items: opts.with_items || 0
-				},
-				btn: opts.btn,
-				callback: function(r) {
-					shopping_cart.set_cart_count();
-					if(opts.callback)
-						opts.callback(r);
-				}
-			});
+		// original cart won't allow "Guest" user to add 
+		// items to cart, so we change it temporarily
+		// and update_cart code stays intact
+
+		var tmp_fullname = full_name;
+		full_name = "Guest User";		try {
+			return update_cart_bak(opts);
+		} finally {
+			// then we set it back
+			full_name = tmp_fullname;
 		}
 	},
-
+	/*
 	set_cart_count: function() {
 		var cart_count = getCookie("cart_count");
 		
@@ -68,5 +50,5 @@ $.extend(shopping_cart, {
 		} else {
 			$badge.remove();
 		}
-	}
+	}*/
 });
