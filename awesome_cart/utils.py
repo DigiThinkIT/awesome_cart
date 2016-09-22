@@ -84,6 +84,6 @@ def get_payment_url(doc, method):
 			http_status_code=frappe.ValidationError.http_status_code)
 
 def validate_price_list_currency(doc, method):
-	if doc.enabled and doc.enabled_checkout:
+	if doc.enabled and doc.enable_checkout:
 		if not doc.payment_gateway_account:
 			doc.enable.checkout = 0

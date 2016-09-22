@@ -65,6 +65,8 @@ def register(email, password, password_check, first_name, last_name):
 	guest_user = frappe.get_user()
 	user = frappe.get_doc("User", guest_user.name)
 	
+	quotation = cart.get_cart_quotation()["doc"]
+
 	if user:
 		if user.email[-12:] == "@guest.local":
 			user.email = email
@@ -103,6 +105,10 @@ def register(email, password, password_check, first_name, last_name):
 					customer.save()
 
 					frappe.rename_doc("Customer", customer.name, customer.full_name, ignore_permissions=True)
+
+			# move quotation to logged in user
+			quotation.customer = email
+			quotation.save()
 
 			result["success"] = True
 			result["msg"] = ""
