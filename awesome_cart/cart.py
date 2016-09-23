@@ -1,9 +1,14 @@
 from __future__ import unicode_literals
 
 import json
+import traceback
 import frappe
+
 from frappe.utils.password import check_password
 from erpnext.shopping_cart import cart
+
+from . import dbug
+from . import embed
 
 def is_logged():
 	session_user = frappe.get_user()
@@ -48,15 +53,43 @@ def login(email, password):
 
 @frappe.whitelist(allow_guest=False, xss_safe=True)
 def checkout(form):
-
 	result = {
 		"success": False,
 		"msg": "Not Implemented",
 		"errors": {}
 	}
 
-	
-	
+	try:
+		form = json.loads(form)
+	except:
+		result["msg"] = "Invalid data"
+		return result
+
+	dbug.log(json.dumps(form, indent=2))
+
+	billing = form.get("billing", {})
+	try:
+		gateway = embed.get_gateway_module(billing.get("gateway", None))
+	except:
+		result["success"] = false
+		result["msg"] = "Internal Error"
+		result["exception"] = traceback.format_exc()
+
+	if gateway:
+		stored_payment = None
+		if form.get("stored_payment", False):
+			stored_payment = None # update with new doctype
+
+		gateway_fields = billing.get("fields")
+		try:
+			gateway_result = gateway.process(transaction, gateway_fields, stored_payment)
+			if gateway.get("success", False):
+				result["success"] = True
+		except:
+			result["success"] = False
+			result["msg"] = "Internal Error"
+			result["exception"] = traceback.format_exc()
+
 
 	return result
 
@@ -138,9 +171,37 @@ def start_checkout(amount, currency="USD", date=None):
 
 	jdata = json.loads(data)
 
-	#if jdata.get("doctype") and jdata.get("docname"):
+	if jdata.get("doctype") and jdata.get("docname"):
+		reference_doctype = jdata.get("doctype")
+		reference_docname = jdata.get("docname")
+		reference_doc = frappe.get_doc(reference_doctype, reference_docname)
+		
+		if reference_doctype == "Payment Request":
+			if reference_doc.status not in ["Draft", "Initiated"]:
+				frappe.local.response["type"] = "redirect"
+				frappe.local.response["location"] = get_url(
+				"/orders/{0}".format(reference_doc.reference_name))
+				return
+
+		frappe.local.response["type"] = "redirect"
+		frappe.local.response["location"] = get_url("/gateway?name={0}&source={1}".format(reference_docname, reference_doctype))
 		
 
 def validate_transaction_currency(currency):
-	pass
+	if currency not in ["USD"]:
+		frappe.throw(
+			_("Please select another payment method. '{0}' is unsupported").format(currency)
+		)	
 	
+
+def transaction_log(gateway_name, data, params=None):
+	frappe.get_doc({
+		"doctype": "DTI Gateway Log",
+		"gateway": gateway_name,
+		"error": frappe.as_json(data),
+		"params": frappe.as_json(params or "")
+	}).insert(ignore_permissions=True)
+
+	return data
+
+

@@ -38,6 +38,13 @@ def get_gateway_plugins():
 
 	return plugins
 
+def get_gateway_module(name):
+	gateways = get_gateway_plugins()
+	if name in gateways:
+		return frappe.get_module("%s.gateway" % name)
+
+	return False
+
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def process_payment(gateway_name, name, source, info):
 

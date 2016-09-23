@@ -243,7 +243,7 @@ awc.confirm_form.$form.on('submit_action', function(e, fields, done, error) {
 			} else {
 				//error(result.msg); Don't show error back in confirm form
 
-				$("#checkout-processing .msg").html(result.msg);
+				$("#checkout-processing .msg").html("<div>"+result.msg + "</div>"+ result.exception?"<pre>" + result.exception + "</pre>":"");
 				$("#checkout-processing .feedback").slideDown('fast');
 				$('#checkout-processing .spinner').slideUp('fast');
 				
