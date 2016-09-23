@@ -120,9 +120,18 @@ def register(email, password, password_check, first_name, last_name):
 
 	return result
 
-def start_checkout():
-	pass
+@frappe.whitelist(allow_guest=True, xss_safe=True)
+def start_checkout(amount, currency="USD", date=None):
+	validate_transaction_currency(currency)
+	
+	if not isinstance(data, basestring):
+		date = frappe.as_json(data or "{}")
 
-def validate_transaction_currency():
+	jdata = json.loads(data)
+
+	#if jdata.get("doctype") and jdata.get("docname"):
+		
+
+def validate_transaction_currency(currency):
 	pass
 	
