@@ -270,6 +270,9 @@ awc.login_form.$form.on('submit_action', function(e, fields, done, error) {
 			var result = r.message;
 			if ( result.success ) {
 				awc.checkout_pages.show('#checkout-billing');
+				$('.full-name').text(result.user.full_name);
+				frappe.full_name = result.user.full_name;
+				frappe.user_id = result.user.name;
 			} else {
 				error(result.msg);
 			}
@@ -301,6 +304,9 @@ awc.register_form.$form.on('submit_action', function(e, fields, done, error) {
 			result = r.message;
 			if ( result.success ) {
 				awc.checkout_pages.show('#checkout-billing');
+				$('.full-name').text(result.user.full_name);
+				frappe.full_name = result.user.full_name;
+				frappe.user_id = result.user.name;
 			} else {
 				error(result.msg);
 			}

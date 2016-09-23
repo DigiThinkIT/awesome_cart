@@ -28,6 +28,7 @@ def login(email, password):
 		user_doc = check_password(email, password)
 		frappe.local.login_manager.login_as(email)
 		frappe.set_user(email)
+		user = frappe.get_doc("User", email)
 
 		# move quotation to logged in user
 		quotation.customer = email
@@ -35,6 +36,10 @@ def login(email, password):
 
 		result["success"] = True
 		result["msg"] = ""
+		result["user"] = {
+			"full_name": user.full_name,
+			"name": user.name
+		}
 	except frappe.AuthenticationError as ex:
 		result["success"] = False
 		result["msg"] = str(ex)
@@ -112,6 +117,10 @@ def register(email, password, password_check, first_name, last_name):
 
 			result["success"] = True
 			result["msg"] = ""
+			result["user"] = {
+				"full_name": user.full_name,
+				"name": user.name
+			}
 
 		else:
 			result["msg"] = "User is not a guest: %s" % user.email
