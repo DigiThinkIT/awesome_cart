@@ -54,7 +54,7 @@ def update_context(context):
 	#	log("Context for: \n%s" % json.dumps(context, indent=2, default=json_default))
 
 class DictCopy:
-	def __init__(src, dst):
+	def __init__(self, src, dst):
 		self.src = src
 		self.dst = dst
 
@@ -65,7 +65,7 @@ class DictCopy:
 		self.src = None
 		self.dst = None
 
-	def copy(src_key, dst_key=None):
+	def copy(self, src_key, dst_key=None):
 		if dst_key is None:
 			src_key = dst_key
 

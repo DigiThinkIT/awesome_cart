@@ -56,6 +56,10 @@
     background-image: url(/assets/dti_gateway_manager/images/icon-gateway-swipe.svg) !important;
 }
 
+#billing-fields .extra-actions, #gateway-selectors .extra-actions, #stored-payments .extra-actions , #gateway-fields .extra-actions {
+	float: right;
+}
+
 #billing-fields .title, #gateway-selectors .title, #stored-payments .title , #gateway-fields .title {
     font-size: 1.3em;
     color: #888;

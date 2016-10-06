@@ -1,76 +1,153 @@
 .dti-form .field {
-    padding: .2em;
-    border: 1px solid #bbb;
-    background: #fff;
-    border-radius: 4px;
-    margin: .2em;
+	padding: .2em;
+	border: 1px solid #bbb;
+	background: #fff;
+	border-radius: 4px;
+	margin: .2em;
+}
+
+.dti-form .field.hidden {
+	display: none;
+}
+
+.dti-form .field.locked {
+	background: #d8d8d8;
 }
 
 .dti-form .field.noborder {
-    border: none;
-    background: transparent;
+	border: none;
+	background: transparent;
 }
 
 .dti-form .field label {
-    display: none;
-    font-weight: normal;
+	display: none;
+	font-weight: normal;
 }
 
 .dti-form .field label.visible {
-    display: initial;
+	display: initial;
 }
 
 .dti-form .field.label-visible label {
-    display: initial;
+	display: initial;
 }
 
 .dti-form .field input {
-    border: none;
-    background: transparent;
-    width: 100%;
+	border: none;
+	background: transparent;
+	width: 100%;
 }
 
 .dti-form .field input.minimal {
-    width: initial;
+	width: initial;
 }
 
 .dti-form .field.required.error {
-    border-color: #f00;
-    box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);
+	border-color: #f00;
+	box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);
 }
 
 /** bof - Colorize placeholder on error **/
 /* webkit */
-.dti-form .field.required.error input::-webkit-input-placeholder {
-    color: #f00;
-}
+.dti-form .field.required.error input::-webkit-input-placeholder,
 /* FF 19+ */
-.dti-form .field.required.error input::-moz-placeholder {
-    color: #f00;
-}
+.dti-form .field.required.error input::-moz-placeholder,
 /* MS 10+ */
-.dti-form .field.required.error input:-ms-input-placeholder {
-    color: #f00;
-}
+.dti-form .field.required.error input:-ms-input-placeholder,
 /* FF18- */
 .dti-form .field.required.error input:-moz-placeholder {
-    color: #f00;
+	color: #f00;
+}
+
+/* webkit */
+.dti-form .field.locked input::-webkit-input-placeholder, 
+/* FF 19+ */
+.dti-form .field.locked input::-moz-placeholder,
+/* MS 10+ */
+.dti-form .field.locked input:-ms-input-placeholder,
+/* FF18- */
+.dti-form .field.locked input:-moz-placeholder {
+	color: transparent;
 }
 
 .nohpad {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
 }
 
 .nolpad {
-    padding-left: 0 !important;
+	padding-left: 0 !important;
 }
 
 .norpad {
-    padding-right: 0 !important;
+	padding-right: 0 !important;
 }
 
 .nohmargin {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
 }
+
+.awc-radio-editor label {
+	display: block;
+	padding: 0;
+	margin: 0;
+	font-size: .9em;
+	position: relative;
+}
+
+.awc-radio-editor label .content {
+	display: none;
+	padding: .5em 4em;
+	margin-bottom: .5em;
+}
+
+.awc-radio-editor input[type=radio] {
+	display: none;
+}
+
+.awc-radio-editor .editor-actions {
+	position: absolute;
+	top: 0;
+	right: 0;
+	white-space: nowrap;
+	font-size: .8em;
+}
+
+.awc-radio-editor .btn {
+	background: #e0e0e0;
+	border: 1px solid #bbb;
+	border-radius: .3em;
+	padding: .1em .5em;
+	font-size: 1em;
+	margin-right: .5em;
+}
+
+.awc-radio-editor address {
+	margin-bottom: 0;
+	font-size: .9em;
+}
+
+.awc-address.editable .extra-actions .btn input[type=radio] {
+	display: none;
+}
+
+.awc-address.editable .extra-actions .btn label {
+	margin: 0;
+}
+
+.awc-address.editable .extra-actions .btn {
+	
+	background: #e0e0e0;
+	border: 1px solid #bbb;
+	border-radius: .3em;
+	padding: .1em .5em;
+	font-size: .7em;
+	margin-right: .5em;
+}
+
+.awc-address.editable .extra-actions .btn:hover, .awc-radio-editor .btn:hover {
+	background: #d2e7f5;
+}
+
+

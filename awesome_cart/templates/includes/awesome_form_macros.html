@@ -1,123 +1,153 @@
-{% macro awfield(name, label="", id=None, cls="", reverse_label=False, match_val=None) -%}
-<div class="field {{ cls }}" data-label="{{ label }}" {% if match_val %}data-match-val="{{ match_val }}"{% endif %} >
-	{% if reverse_label %}
-	    {{ caller() }}
-            <label for="{{ id or name }}">{{ label }}</label>
-	{% else %}
-            <label for="{{ id or name }}">{{ label }}</label>
-	    {{ caller() }}
-	{% endif %}
-    </div>
+{% macro awfield(name, label=None, id=None, cls="", reverse_label=False, match_val=None) -%}
+<div class="field {{ cls }}" data-label="{{ label or '' }}" {% if match_val %}data-match-val="{{ match_val }}"{% endif %} >
+		{% if label %}
+			{% if reverse_label %}
+				{{ caller() }}
+				<label for="{{ id or name }}">{{ label }}</label>
+				{% else %}
+				<label for="{{ id or name }}">{{ label }}</label>
+			{{ caller() }}
+			{% endif %}
+		{% else %}
+			{{ caller() }}
+		{% endif %}
+	</div>
 {%- endmacro %}
 
-{% macro awinput(type, name, label, id=None, cls="", title="", reverse_label=False, match_val=None, value=None, atts={} ) -%}
-    {% call awfield(name, label, id, cls, reverse_label, match_val) %}
+{% macro awinput(type, name, label=None, id=None, cls="", title="", reverse_label=False, match_val=None, value=None, atts={} ) -%}
+	{% set cssextra = "" %}
+	{% if type == "hidden" %}{% set cssextra = " hidden" %}{% endif %}
+	{% call awfield(name, label, id, cls + cssextra, reverse_label, match_val) %}
 	<input name="{{ name }}" 
-               id="{{ id or name }}" 
-               class="awi" 
-               type="{{ type }}" 
-               placeholder="{{ label }}"
-               title="{{ title }}" {% if value %}value="{{value}}"{% endif %}
-               {% for k, v in atts.items() %}{{ k }}="{{ v }}" {% endfor %} />
-    {% endcall %}
+		id="{{ id or name }}" 
+		class="awi" 
+		type="{{ type }}" 
+		placeholder="{{ label or '' }}"
+		title="{{ title }}" {% if value %}value="{{value}}"{% endif %}
+		{% for k, v in atts.items() %}{{ k }}="{{ v }}" {% endfor %} />
+	{% endcall %}
 {%- endmacro %}
 
 {% macro awpassword(name, label, id=None, cls="", title="", reverse_label=False, match_val=None) -%}
-    {{ awinput("password", name=name, label=label, id=id, cls=cls, title=title, reverse_label=reverse_label, match_val=match_val) }}
+	{{ awinput("password", name=name, label=label, id=id, cls=cls, title=title, reverse_label=reverse_label, match_val=match_val) }}
 {%- endmacro %}
 
 {% macro awselect(name, label, id=None, cls="", title="", reverse_label=False) -%}
-    {% set content=caller() %}
-    {% call awfield(name, label, id, cls, reverse_label) %}
-        <select name="{{ name }}" id={{ id or name }} class="awi">
-            {{ content }}
-        </select>
-    {% endcall %}
+	{% set content=caller() %}
+	{% call awfield(name, label, id, cls, reverse_label) %}
+		<select name="{{ name }}" id={{ id or name }} class="awi">
+			{{ content }}
+		</select>
+	{% endcall %}
 {%- endmacro %}
 
 {% macro awactions() -%}
-    {% set content=caller() %}
-    <div class="action">
+	{% set content=caller() %}
+	<div class="action">
 	<div class="action-error"></div>
 	<div class="action-content">{{ content }}</div>
-        <div class="action-spinner"></div>
-    </div>
+		<div class="action-spinner"></div>
+	</div>
 {%- endmacro %}
 
 {% macro awbutton(label, is_primary=0, cls="", id=None, data={}) -%}
-    <button{% if id %} id="{{id}}"{% endif %} class="btn{% if is_primary %} btn-primary{% endif %} {{cls}}"
-        {% for k, v in data.items() %}
+	<button{% if id %} id="{{id}}"{% endif %} class="btn{% if is_primary %} btn-primary{% endif %} {{cls}}"
+		{% for k, v in data.items() %}
 	data-{{k}}="{{v}}"
 	{% endfor %}
-    >{{label}}</button>
+	>{{label}}</button>
 {%- endmacro %}
 
-{% macro address_form(title, display_name=False, require_name=True, field_prefix="", countries=[]) -%}
-
-<div class="title">{{ title }}</div>
-<div class="content">
-
-{% if display_name %}
-    {% set name_require = "" %}
-    {% if require_name %}
-        {% set name_require = "require" %}
-    {% endif %}
-    <div class="row nohmargin">
-        <div class="col-sm-6 nohpad">
-            {{ awinput("text", field_prefix + "first_name", "First Name", cls=name_require) }}
-        </div>
-        <div class="col-sm-6 nohpad">
-            {{ awinput("text", field_prefix + "last_name", "Last Name", cls=name_require) }}
-        </div>
-    </div>
-{% endif %}
-
-    <div class="row nohmargin">
-        <div class="col-sm-12 nohpad">
-            {{ awinput("text", field_prefix + "company", "Company (optional)") }}
-        </div>
-    </div>
-
-    <div class="row nohmargin">
-        <div class="col-sm-8 nohpad">
-            {{ awinput("text", field_prefix + "address_1", "Address", cls="required") }}
-        </div>
-        <div class="col-sm-4 nohpad">
-            {{ awinput("text", field_prefix + "address_2", "Apt. suite, etc. (optional)") }}
-        </div>
-    </div>
-
-    <div class="row nohmargin">
-	{% if countries|length == 0 %}
-            {{ awinput("text", field_prefix + "country", "Country", cls="required") }}
-	{% else %}
-	    {% call awselect(field_prefix + "country", "Country", cls="required") %}
-		<option value> - Select Country - </option>
-                {% for country in countries.countries %}
-                    <option value="{{country.code}}" {% if country.code == countries.default %}selected{% endif %}>{{country.country_name}}</option>
-                {% endfor %}
-            {% endcall %}
-        {% endif %}
-    </div>
-
-    <div class="row nohmargin">
-        <div class="col-sm-4 nohpad">
-            {{ awinput("text", field_prefix + "city", "City", cls="required") }}
-        </div>
-        <div class="col-sm-4 nohpad">
-            {{ awinput("text", field_prefix + "state", "State", cls="required") }}
-        </div>
-        <div class="col-sm-4 nohpad">
-            {{ awinput("text", field_prefix + "zip", "Zip", cls="required") }}
-        </div>
-    </div>
-
-    <div class="row nohmargin">
-        <div class="col-sm-12 nohpad">
-            {{ awinput("text", field_prefix + "phone", "Phone") }}
-        </div>
-    </div>
-
+{% macro editable_radio_list(id, name, source, new_label, limit=3) -%}
+<div class="awc-radio-editor" id="{{ id }}" data-source="{{ source }}" data-group="{{ name }}">
+	<div class="data"></div>
+	<div class="paginator">
+		<ul></ul>
+	</div>
 </div>
+{%- endmacro %}
 
+{% macro address_form(title, display_name=False, require_name=True, field_prefix="", countries=[], address_source=None, primary_field=None) -%}
+<div class="awc-address {% if address_source %}editable{% endif %}"
+	{% if field_prefix %}
+	data-field-prefix="{{ field_prefix }}"
+	{% endif %}
+	{% if primary_field %}
+	data-primary-field="{{ primary_field }}"
+	{% endif %}
+	>
+	<div class="extra-actions"></div>
+	<div class="title">{{ title }}</div>
+	{% if address_source %}
+	<div class="editor">
+		 {{ editable_radio_list(field_prefix + "addresses", "address", address_source, "New Address") }}
+	</div>
+	{% endif %}
+	<div class="content">
+
+		{{ awinput("hidden", field_prefix + "address_id") }}
+
+	{% if display_name %}
+		{% set name_require = "" %}
+		{% if require_name %}
+			{% set name_require = "require" %}
+		{% endif %}
+		<div class="row nohmargin">
+			<div class="col-sm-6 nohpad">
+				{{ awinput("text", field_prefix + "first_name", "First Name", cls=name_require) }}
+			</div>
+			<div class="col-sm-6 nohpad">
+				{{ awinput("text", field_prefix + "last_name", "Last Name", cls=name_require) }}
+			</div>
+		</div>
+	{% endif %}
+
+		<div class="row nohmargin">
+			<div class="col-sm-12 nohpad">
+				{{ awinput("text", field_prefix + "company", "Company (optional)") }}
+			</div>
+		</div>
+
+		<div class="row nohmargin">
+			<div class="col-sm-8 nohpad">
+				{{ awinput("text", field_prefix + "address_1", "Address", cls="required") }}
+			</div>
+			<div class="col-sm-4 nohpad">
+				{{ awinput("text", field_prefix + "address_2", "Apt. suite, etc. (optional)") }}
+			</div>
+		</div>
+
+		<div class="row nohmargin">
+		{% if countries|length == 0 %}
+				{{ awinput("text", field_prefix + "country", "Country", cls="required") }}
+		{% else %}
+			{% call awselect(field_prefix + "country", "Country", cls="required") %}
+			<option value> - Select Country - </option>
+					{% for country in countries.countries %}
+						<option value="{{ country.name }}" {% if country.name == countries.default %}selected{% endif %}>{{country.country_name}}</option>
+					{% endfor %}
+				{% endcall %}
+			{% endif %}
+		</div>
+
+		<div class="row nohmargin">
+			<div class="col-sm-4 nohpad">
+				{{ awinput("text", field_prefix + "city", "City", cls="required") }}
+			</div>
+			<div class="col-sm-4 nohpad">
+				{{ awinput("text", field_prefix + "state", "State", cls="required") }}
+			</div>
+			<div class="col-sm-4 nohpad">
+				{{ awinput("text", field_prefix + "zip", "Zip", cls="required") }}
+			</div>
+		</div>
+
+		<div class="row nohmargin">
+			<div class="col-sm-12 nohpad">
+				{{ awinput("text", field_prefix + "phone", "Phone") }}
+			</div>
+		</div>
+
+	</div>
+</div>
 {%- endmacro %}

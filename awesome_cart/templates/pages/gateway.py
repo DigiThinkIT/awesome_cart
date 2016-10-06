@@ -22,13 +22,13 @@ def get_context(context):
 	awc_countries = frappe.get_all("Awc Country Setting", ["country"])
 	for ac in awc_countries:
 		country = frappe.get_doc("Country", ac.country)
-		countries.append({ "country_name": country.country_name, "code": country.code})
+		countries.append({ "country_name": country.country_name, "name": country.name})
 
 	settings = frappe.db.get("Awc Settings")
 	if settings.default_country:
 		if frappe.db.exists("Country", settings.default_country):
 			default_country_doc = frappe.get_doc("Country", settings.default_country)
-			default_country = default_country_doc.code
+			default_country = default_country_doc.name
 		else:
 			default_country = None
 	else:

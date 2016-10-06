@@ -1,0 +1,29 @@
+{% extends "templates/web.html" %}
+{% block title %} {{ "Checkout Success" }} {% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block style %}
+<style>
+    {% include "templates/includes/cart.css" %}
+</style>
+{% endblock %}
+
+{% block header_actions %}{% endblock %}
+
+{% block content %}
+<h1>Thank you for your purchase!</h1>
+
+<p>Your payment was received.</p>
+<p>A copy of this order sent to your email at: {{ user_email }}</p>
+
+<p><a href="/invoices/{{ inv_name }}" class="btn btn-primary">View Invoice #{{ inv_name}}</a></p>
+
+<!-- no-sidebar -->
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+
+</script>
+{% endblock %}

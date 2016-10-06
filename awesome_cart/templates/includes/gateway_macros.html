@@ -1,3 +1,5 @@
+{% from "templates/includes/awesome_form_macros.html" import address_form %}
+
 {% macro embed_gateways_styles(gateway_forms) %}
 
 	<style type="text/css">
@@ -25,7 +27,7 @@
 
 {% endmacro %}
 
-{% macro embed_gateways(gateway_forms, stored_payments, enable_billing_address, aw_goto, current_date, submit_label="Continue", countries=[]) -%}
+{% macro embed_gateways(gateway_forms, stored_payments, enable_billing_address, aw_goto, current_date, submit_label="Continue", countries=[], billing_address_source="awesome_cart.datasource.billing_addresses") -%}
 
 <div id="gateway-form">
 	<div id="gateway-selectors">
@@ -89,6 +91,16 @@
 			<div class="content">
 				<div class="title">{{ gateway.title }}</div>
 				{% include gateway.template %}
+				{% if gateway.requires_billing_address %}
+					{{ address_form(
+						"Billing Info.", 
+						False, 
+						field_prefix="bill_", 
+						countries=countries, 
+						address_source=billing_address_source,
+						primary_field='is_primary_address') 
+					}}
+				{% endif %}
 				<div id="actions">
 				    <button {% if aw_goto %}data-aw-goto="{{ aw_goto }}"{% endif %} class="btn btn-primary pay-btn">{{ submit_label }}</button>
 				</div>

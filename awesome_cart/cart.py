@@ -6,6 +6,7 @@ import frappe
 
 from frappe.utils.password import check_password
 from erpnext.shopping_cart import cart
+from erpnext.accounts.doctype.payment_request import payment_request
 
 from . import dbug
 from . import embed
@@ -37,6 +38,7 @@ def login(email, password):
 
 		# move quotation to logged in user
 		quotation.customer = email
+		quotation.customer_name = user.customer_name
 		quotation.save()
 
 		result["success"] = True
@@ -67,30 +69,80 @@ def checkout(form):
 
 	dbug.log(json.dumps(form, indent=2))
 
+
 	billing = form.get("billing", {})
+	session_user = frappe.get_user()
+	user = frappe.get_doc("User", session_user.name)
+	form["user"] = {
+		"email": user.email
+	}
+
 	try:
+		quotation = cart.get_cart_quotation()
+		quote = quotation["doc"]
 		gateway = embed.get_gateway_module(billing.get("gateway", None))
 	except:
-		result["success"] = false
+		result["success"] = False
 		result["msg"] = "Internal Error"
 		result["exception"] = traceback.format_exc()
 
 	if gateway:
+		
+		transaction = create_transaction(quote.grand_total, quote.currency)
+		transaction.email = user.email
+		
 		stored_payment = None
 		if form.get("stored_payment", False):
 			stored_payment = None # update with new doctype
-
-		gateway_fields = billing.get("fields")
+		
 		try:
-			gateway_result = gateway.process(transaction, gateway_fields, stored_payment)
-			if gateway.get("success", False):
+			success, msg = gateway.process(transaction, form, stored_payment)
+			if success:
 				result["success"] = True
+				# now we'll submit quotation, create sales order,
+				# create payment request and fullfill it
+				so_name = cart.place_order() # submit quotation and create so
+
+				# lets now create a payment request and fullfill it immediately
+				preq = payment_request.make_payment_request(dt="Sales Order", dn=so_name, submiti_doc=1, return_doc=1)
+
+				if preg:
+					gdoc = gateway.get_gateway()
+					adoc = gateway.get_account()
+					gadoc = gateway.get_gateway_account()
+
+					preg.payment_gateway = gdoc.name
+					preg.payment_account = adoc.name
+					preq.payment_gateway_account = gadoc.name
+
+					preq.flags.ignore_validate_update_after_submit = 1
+					preg.save()
+
+					payment_entry = preg.run_method("set_as_paid")
+
+					transaction.data = json.dumps(sanitize_checkout_form(form), indent=4)
+					transaction.reference_doctype = "Payment Request"
+					transaction.reference_docname = preq.name
+					transaction.gateway = gdoc.name
+					transaction.save()
+					
+					frappe.local.response["type"] = "redirect"
+					frappe.local.response["location"] = get_url("/cart_success")
+			else:
+				result["success"] = False
+				result["msg"] = msg
 		except:
+			transaction.data = json.dumps(sanitize_checkout_form(form), indent=4)
+			transaction.status = "Failed"
+			transaction.transaction_error = transaction.transaction_error or "" 
+			transaction.transaction_error += traceback.format_exc() + "\n---\n"
+			transaction.save()
+			
 			result["success"] = False
 			result["msg"] = "Internal Error"
 			result["exception"] = traceback.format_exc()
-
-
+		
+	
 	return result
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
@@ -146,6 +198,7 @@ def register(email, password, password_check, first_name, last_name):
 
 			# move quotation to logged in user
 			quotation.customer = email
+			quotation.customer_name = user.customer_name
 			quotation.save()
 
 			result["success"] = True
@@ -185,7 +238,38 @@ def start_checkout(amount, currency="USD", date=None):
 
 		frappe.local.response["type"] = "redirect"
 		frappe.local.response["location"] = get_url("/gateway?name={0}&source={1}".format(reference_docname, reference_doctype))
-		
+
+def sanitize_checkout_form(form):
+	if "billing" in form:
+		cc = form["billing"]["fields"]["number"]
+		form["billing"]["fields"]["number"][-4:].rjust(len(cc), "X")
+		code = form["billing"]["fields"]["code"] 
+		form["billing"]["fields"]["code"] = "*" * len(code)
+
+def create_transaction(amount, currency, gateway=None, data=None, reference_doc=None):
+	transaction = frappe.get_doc({
+		"doctype": "AWC Transaction",
+		"status": "Initiated",
+		"amount": amount,
+		"currency": currency,
+		"transaction_ref": "-1",
+		"data": json.dumps(data or {}),
+		"gateway_module": gateway or ""
+	});
+
+	if reference_doc:
+		transaction.reference_doctype = reference_doc.doctype
+		transaction.reference_docname = reference_doc.name
+
+	transaction.insert(ignore_permissions=True)
+	frappe.db.commit()
+
+	return transaction
+
+def find_transaction(refence_doc, status="Initiated"):
+	transaction = frappe.get_doc("AWC Transaction", {"reference_doctype": ("=", reference_doc.doctype), "reference_docname": ("=", reference_doc.name), "status": status})
+	
+	return transaction
 
 def validate_transaction_currency(currency):
 	if currency not in ["USD"]:

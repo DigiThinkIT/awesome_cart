@@ -182,6 +182,18 @@ awc.confirm_form = new awc.Form($('#confirm-form'));
 awc.gateway.init($('#gateway-form'));
 awc.shipping_enabled = {{ shipping_enabled }};
 
+// enable address editors
+$('.awc-address.editable').each(function() {
+	var $addr_editor = new awc.AddressEditor($(this));
+	$('.awc-checkout-panel').on('awc-refresh', function() {
+		$addr_editor.update();
+	});
+});
+
+$(function() {
+	$('.awc-checkout-panel').trigger('awc-refresh');
+});
+
 awc.checkout_pages = new awc.PagesPanel(
 	$('#awc-checkout-panel'), 
 	{% if is_logged %}'#checkout-billing'{% else %}'#checkout-login'{% endif %}
@@ -242,8 +254,8 @@ awc.confirm_form.$form.on('submit_action', function(e, fields, done, error) {
 				window.location = '/cart_success';
 			} else {
 				//error(result.msg); Don't show error back in confirm form
-
-				$("#checkout-processing .msg").html("<div>"+result.msg + "</div>"+ result.exception?"<pre>" + result.exception + "</pre>":"");
+				
+				$("#checkout-processing .msg").html("<div>"+result.msg + "</div>" + ('exception' in result?"<pre>" + result.exception + "</pre>":""));
 				$("#checkout-processing .feedback").slideDown('fast');
 				$('#checkout-processing .spinner').slideUp('fast');
 				
@@ -269,6 +281,7 @@ awc.login_form.$form.on('submit_action', function(e, fields, done, error) {
 		callback: function(r) {
 			var result = r.message;
 			if ( result.success ) {
+				$('awc-checkout-panel').trigger('awc-refresh');
 				awc.checkout_pages.show('#checkout-billing');
 				$('.full-name').text(result.user.full_name);
 				frappe.full_name = result.user.full_name;
