@@ -42,4 +42,6 @@ doc_events = {
 	}
 }
 
-
+awc_shipping_api = {
+	"get_rates": "awesome_cart.dummy.get_shipping_rates"
+}

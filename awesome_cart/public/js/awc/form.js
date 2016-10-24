@@ -143,6 +143,10 @@ awc.Form = Class.extend({
 		this.check_required(false, false);
 	},
 
+	on_validate: function(result) {
+		return result; // default implementation just passes through results.
+	}
+
 	// Handler, used to check if required fields are filled to
 	// enable/disable pay button.
 	check_required: function(update_ui, ignore_focused, $update_field) {
@@ -152,9 +156,10 @@ awc.Form = Class.extend({
 		}
 
 		var result = this.get_fields(update_ui, ignore_focused, $update_field);
-		var all_required_filled = result.valid;
+		// Allow extending class to validate further
+		result = this.on_validate(result);
 
-		if ( all_required_filled ) {
+		if ( result.valid ) {
 			this.$form.removeClass('incomplete');
 		} else {
 			this.$form.addClass('incomplete');

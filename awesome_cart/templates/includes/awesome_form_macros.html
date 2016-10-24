@@ -80,7 +80,7 @@
 	<div class="title">{{ title }}</div>
 	{% if address_source %}
 	<div class="editor">
-		 {{ editable_radio_list(field_prefix + "addresses", "address", address_source, "New Address") }}
+		 {{ editable_radio_list(field_prefix + "address", field_prefix + "address", address_source, "New Address") }}
 	</div>
 	{% endif %}
 	<div class="content">

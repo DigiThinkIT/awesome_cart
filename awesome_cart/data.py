@@ -37,7 +37,8 @@ def map_address_widget_to_address_doctype(fields, key_prefix=""):
 		d.copy(key_prefix + 'address_2', 'address_line2')
 		d.copy(key_prefix + 'country', 'country')
 		d.copy(key_prefix + 'city', 'city')
-		d.copy(key_prefix + 'state', 'pincode')
+		d.copy(key_prefix + 'state', 'state')
+		d.copy(key_prefix + 'zip', 'pincode')
 		d.copy(key_prefix + 'phone', 'phone')
 
 	return result

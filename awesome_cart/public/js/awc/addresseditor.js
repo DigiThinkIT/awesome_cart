@@ -9,6 +9,7 @@ awc.AddressEditor = Class.extend({
 		this.prefix = $el.attr('data-field-prefix');
 		this.$reditor = new awc.RadioEditor($el.find('.awc-radio-editor'), $el.find('.extra-actions'), this.formatter.bind(this), "New Address");
 		this.$reditor.$el.on('option-select option-edit option-remove', function(e, value, record, mode) {
+			console.log(this, value, record, mode);
 			if ( value == 'new' ) {
 				scope.update_fields({
 					address_title: '',
