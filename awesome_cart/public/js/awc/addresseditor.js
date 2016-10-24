@@ -11,6 +11,7 @@ awc.AddressEditor = Class.extend({
 		this.$reditor.$el.on('option-select option-edit option-remove', function(e, value, record, mode) {
 			if ( value == 'new' ) {
 				scope.update_fields({
+					address_title: '',
 					company: '',
 					address_line1: '',
 					address_line2: '',
@@ -29,11 +30,7 @@ awc.AddressEditor = Class.extend({
 				} else if ( mode == "edit" ) {
 					scope.lock_fields(false, false);
 				} else if ( mode == "remove" ) {
-					if ( confirm("This will remove this address permanently. Continue?") ) {
-						console.log("DELETE THIS BIATCH");
-					} else {
-						console.log("nvm");
-					}
+					// Record was removed
 				}
 			}
 		});
@@ -41,6 +38,7 @@ awc.AddressEditor = Class.extend({
 		// trigger fetching data after page load
 		$(function() { scope.$reditor.update(); });
 		this.$fields = {
+			address_title: $el.find('[name=' + this.prefix + 'address_title]'),
 			company: $el.find('[name=' + this.prefix + 'company]'),
 			address1: $el.find('[name=' + this.prefix + 'address_1]'),
 			address2: $el.find('[name=' + this.prefix + 'address_2]'),
@@ -50,6 +48,10 @@ awc.AddressEditor = Class.extend({
 			zip: $el.find('[name=' + this.prefix + 'zip]'),
 			phone: $el.find('[name=' + this.prefix + 'phone]')
 		};
+	},
+
+	update: function() {
+		this.$reditor.update();
 	},
 
 	clip_text: function (text, max_length, elipsis) {
@@ -119,6 +121,7 @@ awc.AddressEditor = Class.extend({
 	update_fields: function(r) {
 
 		if ( r ) {
+			this.$fields.address_title.val(r.address_title);
 			this.$fields.company.val(r.company);
 			this.$fields.address1.val(r.address_line1);
 			this.$fields.address2.val(r.address_line2);
@@ -158,6 +161,10 @@ awc.AddressEditor = Class.extend({
 		} else {
 			this.$content.slideDown('fast');
 		}
+	},
+
+	delete_address: function(id) {
+		
 	}
 
 });

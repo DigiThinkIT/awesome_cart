@@ -53,25 +53,6 @@ def update_context(context):
 	#
 	#	log("Context for: \n%s" % json.dumps(context, indent=2, default=json_default))
 
-class DictCopy:
-	def __init__(self, src, dst):
-		self.src = src
-		self.dst = dst
-
-	def __enter__(self):
-		return self
-
-	def __exit__(self, exc_type, exc_value, traceback):
-		self.src = None
-		self.dst = None
-
-	def copy(self, src_key, dst_key=None):
-		if dst_key is None:
-			src_key = dst_key
-
-		if src_key in self.src:
-			self.dst[dst_key] = self.src[src_key]
-
 def get_payment_url(doc, method):
 	if doc.status == 1:
 		start_checkout(doc.grand_total, doc.currency, {

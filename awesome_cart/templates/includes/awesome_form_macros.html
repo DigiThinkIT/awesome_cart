@@ -67,7 +67,7 @@
 </div>
 {%- endmacro %}
 
-{% macro address_form(title, display_name=False, require_name=True, field_prefix="", countries=[], address_source=None, primary_field=None) -%}
+{% macro address_form(title, display_name=False, require_name=True, field_prefix="", countries=[], address_source=None, primary_field=None, display_title=False) -%}
 <div class="awc-address {% if address_source %}editable{% endif %}"
 	{% if field_prefix %}
 	data-field-prefix="{{ field_prefix }}"
@@ -86,6 +86,13 @@
 	<div class="content">
 
 		{{ awinput("hidden", field_prefix + "address_id") }}
+	{% if display_title %}
+		<div class="row nohmargin">
+			<div class="col-sm-12 nohpad">
+				{{ awinput("text", field_prefix + "address_title", "Address Title", cls="required") }}
+			</div>
+		</div>
+	{% endif %}
 
 	{% if display_name %}
 		{% set name_require = "" %}
@@ -102,11 +109,13 @@
 		</div>
 	{% endif %}
 
+		{#
 		<div class="row nohmargin">
 			<div class="col-sm-12 nohpad">
 				{{ awinput("text", field_prefix + "company", "Company (optional)") }}
 			</div>
 		</div>
+		#}
 
 		<div class="row nohmargin">
 			<div class="col-sm-8 nohpad">

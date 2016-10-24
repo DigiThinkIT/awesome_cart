@@ -27,6 +27,35 @@
 
 {% endmacro %}
 
+{% macro embed_shipping(aw_goto, submit_label="Continue", countries=[], shipping_address_source="awesome_cart.datasource.shipping_addresses") -%}
+
+<div id="shipping-form" class="dti-form">
+	<div id="shipping-fields">
+		<div class="content">
+			{{ address_form(
+				"Shipping Info.", 
+				False, 
+				field_prefix="ship_", 
+				countries=countries, 
+				address_source=shipping_address_source,
+				primary_field='is_shipping_address',
+				display_title=True) 
+			}}
+		</div>
+	
+	</div>
+	<div id="shipping-selectors">
+		<div class="title">Delivery Method</div>
+		<div class="content"></div>
+	</div>
+
+	<div id="actions">
+	    <button {% if aw_goto %}data-aw-goto="{{ aw_goto }}"{% endif %} class="btn btn-primary pay-btn">{{ submit_label }}</button>
+	</div>
+</div>
+
+{%- endmacro %}
+
 {% macro embed_gateways(gateway_forms, stored_payments, enable_billing_address, aw_goto, current_date, submit_label="Continue", countries=[], billing_address_source="awesome_cart.datasource.billing_addresses") -%}
 
 <div id="gateway-form">
@@ -98,7 +127,8 @@
 						field_prefix="bill_", 
 						countries=countries, 
 						address_source=billing_address_source,
-						primary_field='is_primary_address') 
+						primary_field='is_primary_address',
+						display_title=True) 
 					}}
 				{% endif %}
 				<div id="actions">

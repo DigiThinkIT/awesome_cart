@@ -1,5 +1,5 @@
 {% extends "templates/web.html" %}
-{% from "awesome_cart/templates/includes/gateway_macros.html" import embed_gateways %}
+{% from "awesome_cart/templates/includes/gateway_macros.html" import embed_gateways, embed_shipping %}
 {% from "awesome_cart/templates/includes/gateway_macros.html" import embed_gateways_scripts %}
 {% from "awesome_cart/templates/includes/gateway_macros.html" import embed_gateways_styles %}
 {% import "awesome_cart/templates/includes/awesome_form_macros.html" as form %}
@@ -130,7 +130,10 @@
 					<p>Enable at least one gateway module to continue</p>
 					{% endif %}
 				</div>
-				<div  id="checkout-shiping" data-next="#checkout-confirmation" class="disabled">
+				<div  id="checkout-shiping" data-next="#checkout-confirmation" class="{% if not shipping_enabled %}disabled{% endif %}">
+					{% if shipping_enabled %}
+					{{ embed_shipping("!next", countries=countries) }}
+					{% endif %}
 				</div>
 				<div  id="checkout-confirmation" data-next="#checkout-processing">
 					<p>Please check review your information before once more before completing checkout</p>
@@ -144,7 +147,7 @@
 					<div class="confirm-box dti-form" id="checkout-confirm-shipping">
 						<h4>Shipping Information</h4>
 						<div class="content"></div>
-						{{ form.awbutton("Edit", 1, data={ "aw-goto": "#checkout-billing" }) }}
+						{{ form.awbutton("Edit", 1, data={ "aw-goto": "#checkout-shipping" }) }}
 					</div>
 					{% endif %}
 
@@ -180,18 +183,30 @@ awc.confirm_billing_form = new awc.Form($('#checkout-confirm-billing'));
 awc.confirm_shipping_form = new awc.Form($('#checkout-confirm-shipping'));
 awc.confirm_form = new awc.Form($('#confirm-form'));
 awc.gateway.init($('#gateway-form'));
+awc.shipping.init($('#shipping-form'));
 awc.shipping_enabled = {{ shipping_enabled }};
+awc.billing_addr_editors = [];
+awc.shipping_editor = new awc.AddressEditor($('#shipping-form .content'));
 
 // enable address editors
 $('.awc-address.editable').each(function() {
 	var $addr_editor = new awc.AddressEditor($(this));
-	$('.awc-checkout-panel').on('awc-refresh', function() {
-		$addr_editor.update();
+	var $panel = $('.awc-checkout-panel');
+
+	awc.billing_addr_editors.push($addr_editor);
+});
+
+$('#awc-checkout-panel').on('awc-refresh', function() {
+	$.each(awc.billing_addr_editors, function(i, editor) {
+		//console.log("Refreshing address list", i, editor);
+		editor.update();
 	});
+
+	awc.shipping_editor.update();
 });
 
 $(function() {
-	$('.awc-checkout-panel').trigger('awc-refresh');
+	$('#awc-checkout-panel').trigger('awc-refresh');
 });
 
 awc.checkout_pages = new awc.PagesPanel(
@@ -281,8 +296,8 @@ awc.login_form.$form.on('submit_action', function(e, fields, done, error) {
 		callback: function(r) {
 			var result = r.message;
 			if ( result.success ) {
-				$('awc-checkout-panel').trigger('awc-refresh');
 				awc.checkout_pages.show('#checkout-billing');
+				$('#awc-checkout-panel').trigger('awc-refresh');
 				$('.full-name').text(result.user.full_name);
 				frappe.full_name = result.user.full_name;
 				frappe.user_id = result.user.name;

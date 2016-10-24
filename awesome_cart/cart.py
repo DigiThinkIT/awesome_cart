@@ -10,6 +10,11 @@ from erpnext.accounts.doctype.payment_request import payment_request
 
 from . import dbug
 from . import embed
+from .data import map_address_widget_to_address_doctype, get_doctype_next_series
+
+BILL_ADDRESS_FIELDS = ['bill_address_id', 'bill_address_title', \
+	'bill_address_1', 'bill_address_2', 'bill_country', \
+	'bill_city', 'bill_state', 'bill_zip', 'bill_phone' ]
 
 def is_logged():
 	session_user = frappe.get_user()
@@ -19,6 +24,28 @@ def is_logged():
 		return False
 
 	return True
+
+def _create_customer_address(fields, customer, prefix, address_type='Billing'):
+	dbug.log("address fields passed:")
+	dbug.log(json.dumps(fields, indent=2))
+
+	address = map_address_widget_to_address_doctype(fields, prefix)
+	# set the doctype field so we can insert this record
+	address['doctype'] = "Address"
+
+	# set the customer name and other meta
+	address['address_title'] = get_doctype_next_series('Address', "%s-%s" % (fields[prefix+"address_title"], address_type))
+	address['address_type'] = address_type
+	address['customer'] = customer.name
+	address['customer_name'] = customer.customer_name
+
+	dbug.log("generated address fields:")
+	dbug.log(json.dumps(address, indent=2))
+
+	address_doc = frappe.get_doc(address)
+	address_doc.insert()
+
+	return address_doc
 	
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def login(email, password):
@@ -38,7 +65,7 @@ def login(email, password):
 
 		# move quotation to logged in user
 		quotation.customer = email
-		quotation.customer_name = user.customer_name
+		quotation.customer_name = user.name
 		quotation.save()
 
 		result["success"] = True
@@ -69,78 +96,109 @@ def checkout(form):
 
 	dbug.log(json.dumps(form, indent=2))
 
-
 	billing = form.get("billing", {})
 	session_user = frappe.get_user()
+	customer = None
 	user = frappe.get_doc("User", session_user.name)
 	form["user"] = {
 		"email": user.email
 	}
+	result['form'] = form	# set form back to browser to update any ids as neccessary
+		
+	
+	gateway = None
 
 	try:
 		quotation = cart.get_cart_quotation()
 		quote = quotation["doc"]
 		gateway = embed.get_gateway_module(billing.get("gateway", None))
+		customer = frappe.get_doc("Customer", quote.customer)
 	except:
 		result["success"] = False
 		result["msg"] = "Internal Error"
 		result["exception"] = traceback.format_exc()
 
-	if gateway:
-		
-		transaction = create_transaction(quote.grand_total, quote.currency)
-		transaction.email = user.email
-		
-		stored_payment = None
-		if form.get("stored_payment", False):
-			stored_payment = None # update with new doctype
-		
-		try:
-			success, msg = gateway.process(transaction, form, stored_payment)
-			if success:
-				result["success"] = True
-				# now we'll submit quotation, create sales order,
-				# create payment request and fullfill it
-				so_name = cart.place_order() # submit quotation and create so
-
-				# lets now create a payment request and fullfill it immediately
-				preq = payment_request.make_payment_request(dt="Sales Order", dn=so_name, submiti_doc=1, return_doc=1)
-
-				if preg:
-					gdoc = gateway.get_gateway()
-					adoc = gateway.get_account()
-					gadoc = gateway.get_gateway_account()
-
-					preg.payment_gateway = gdoc.name
-					preg.payment_account = adoc.name
-					preq.payment_gateway_account = gadoc.name
-
-					preq.flags.ignore_validate_update_after_submit = 1
-					preg.save()
-
-					payment_entry = preg.run_method("set_as_paid")
-
-					transaction.data = json.dumps(sanitize_checkout_form(form), indent=4)
-					transaction.reference_doctype = "Payment Request"
-					transaction.reference_docname = preq.name
-					transaction.gateway = gdoc.name
-					transaction.save()
-					
-					frappe.local.response["type"] = "redirect"
-					frappe.local.response["location"] = get_url("/cart_success")
-			else:
-				result["success"] = False
-				result["msg"] = msg
-		except:
-			transaction.data = json.dumps(sanitize_checkout_form(form), indent=4)
-			transaction.status = "Failed"
-			transaction.transaction_error = transaction.transaction_error or "" 
-			transaction.transaction_error += traceback.format_exc() + "\n---\n"
-			transaction.save()
+	frappe.db.sql('start transaction')
+	try:
+		if gateway:
 			
-			result["success"] = False
-			result["msg"] = "Internal Error"
-			result["exception"] = traceback.format_exc()
+			bill_address = None
+			ship_address = None
+			
+			# lets extract billing address if one was entered
+			if not billing['fields'].get('bill_address_id', False):
+				bill_address = { 
+					k: billing['fields'].get(k, None) \
+					for k in BILL_ADDRESS_FIELDS 
+				}
+				dbug.log(json.dumps(bill_address, indent=2))
+				bill_address = _create_customer_address(bill_address, customer, 'bill_')
+				billing['fields']['bill_address_id'] = bill_address.name
+				
+
+			transaction = create_transaction(quote.grand_total, quote.currency)
+			transaction.email = user.email
+			
+			stored_payment = None
+			if form.get("stored_payment", False):
+				stored_payment = None # update with new doctype
+			
+			try:
+				success, msg = gateway.process(transaction, form, stored_payment, bill_address, ship_address)
+				if success:
+					result["success"] = True
+					# now we'll submit quotation, create sales order,
+					# create payment request and fullfill it
+					so_name = cart.place_order() # submit quotation and create so
+
+					# lets now create a payment request and fullfill it immediately
+					preq = payment_request.make_payment_request(dt="Sales Order", dn=so_name, submiti_doc=1, return_doc=1)
+
+					if preg:
+						gdoc = gateway.get_gateway()
+						adoc = gateway.get_account()
+						gadoc = gateway.get_gateway_account()
+
+						preg.payment_gateway = gdoc.name
+						preg.payment_account = adoc.name
+						preq.payment_gateway_account = gadoc.name
+
+						preq.flags.ignore_validate_update_after_submit = 1
+						preg.save()
+
+						payment_entry = preg.run_method("set_as_paid")
+
+						transaction.data = json.dumps(sanitize_checkout_form(form), indent=4)
+						transaction.reference_doctype = "Payment Request"
+						transaction.reference_docname = preq.name
+						transaction.gateway = gdoc.name
+						transaction.save()
+						
+						frappe.local.response["type"] = "redirect"
+						frappe.local.response["location"] = get_url("/cart_success")
+					frappe.db.commit()
+				else:
+					result["success"] = False
+					result["msg"] = msg
+			except:
+				transaction.data = json.dumps(sanitize_checkout_form(form), indent=4)
+				transaction.status = "Failed"
+				transaction.transaction_error = transaction.transaction_error or "" 
+				transaction.transaction_error += traceback.format_exc() + "\n---\n"
+				transaction.save()
+				
+				result["success"] = False
+				result["msg"] = 'Internal Error'
+				result["exception"] = traceback.format_exc()
+				raise
+	except:
+		result["success"] = False
+		if not result.get('msg'):
+			result['msg'] = 'Internal Error'
+		if not result.get('exception'):
+			result['exception'] = traceback.format_exc()
+
+		frappe.db.rollback()
 		
 	
 	return result

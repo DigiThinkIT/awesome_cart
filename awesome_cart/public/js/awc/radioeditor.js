@@ -47,6 +47,23 @@ awc.RadioEditor = Class.extend({
 		
 	},
 
+	remove: function(value) {
+		var scope = this;
+		if ( confirm("Remove this record permanently?") ) {
+			frappe.call({
+				method: this.source,
+				args: { "address_id": value, "action": "remove" },
+				callback: function(r) {
+					var result = r.message;
+					if ( result.success ) {
+						scope.$container.find('label[data-value="' + value + '"]').remove();
+					} else {
+						alert("There was an error removing this record.\n Please contact us and let us know of this issue.");
+					}
+				}});
+		}
+	},
+
 	update: function() {
 		var scope = this;
 		frappe.call({
@@ -59,9 +76,9 @@ awc.RadioEditor = Class.extend({
 					var line = scope.formatter(v);
 					var id = scope.group + "_" + line.value;
 					var $option = $(
-						'<label for="' + id + '">'+
-							'<div class="row" data-value="' + line.value + '">' + 
-								'<div class="col-md-12">' +
+						'<label for="' + id + '" data-value="' + line.value + '">'+
+							'<div class="row nohmargin" data-value="' + line.value + '">' + 
+								'<div class="col-md-12 nohpad">' +
 									'<input type="radio" id="' + id +'" name="'+scope.group+'" value="' + line.value + '" />' +
 									'<div class="label">' + line.label + '</div>'+
 									'<div class="content">' + line.detail + '</div>'+
@@ -74,13 +91,19 @@ awc.RadioEditor = Class.extend({
 						'</label>');
 					scope.$container.append($option);
 					$option.find('input').data('record', v);
+					$option.find('input').data('record_id', line.value);
 					$option.find('.btn-edit').click(function() {
 						var $input = $(this).closest('label').find('input');
 						scope.select_option($input, 'edit');
 					});
 					$option.find('.btn-remove').click(function() {
 						var $input = $(this).closest('label').find('input');
-						scope.select_option($input, 'remove');
+						var record = $input.data('record');
+						var record_id = $input.data('record_id');
+						console.log(record_id);
+						scope.remove(record_id, function() {
+							scope.select_option(record, 'remove');
+						});
 					});
 				});
 

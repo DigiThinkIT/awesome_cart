@@ -56,7 +56,7 @@
     background-image: url(/assets/dti_gateway_manager/images/icon-gateway-swipe.svg) !important;
 }
 
-#billing-fields .extra-actions, #gateway-selectors .extra-actions, #stored-payments .extra-actions , #gateway-fields .extra-actions {
+#shipping-form .extra-actions, #billing-fields .extra-actions, #gateway-selectors .extra-actions, #stored-payments .extra-actions , #gateway-fields .extra-actions {
 	float: right;
 }
 

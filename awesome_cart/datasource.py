@@ -13,7 +13,7 @@ def billing_addresses(start=0, limit=5, action="query", address_id=None):
 	if action == "query":
 		return fetch_addresses(start, limit, "Billing", "is_primary_address DESC")
 	
-	if action == "delete":
+	if action == "remove":
 		return delete_address(address_id)
 
 @frappe.whitelist(xss_safe=True)
@@ -22,7 +22,7 @@ def shipping_addresses(start=0, limit=5, action="query", address_id=None):
 	if action == "query":
 		return fetch_addresses(start, limit, "Shipping", "is_shipping_address DESC")
 
-	if action == "delete":
+	if action == "remove":
 		return delete_address(address_id)
 
 def delete_address(address_id):
@@ -31,6 +31,11 @@ def delete_address(address_id):
 		"success": False,
 		"msg": ""
 	}
+
+	if not address_id:
+		result['success'] = False
+		result['msg'] = 'Missing address_id'
+		return result
 
 	session_user = frappe.get_user()
 	user = frappe.get_doc("User", session_user.name)
@@ -43,7 +48,10 @@ def delete_address(address_id):
 
 	address = frappe.get_doc("Address", address_id)
 
+	# sanity check to make sure we only delete addresses which belong
+	# to the customer in session
 	if address and address.customer == customer.name:
+		frappe.delete_doc("Address", address_id, ignore_permissions=True)
 		result["success"] = True
 	else:
 		result["msg"] = "Address Not Found"
