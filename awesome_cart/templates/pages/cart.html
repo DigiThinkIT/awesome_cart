@@ -122,7 +122,7 @@
 
 					</div>
 				</div>
-				<div  id="checkout-billing" data-next="#checkout-shiping">
+				<div  id="checkout-billing" data-next="#checkout-shipping">
 					{% if gateway_forms|length > 0 %}
 					{{ embed_gateways(gateway_forms, stored_payments, enable_billing_address, "!next", countries=countries) }}
 					{% else %}
@@ -130,7 +130,7 @@
 					<p>Enable at least one gateway module to continue</p>
 					{% endif %}
 				</div>
-				<div  id="checkout-shiping" data-next="#checkout-confirmation" class="{% if not shipping_enabled %}disabled{% endif %}">
+				<div  id="checkout-shipping" data-next="#checkout-confirmation" class="{% if not shipping_enabled %}disabled{% endif %}">
 					{% if shipping_enabled %}
 					{{ embed_shipping("!next", countries=countries) }}
 					{% endif %}
@@ -164,6 +164,10 @@
 					</div>
 					<div class="spinner"></div>
 				</div>
+				<div id="checkout-success">
+					<p>Success!</p>
+					<p>Now redirecting. Please wait...</p>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -196,7 +200,6 @@ $('.awc-address.editable').each(function() {
 
 $('#awc-checkout-panel').on('awc-refresh', function() {
 	$.each(awc.address_widgets, function(i, editor) {
-		//console.log("Refreshing address list", i, editor);
 		editor.update();
 	});
 });
@@ -210,22 +213,52 @@ awc.checkout_pages = new awc.PagesPanel(
 	{% if is_logged %}'#checkout-billing'{% else %}'#checkout-login'{% endif %}
 );
 
+/**
+ * Formats confirmation fields
+ */
+function format_confirm_field(name, meta) {
+	if ( meta.type == 'hidden' ) {
+		return false;
+	}
+
+	var $line = $(
+		'<div class="confirm-line field-'+name+'">'+
+			'<span class="label">'+meta.label+'</span>: <span class="value">'+meta.human_value+'</span>'+
+		'</div>');
+	return $line
+}
+
 awc.checkout_pages.on_show('#checkout-confirmation', function() {
+	// gather billing and shipping fields to display user a confirmation of their
+	// value selections.
+
 	var billing_fields = awc.gateway.get_selected_fields();
-	var $content = $('#checkout-confirm-billing .content').empty();
+	var $bill_content = $('#checkout-confirm-billing .content').empty();
 	$.each(billing_fields.meta, function(name, meta) {
 		if ( meta.has_value ) {
-			var $line = $(
-				'<div class="confirm-line">'+
-					'<span class="label">'+meta.label+'</span>: <span class="value">'+meta.human_value+'</span>'+
-				'</div>');
-			$content.append($line);
+			var $line = format_confirm_field(name, meta);
+			if ( $line ) {
+				$bill_content.append($line);
+			}
 		}
 	});
+
+	var $ship_content = $('#checkout-confirm-shipping .content').empty();
+	if ( awc.shipping_enabled ) {
+		var shipping_fields = awc.shipping.get_selected_fields();
+		console.log(shipping_fields);
+		$.each(shipping_fields.meta, function(name, meta) {
+			if ( meta.has_value ) {
+				var $line = format_confirm_field(name, meta);
+				if ( $line ) {
+					$ship_content.append($line);
+				}
+			}
+		});
+	}
 });
 
 awc.confirm_form.$form.on('submit_action', function(e, fields, done, error) {
-
 	var billing_gateway = awc.gateway.get_selected_form();
 	var billing_fields = awc.gateway.get_selected_fields();
 	var confirm_fields = awc.confirm_form.get_fields();
@@ -243,12 +276,9 @@ awc.confirm_form.$form.on('submit_action', function(e, fields, done, error) {
 	if ( awc.shipping_enabled ) {
 		var shipping_fields = awc.shipping.get_selected_fields();
 		form.shipping = {
-			carrier: '',
 			fields: shipping_fields.fields
 		};
 	}
-
-	console.log('SUBMIT', form);
 
 	awc.checkout_pages.show('#checkout-processing');
 	$('#checkout-processing .msg').empty();
@@ -262,7 +292,7 @@ awc.confirm_form.$form.on('submit_action', function(e, fields, done, error) {
 			var result = r.message;
 			if ( result.success ) {
 				awc.checkout_pages.show('#checkout-success');
-				window.location = '/cart_success';
+				window.location = '/cart_success/' + result.so_name;
 			} else {
 				//error(result.msg); Don't show error back in confirm form
 				
@@ -279,7 +309,6 @@ awc.confirm_form.$form.on('submit_action', function(e, fields, done, error) {
 });
 
 awc.login_form.$form.on('submit_action', function(e, fields, done, error) {
-	console.log(fields, done, error);
 	var email = fields.fields.customer_email;
 	var pass = fields.fields.customer_password;
 

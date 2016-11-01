@@ -12,6 +12,7 @@ awc.AddressEditor = Class.extend({
 			console.log(this, value, record, mode);
 			if ( value == 'new' ) {
 				scope.update_fields({
+					address_id: '',
 					address_title: '',
 					company: '',
 					address_line1: '',
@@ -39,6 +40,7 @@ awc.AddressEditor = Class.extend({
 		// trigger fetching data after page load
 		$(function() { scope.$reditor.update(); });
 		this.$fields = {
+			address_id: $el.find('[name=' + this.prefix + 'address_id]'),
 			address_title: $el.find('[name=' + this.prefix + 'address_title]'),
 			company: $el.find('[name=' + this.prefix + 'company]'),
 			address1: $el.find('[name=' + this.prefix + 'address_1]'),
@@ -122,6 +124,7 @@ awc.AddressEditor = Class.extend({
 	update_fields: function(r) {
 
 		if ( r ) {
+			this.$fields.address_id.val(r.name);
 			this.$fields.address_title.val(r.address_title);
 			this.$fields.company.val(r.company);
 			this.$fields.address1.val(r.address_line1);
@@ -146,6 +149,7 @@ awc.AddressEditor = Class.extend({
 			hide = false;
 		}
 
+		var blured = false;
 		$.each(this.$fields, function(i, $f) {
 			$f.prop('disabled', lock?true:false);
 			if ( lock ) {
@@ -154,9 +158,9 @@ awc.AddressEditor = Class.extend({
 				$f.closest('.field').removeClass('locked');
 			}
 
-			$f.blur();
+			if ( !blured) { $f.blur(); blured = true; }
 		});
-		
+
 		if ( hide ) {
 			this.$content.slideUp('fast');
 		} else {

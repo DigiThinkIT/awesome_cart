@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
 
 import json
+import traceback
 import frappe
 
 from frappe import _
+from frappe.utils import cint
 from erpnext.shopping_cart import cart
 
 from . import dbug
@@ -59,21 +61,33 @@ def delete_address(address_id):
 	return result
 
 def fetch_addresses(start, limit, address_type, order_by):
+	result = {
+		"success": False
+	}
 
-	session_user = frappe.get_user()
-	user = frappe.get_doc("User", session_user.name)
-	
-	if user and user.email[-12:] == "@guest.local":
-		return []
+	try:
+		session_user = frappe.get_user()
+		user = frappe.get_doc("User", session_user.name)
+		
+		if user and user.email[-12:] == "@guest.local":
+			return []
 
-	quotation = cart.get_cart_quotation()["doc"]
-	customer = frappe.get_doc("Customer", quotation.customer)
+		quotation = cart.get_cart_quotation()["doc"]
+		customer = frappe.get_doc("Customer", quotation.customer)
 
-	addresses = frappe.get_list("Address", 
-		fields=["address_title", "address_type", "address_line1", "address_line2", "city", "country", "state", "county", "pincode", "is_primary_address", "is_shipping_address", "name"], 
-		filters={"customer": customer.name, "address_type": address_type},
-		order_by=order_by,
-		limit_start=start,
-		limit=limit)
+		count_query = frappe.db.sql("SELECT COUNT(*) FROM tabAddress where customer='{}' and address_type='{}'".format(customer.name, address_type), as_list=1)[0][0];
 
-	return addresses
+		addresses = frappe.get_list("Address", 
+			fields=["address_title", "address_type", "address_line1", "address_line2", "city", "country", "state", "county", "pincode", "is_primary_address", "is_shipping_address", "name"], 
+			filters={"customer": customer.name, "address_type": address_type},
+			order_by=order_by,
+			limit_start=start,
+			limit=limit)
+
+		result['data'] = addresses
+		result['total'] = cint(count_query)
+	except Exception as ex:
+		result['exception'] = traceback.format_exc()
+		result['success'] = False
+
+	return result

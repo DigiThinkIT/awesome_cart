@@ -7,4 +7,6 @@ import frappe
 from frappe.model.document import Document
 
 class AWCTransaction(Document):
-	pass
+	def log(self, txt, *args):
+		self.data += txt.format(*args) + "\n"
+

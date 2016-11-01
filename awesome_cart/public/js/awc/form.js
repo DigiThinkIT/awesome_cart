@@ -3,6 +3,7 @@ frappe.provide("awc");
 awc.Form = Class.extend({
 	init: function($form) {
 		var scope = this;
+		this._is_locked = false;
 		this.$form = $form;
 
 		this.$form.data("awc_form", this);
@@ -143,9 +144,33 @@ awc.Form = Class.extend({
 		this.check_required(false, false);
 	},
 
+	lock_fields: function(lock) {
+		if ( lock === undefined ) {
+			lock = true;
+		}
+
+		var fields = this.get_fields();
+		this.$form.find('.field .awi').each(function() {
+			var $f = $(this);
+			$f.prop('disabled', lock?true:false);
+			if ( lock ) {
+				$f.closest('.field').addClass('locked');
+			} else {
+				$f.closest('.field').removeClass('locked');
+			}
+		});
+
+		this._is_locked = lock;
+	},
+
 	on_validate: function(result) {
 		return result; // default implementation just passes through results.
-	}
+	},
+
+	validate: function(update_ui, ignore_focused, $update_field) {
+		// alias method for future renaming
+		return this.check_required(update_ui, ignore_focused, $update_field);
+	},
 
 	// Handler, used to check if required fields are filled to
 	// enable/disable pay button.
@@ -197,6 +222,24 @@ awc.Form = Class.extend({
 			if ( $this.is(':checkbox') ) {
 				if ( $this.is(':checked') ) {
 					has_value = true;
+				} else {
+					field_value = null;
+				}
+			} else if ( $this.is(':radio') ) {
+				var radio_group = $this.attr('name');
+				var $group = $this.parent().parent().find('[name="'+radio_group+'"]:checked');
+
+				console.log("Group", $this, $group);
+
+				if ( $group.length > 0 ) {
+					field_value = $group.val();
+					has_value = true;
+
+					if ( $group.attr('data-human-value') ) {
+						field_human_value = $group.attr('data-human-value');
+					} else {
+						field_human_value = field_value;
+					}
 				} else {
 					field_value = null;
 				}

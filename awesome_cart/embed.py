@@ -38,6 +38,22 @@ def get_gateway_plugins():
 
 	return plugins
 
+def api_get_shipping_rates(items, address):
+	hooks = frappe.get_hooks("awc_shipping_api") or {}
+	result = []
+	for fn in hooks.get("get_rates", []):
+		rates = frappe.call(fn, items=items, address=address)
+		if isinstance(rates, list):
+			result += rates
+		elif isinstance(rates, tuple):
+			result += list(rates)
+		else:
+			result += [rates]
+
+	return rates
+
+	
+
 def get_gateway_module(name):
 	gateways = get_gateway_plugins()
 	if name in gateways:
@@ -66,3 +82,27 @@ def process_payment(gateway_name, name, source, info):
 
 def get_stored_payments():
 	return []
+
+@frappe.whitelist(xss_safe=True)
+def get_shipping_rates(address):
+	result = {
+		"success": False,
+		"msg": ""
+	}
+
+	rates = api_get_shipping_rates(items = [], address=address)
+
+	for rate in rates:
+		rate["currency"] = currency_format(rate["fee"])
+
+	if rates:
+		result["rates"] = rates
+		result["success"] = True
+
+	return result
+
+def get_cart_currency():
+	return "USD"
+
+def currency_format(value):
+	return "$%s" % value

@@ -28,6 +28,10 @@ web_include_js = [ "/assets/js/awesome_cart.js" ]
 # page prerender override to generate guest users
 on_render_page = [ "awesome_cart.utils.on_render_page" ]
 
+website_route_rules = [
+	{ "from_route": "/cart_success/<path:so_name>", "to_route": "cart_success" }
+]
+
 # cart context override
 extend_website_page_controller_context = {
 	"erpnext.templates.pages.cart": "awesome_cart.templates.pages.cart"

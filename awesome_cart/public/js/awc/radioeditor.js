@@ -14,7 +14,7 @@ awc.RadioEditor = Class.extend({
 		this.source = $el.attr('data-source');
 		this.group = $el.attr('data-group');
 		this.start = 0;
-		this.limit = 5;
+		this.limit = null;
 
 		var btn_new_id = this.group + "-new-btn";
 		this.$btn_new = $(
@@ -57,6 +57,7 @@ awc.RadioEditor = Class.extend({
 					var result = r.message;
 					if ( result.success ) {
 						scope.$container.find('label[data-value="' + value + '"]').remove();
+						scope.update();
 					} else {
 						alert("There was an error removing this record.\n Please contact us and let us know of this issue.");
 					}
@@ -72,7 +73,7 @@ awc.RadioEditor = Class.extend({
 			callback: function(r) {
 				var result = r.message;
 				scope.$container.empty();
-				$.each(r.message, function(k, v) {
+				$.each(result.data, function(k, v) {
 					var line = scope.formatter(v);
 					var id = scope.group + "_" + line.value;
 					var $option = $(

@@ -5,16 +5,19 @@ import traceback
 import frappe
 
 from frappe.utils.password import check_password
+from frappe.utils import get_url
+
 from erpnext.shopping_cart import cart
 from erpnext.accounts.doctype.payment_request import payment_request
+from erpnext.utilities.doctype.address.address import get_address_display
 
-from . import dbug
 from . import embed
-from .data import map_address_widget_to_address_doctype, get_doctype_next_series
+from .data import map_address_widget_to_address_doctype, get_doctype_next_series, transfer_quotation_to_user, find_user_customer
 
-BILL_ADDRESS_FIELDS = ['bill_address_id', 'bill_address_title', \
-	'bill_address_1', 'bill_address_2', 'bill_country', \
-	'bill_city', 'bill_state', 'bill_zip', 'bill_phone' ]
+
+ADDRESS_FIELDS = ['address_id', 'address_title', \
+	'address_1', 'address_2', 'country', \
+	'city', 'state', 'zip', 'phone' ]
 
 def is_logged():
 	session_user = frappe.get_user()
@@ -26,8 +29,6 @@ def is_logged():
 	return True
 
 def _create_customer_address(fields, customer, prefix, address_type='Billing'):
-	dbug.log("address fields passed:")
-	dbug.log(json.dumps(fields, indent=2))
 
 	address = map_address_widget_to_address_doctype(fields, prefix)
 	# set the doctype field so we can insert this record
@@ -39,11 +40,8 @@ def _create_customer_address(fields, customer, prefix, address_type='Billing'):
 	address['customer'] = customer.name
 	address['customer_name'] = customer.customer_name
 
-	dbug.log("generated address fields:")
-	dbug.log(json.dumps(address, indent=2))
-
 	address_doc = frappe.get_doc(address)
-	address_doc.insert()
+	#address_doc.insert()
 
 	return address_doc
 	
@@ -64,9 +62,10 @@ def login(email, password):
 		user = frappe.get_doc("User", email)
 
 		# move quotation to logged in user
-		quotation.customer = email
-		quotation.customer_name = user.name
-		quotation.save()
+		transfer_quotation_to_user(quotation, user)
+		#quotation.customer = email
+		#quotation.customer_name = user.name
+		#quotation.save()
 
 		result["success"] = True
 		result["msg"] = ""
@@ -94,9 +93,8 @@ def checkout(form):
 		result["msg"] = "Invalid data"
 		return result
 
-	dbug.log(json.dumps(form, indent=2))
-
 	billing = form.get("billing", {})
+	shipping = form.get("shipping", {})
 	session_user = frappe.get_user()
 	customer = None
 	user = frappe.get_doc("User", session_user.name)
@@ -118,24 +116,43 @@ def checkout(form):
 		result["msg"] = "Internal Error"
 		result["exception"] = traceback.format_exc()
 
-	frappe.db.sql('start transaction')
 	try:
 		if gateway:
 			
 			bill_address = None
+			bill_address_insert = False
 			ship_address = None
+			ship_address_insert = False
 			
 			# lets extract billing address if one was entered
 			if not billing['fields'].get('bill_address_id', False):
 				bill_address = { 
 					k: billing['fields'].get(k, None) \
-					for k in BILL_ADDRESS_FIELDS 
+					for k in ["bill_%s" % j for j in ADDRESS_FIELDS]
 				}
-				dbug.log(json.dumps(bill_address, indent=2))
 				bill_address = _create_customer_address(bill_address, customer, 'bill_')
-				billing['fields']['bill_address_id'] = bill_address.name
-				
+				bill_address_insert = True
+			else:
+				bill_address = frappe.get_doc('Address', billing['fields']['bill_address_id'])
 
+			if not shipping['fields'].get('ship_address_id', False):
+				ship_address = {
+					k: shipping['fields'].get(k, None) \
+					for k in ["ship_%s" % j for j in ADDRESS_FIELDS]
+				}
+				ship_address = _create_customer_address(ship_address, customer, 'ship_')
+				ship_address_insert = True
+			else:
+				ship_address = frappe.get_doc('Address', shipping['fields']['ship_address_id'])
+
+			# apply addresses to quotation
+			quote.shipping_address_name = ship_address.name
+			quote.shipping_address = get_address_display(ship_address.as_dict())
+			quote.customer_address = bill_address.name
+			quote.address_display = get_address_display(bill_address.as_dict())
+			quote.save()
+
+			# setup transaction
 			transaction = create_transaction(quote.grand_total, quote.currency)
 			transaction.email = user.email
 			
@@ -150,41 +167,56 @@ def checkout(form):
 					# now we'll submit quotation, create sales order,
 					# create payment request and fullfill it
 					so_name = cart.place_order() # submit quotation and create so
+					result["so_name"] = so_name
 
 					# lets now create a payment request and fullfill it immediately
 					preq = payment_request.make_payment_request(dt="Sales Order", dn=so_name, submiti_doc=1, return_doc=1)
 
-					if preg:
+					if preq:
 						gdoc = gateway.get_gateway()
-						adoc = gateway.get_account()
-						gadoc = gateway.get_gateway_account()
+						adoc = gateway.get_bank_account()
+						gadoc = gateway.get_account()
 
-						preg.payment_gateway = gdoc.name
-						preg.payment_account = adoc.name
+						preq.payment_gateway = gdoc.name
+						preq.payment_account = adoc.name
 						preq.payment_gateway_account = gadoc.name
 
 						preq.flags.ignore_validate_update_after_submit = 1
-						preg.save()
+						preq.save()
 
-						payment_entry = preg.run_method("set_as_paid")
+						payment_entry = preq.run_method("set_as_paid")
 
-						transaction.data = json.dumps(sanitize_checkout_form(form), indent=4)
+						transaction.log(json.dumps(sanitize_checkout_form(form), indent=4))
 						transaction.reference_doctype = "Payment Request"
 						transaction.reference_docname = preq.name
 						transaction.gateway = gdoc.name
 						transaction.save()
+
+						# find invoice
+						inv_item = frappe.get_list("Sales Invoice Item", fields=["parent"], filters={"sales_order": so_name})[0]
+						result["inv_name"] = inv_item.get("parent")
+
+						frappe.session['awc_success_inv_name'] = inv_item.get("parent")
+						frappe.session['awc_success_so_name'] = so_name
+						frappe.session['awc_success_email'] = user.email
+
+					# on success insert new addresses
 						
-						frappe.local.response["type"] = "redirect"
-						frappe.local.response["location"] = get_url("/cart_success")
-					frappe.db.commit()
+					if bill_address_insert:
+						bill_address.insert()
+						billing['fields']['bill_address_id'] = bill_address.name
+
+					if ship_address_insert:
+						ship_address.insert()
+						shipping['fields']['ship_address_id'] = ship_address.name
+						
 				else:
 					result["success"] = False
 					result["msg"] = msg
 			except:
-				transaction.data = json.dumps(sanitize_checkout_form(form), indent=4)
+				transaction.log(json.dumps(sanitize_checkout_form(form), indent=4))
 				transaction.status = "Failed"
-				transaction.transaction_error = transaction.transaction_error or "" 
-				transaction.transaction_error += traceback.format_exc() + "\n---\n"
+				transaction.log(traceback.format_exc() + "\n---\n")
 				transaction.save()
 				
 				result["success"] = False
@@ -195,12 +227,10 @@ def checkout(form):
 		result["success"] = False
 		if not result.get('msg'):
 			result['msg'] = 'Internal Error'
+
 		if not result.get('exception'):
 			result['exception'] = traceback.format_exc()
 
-		frappe.db.rollback()
-		
-	
 	return result
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
@@ -246,18 +276,20 @@ def register(email, password, password_check, first_name, last_name):
 
 				customer = frappe.get_doc("Customer", contact.customer)
 
-				if customer:
+				if customer and customer.name.startswith("Guest"):
 					customer.full_name = "%s %s" % (first_name, last_name)
 
 					customer.flags.ignore_permissions = True
 					customer.save()
 
-					frappe.rename_doc("Customer", customer.name, customer.full_name, ignore_permissions=True)
+					customer_next = get_doctype_next_series("Customer", customer.full_name)
+					frappe.rename_doc("Customer", customer.name, customer_next, ignore_permissions=True)
 
 			# move quotation to logged in user
-			quotation.customer = email
-			quotation.customer_name = user.customer_name
-			quotation.save()
+			transfer_quotation_to_user(quotation, user)
+			#quotation.customer = email
+			#quotation.customer_name = user.customer_name
+			#quotation.save()
 
 			result["success"] = True
 			result["msg"] = ""
@@ -335,15 +367,5 @@ def validate_transaction_currency(currency):
 			_("Please select another payment method. '{0}' is unsupported").format(currency)
 		)	
 	
-
-def transaction_log(gateway_name, data, params=None):
-	frappe.get_doc({
-		"doctype": "DTI Gateway Log",
-		"gateway": gateway_name,
-		"error": frappe.as_json(data),
-		"params": frappe.as_json(params or "")
-	}).insert(ignore_permissions=True)
-
-	return data
 
 
