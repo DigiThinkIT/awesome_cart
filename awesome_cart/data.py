@@ -57,16 +57,21 @@ def get_doctype_next_series(doctype, prefix):
 	count = cint(count) + 1
 	return "{0} - {1}".format(prefix, cstr(count))
 
-def transfer_quotation_to_user(quotation, user):
-	customer = find_user_customer(user)
-	contact = find_user_primary_contact(user)
+def transfer_quotation_to_user(quotation, user, customer = None, contact = None):
+	if not customer:
+		customer = find_user_customer(user)
+
+	if not contact:
+		contact = find_user_primary_contact(user)
 	
 	quotation.customer = customer.name
 	quotation.customer_name = customer.customer_name
 	quotation.contact_person = contact.name
 	quotation.title = "Shopping Cart - %s" % quotation.customer_name
-	quotation.contact_email = contact.email
+	quotation.contact_email = contact.email_id
+	quotation.owner = user.name
 	quotation.contact_display = customer.customer_name
+	quotation.flags.ignore_permissions = True
 	quotation.save()
 
 def find_user_primary_contact(user, or_any_available=True):

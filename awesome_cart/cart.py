@@ -63,9 +63,6 @@ def login(email, password):
 
 		# move quotation to logged in user
 		transfer_quotation_to_user(quotation, user)
-		#quotation.customer = email
-		#quotation.customer_name = user.name
-		#quotation.save()
 
 		result["success"] = True
 		result["msg"] = ""
@@ -131,6 +128,7 @@ def checkout(form):
 					for k in ["bill_%s" % j for j in ADDRESS_FIELDS]
 				}
 				bill_address = _create_customer_address(bill_address, customer, 'bill_')
+				bill_address.flags.ignore_permissions = True
 				bill_address_insert = True
 			else:
 				bill_address = frappe.get_doc('Address', billing['fields']['bill_address_id'])
@@ -141,16 +139,10 @@ def checkout(form):
 					for k in ["ship_%s" % j for j in ADDRESS_FIELDS]
 				}
 				ship_address = _create_customer_address(ship_address, customer, 'ship_')
+				ship_address.flags.ignore_permissions = True
 				ship_address_insert = True
 			else:
 				ship_address = frappe.get_doc('Address', shipping['fields']['ship_address_id'])
-
-			# apply addresses to quotation
-			quote.shipping_address_name = ship_address.name
-			quote.shipping_address = get_address_display(ship_address.as_dict())
-			quote.customer_address = bill_address.name
-			quote.address_display = get_address_display(bill_address.as_dict())
-			quote.save()
 
 			# setup transaction
 			transaction = create_transaction(quote.grand_total, quote.currency)
@@ -164,6 +156,28 @@ def checkout(form):
 				success, msg = gateway.process(transaction, form, stored_payment, bill_address, ship_address)
 				if success:
 					result["success"] = True
+
+					# on success insert new addresses						
+					if bill_address_insert:
+						bill_address.insert()
+						billing['fields']['bill_address_id'] = bill_address.name
+
+					if ship_address_insert:
+						# regenerate title since erpnext uses
+						# title to generate id(name) in case
+						# billing address uses same title
+						ship_address.address_title = get_doctype_next_series('Address', "%s-%s" % (shipping['fields']['ship_address_title'], 'Shipping'))
+						
+						ship_address.insert()
+						shipping['fields']['ship_address_id'] = ship_address.name
+					# apply addresses to quotation
+					quote.shipping_address_name = ship_address.name
+					quote.shipping_address = get_address_display(ship_address.as_dict())
+					quote.customer_address = bill_address.name
+					quote.address_display = get_address_display(bill_address.as_dict())
+					quote.flags.ignore_permissions = True
+					quote.save()
+
 					# now we'll submit quotation, create sales order,
 					# create payment request and fullfill it
 					so_name = cart.place_order() # submit quotation and create so
@@ -182,6 +196,7 @@ def checkout(form):
 						preq.payment_gateway_account = gadoc.name
 
 						preq.flags.ignore_validate_update_after_submit = 1
+						preq.flags.ignore_permissions = True
 						preq.save()
 
 						payment_entry = preq.run_method("set_as_paid")
@@ -200,15 +215,6 @@ def checkout(form):
 						frappe.session['awc_success_so_name'] = so_name
 						frappe.session['awc_success_email'] = user.email
 
-					# on success insert new addresses
-						
-					if bill_address_insert:
-						bill_address.insert()
-						billing['fields']['bill_address_id'] = bill_address.name
-
-					if ship_address_insert:
-						ship_address.insert()
-						shipping['fields']['ship_address_id'] = ship_address.name
 						
 				else:
 					result["success"] = False
@@ -257,10 +263,14 @@ def register(email, password, password_check, first_name, last_name):
 			old_name = user.name
 
 			frappe.rename_doc("User", old_name, email, ignore_permissions=True)
+			user.name = email
+			user.owner = user.name
+			user.save()
 
 			frappe.local.login_manager.login_as(email)
 	                frappe.set_user(email)
 
+			customer = None
 			contact = frappe.get_doc("Contact", {
 				"user": email
 			})
@@ -273,6 +283,7 @@ def register(email, password, password_check, first_name, last_name):
 				contact.save()
 
 				frappe.rename_doc("Contact", contact.name, email, ignore_permissions=True)
+				contact.name = email
 
 				customer = frappe.get_doc("Customer", contact.customer)
 
@@ -284,12 +295,10 @@ def register(email, password, password_check, first_name, last_name):
 
 					customer_next = get_doctype_next_series("Customer", customer.full_name)
 					frappe.rename_doc("Customer", customer.name, customer_next, ignore_permissions=True)
+					customer.name = customer_next
 
 			# move quotation to logged in user
-			transfer_quotation_to_user(quotation, user)
-			#quotation.customer = email
-			#quotation.customer_name = user.customer_name
-			#quotation.save()
+			transfer_quotation_to_user(quotation, user, customer=customer, contact=contact)
 
 			result["success"] = True
 			result["msg"] = ""

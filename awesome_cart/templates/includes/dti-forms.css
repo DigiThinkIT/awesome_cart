@@ -150,4 +150,6 @@
 	background: #d2e7f5;
 }
 
-
+.awc-checkout-panel .panel {
+	display: none;
+}

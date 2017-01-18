@@ -34,9 +34,8 @@ def get_context(context):
 	else:
 		default_country = None
 
-
 	context.gateway_forms = gateway_plugins
-	context.stored_payments = embed.get_stored_payments()
+	context.has_stored_payments = embed.has_stored_payments()
 	context.iname = name
 	context.isource = source
 	context.current_date = dict(year=date.today().year, month=date.today().month, day=date.today().day)

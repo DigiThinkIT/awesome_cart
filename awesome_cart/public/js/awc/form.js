@@ -229,8 +229,6 @@ awc.Form = Class.extend({
 				var radio_group = $this.attr('name');
 				var $group = $this.parent().parent().find('[name="'+radio_group+'"]:checked');
 
-				console.log("Group", $this, $group);
-
 				if ( $group.length > 0 ) {
 					field_value = $group.val();
 					has_value = true;

@@ -111,6 +111,7 @@ awc.AddressEditor = Class.extend({
 
 	formatter: function(r) {
 		return {
+			selected: r[this.primary_field],
 			value: r.name,
 			label: this.get_address_label(r, 40, ' ...'),
 			detail: '<address>' +

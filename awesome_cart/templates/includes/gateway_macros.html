@@ -1,4 +1,4 @@
-{% from "templates/includes/awesome_form_macros.html" import address_form %}
+{% from "templates/includes/awesome_form_macros.html" import address_form, editable_radio_list %}
 
 {% macro embed_gateways_styles(gateway_forms) %}
 
@@ -27,7 +27,7 @@
 
 {% endmacro %}
 
-{% macro embed_shipping(aw_goto, submit_label="Continue", countries=[], shipping_address_source="awesome_cart.datasource.shipping_addresses") -%}
+{% macro embed_shipping(aw_goto, submit_label="Continue", countries=[], shipping_address_source="awesome_cart.datasource.addresses") -%}
 
 <div id="shipping-form">
 	<div class="dti-form">
@@ -56,7 +56,7 @@
 
 {%- endmacro %}
 
-{% macro embed_gateways(gateway_forms, stored_payments, enable_billing_address, aw_goto, current_date, submit_label="Continue", countries=[], billing_address_source="awesome_cart.datasource.billing_addresses") -%}
+{% macro embed_gateways(gateway_forms, has_stored_payments, enable_billing_address, aw_goto, current_date, submit_label="Continue", countries=[], billing_address_source="awesome_cart.datasource.addresses") -%}
 
 <div id="gateway-form">
 	<div id="gateway-selectors">
@@ -86,23 +86,12 @@
 	{% endfor %}
 	</div>
 
-	{% if stored_payments|length > 0 %}
+	{% if has_stored_payments %}
 	<div id="stored-payments">
-	<div class="title">Or Select Stored Payment Information</div>
-	{% for payment in stored_payment %}
-		<div id="stored-{{ payment.name }}"
-		 class="selector">
-
-		<div class="stored-payment-line">
-			<input type="radio"
-			   name="gateway"
-			   class="small-title"
-			   value="stored:{{ payment.name }}"
-			   id="selector-{{ payment.name }}">
-			<label for="selector-{{ payment.name }}">{{ payment.label }}</label>
+		<div class="title">Or Select Stored Payment Information</div>
+		<div class="editor">
+			{{ editable_radio_list("stored_payment", "store_payment", "awesome_cart.datasource.stored_payment", None) }}
 		</div>
-		</div>
-	{% endfor %}
 	</div>
 	{% endif %}
 

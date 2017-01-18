@@ -81,7 +81,7 @@
 				</div>
 			</div>
 			<div id="awc-checkout-panel">
-				<div  id="checkout-login">
+				<div  id="checkout-login" class="panel">
 					<div id="login-form" class="dti-form">
 						<h3>Returning Customer</h3>
 						{{ form.awinput("text", "customer_email", "Email Address", cls="required") }}
@@ -97,7 +97,7 @@
 						{% endcall %}
 					</div>
 				</div>
-				<div  id="register">
+				<div  id="register" class="panel">
 					<div id="register-form" class="dti-form">
 						<h3>Create Account</h3>
 						<div class="title">Contact Info</div>
@@ -122,20 +122,20 @@
 
 					</div>
 				</div>
-				<div  id="checkout-billing" data-next="#checkout-shipping">
+				<div  id="checkout-billing" data-next="#checkout-shipping" class="panel">
 					{% if gateway_forms|length > 0 %}
-					{{ embed_gateways(gateway_forms, stored_payments, enable_billing_address, "!next", countries=countries) }}
+					{{ embed_gateways(gateway_forms, has_stored_payments, enable_billing_address, "!next", countries=countries) }}
 					{% else %}
 					<p>No payment/gateway modules available</p>
 					<p>Enable at least one gateway module to continue</p>
 					{% endif %}
 				</div>
-				<div  id="checkout-shipping" data-next="#checkout-confirmation" class="{% if not shipping_enabled %}disabled{% endif %}">
+				<div  id="checkout-shipping" data-next="#checkout-confirmation" class="{% if not shipping_enabled %}disabled{% endif %}" class="panel">
 					{% if shipping_enabled %}
 					{{ embed_shipping("!next", countries=countries) }}
 					{% endif %}
 				</div>
-				<div  id="checkout-confirmation" data-next="#checkout-processing">
+				<div  id="checkout-confirmation" data-next="#checkout-processing" class="panel">
 					<p>Please check review your information before once more before completing checkout</p>
 					<div class="confirm-box dti-form" id="checkout-confirm-billing">
 						<h4>Billing Information</h4>
@@ -156,7 +156,7 @@
 						{{ form.awbutton("Confirm and Pay", 1, "btn-confirm") }}
 					</div>
 				</div>
-				<div id="checkout-processing" class="dti-form">
+				<div id="checkout-processing" class="dti-form" class="panel">
 					<p>Processing, please wait...</p>
 					<div class="feedback">
 						<div class="msg"></div>
@@ -164,7 +164,7 @@
 					</div>
 					<div class="spinner"></div>
 				</div>
-				<div id="checkout-success">
+				<div id="checkout-success" class="panel">
 					<p>Success!</p>
 					<p>Now redirecting. Please wait...</p>
 				</div>
@@ -227,6 +227,18 @@ function format_confirm_field(name, meta) {
 		'</div>');
 	return $line
 }
+
+awc.checkout_pages.on_hide('#checkout-confirmation', function() {
+	// re-enable shopping cart editing if billing information is displayed
+	$('.cart-items .input-group-btn').stop().fadeIn('fast');
+	$('.cart-items input').prop('disabled', false);
+});
+
+awc.checkout_pages.on_show('#checkout-confirmation #checkout-processing #checkout-success', function() {
+	// disable shopping cart editing if billing information is displayed
+	$('.cart-items .input-group-btn').stop().fadeOut('fast');
+	$('.cart-items input').prop('disabled', true);
+});
 
 awc.checkout_pages.on_show('#checkout-confirmation', function() {
 	// gather billing and shipping fields to display user a confirmation of their
@@ -369,6 +381,8 @@ awc.register_form.$form.on('submit_action', function(e, fields, done, error) {
 	});
 
 });
+
+awc.checkout_pages.start();
 
 </script>
 

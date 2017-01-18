@@ -11,19 +11,38 @@ from erpnext.shopping_cart import cart
 from . import dbug
 
 @frappe.whitelist(xss_safe=True)
-def billing_addresses(start=0, limit=5, action="query", address_id=None):
-	if action == "query":
-		return fetch_addresses(start, limit, "Billing", "is_primary_address DESC")
+def stored_payments(start=0, limit=5, action="query", payment_id=None):
 	
+	if action == "query":
+		return fetch_stored_payments(start, limit)
+
 	if action == "remove":
-		return delete_address(address_id)
+		return delete_stored_payment(payment_id)
+
+def fetch_stored_payments(start, limit):
+
+	result = {
+		"success": True,
+		"data": [],
+		"total": 0
+	}
+
+	return result
+
+def delete_stored_payment(payment_id):
+
+	result = {
+		"msg": "Not Implemented",
+		"success": False
+	}
+
+	return result
 
 @frappe.whitelist(xss_safe=True)
-def shipping_addresses(start=0, limit=5, action="query", address_id=None):
-
+def addresses(start=0, limit=5, action="query", address_id=None):
 	if action == "query":
-		return fetch_addresses(start, limit, "Shipping", "is_shipping_address DESC")
-
+		return fetch_addresses(start, limit, "is_primary_address DESC, is_shipping_address DESC, address_type DESC")
+	
 	if action == "remove":
 		return delete_address(address_id)
 
@@ -31,7 +50,7 @@ def delete_address(address_id):
 
 	result = {
 		"success": False,
-		"msg": ""
+		"msg": "",
 	}
 
 	if not address_id:
@@ -60,7 +79,7 @@ def delete_address(address_id):
 
 	return result
 
-def fetch_addresses(start, limit, address_type, order_by):
+def fetch_addresses(start, limit, order_by):
 	result = {
 		"success": False
 	}
@@ -75,14 +94,14 @@ def fetch_addresses(start, limit, address_type, order_by):
 		quotation = cart.get_cart_quotation()["doc"]
 		customer = frappe.get_doc("Customer", quotation.customer)
 
-		count_query = frappe.db.sql("SELECT COUNT(*) FROM tabAddress where customer='{}' and address_type='{}'".format(customer.name, address_type), as_list=1)[0][0];
+		count_query = frappe.db.sql("SELECT COUNT(*) FROM tabAddress where customer='{}'".format(customer.name), as_list=1)[0][0];
 
 		addresses = frappe.get_list("Address", 
 			fields=["address_title", "address_type", "address_line1", "address_line2", "city", "country", "state", "county", "pincode", "is_primary_address", "is_shipping_address", "name"], 
-			filters={"customer": customer.name, "address_type": address_type},
+			filters={"customer": customer.name},
 			order_by=order_by,
 			limit_start=start,
-			limit=limit)
+			limit=limit, ignore_permissions=True)
 
 		result['data'] = addresses
 		result['total'] = cint(count_query)

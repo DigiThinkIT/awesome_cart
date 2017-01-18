@@ -83,6 +83,9 @@ def process_payment(gateway_name, name, source, info):
 def get_stored_payments():
 	return []
 
+def has_stored_payments():
+	return True
+
 @frappe.whitelist(xss_safe=True)
 def get_shipping_rates(address):
 	result = {
