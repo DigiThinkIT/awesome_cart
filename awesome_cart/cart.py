@@ -9,10 +9,14 @@ from frappe.utils import get_url
 
 from erpnext.shopping_cart import cart
 from erpnext.accounts.doctype.payment_request import payment_request
-from erpnext.utilities.doctype.address.address import get_address_display
 
 from . import embed
-from .data import map_address_widget_to_address_doctype, get_doctype_next_series, transfer_quotation_to_user, find_user_customer
+from .data import \
+	get_address_display, \
+	map_address_widget_to_address_doctype, \
+	get_doctype_next_series, \
+	transfer_quotation_to_user, \
+	find_user_customer
 
 
 ADDRESS_FIELDS = ['address_id', 'address_title', \
@@ -22,7 +26,7 @@ ADDRESS_FIELDS = ['address_id', 'address_title', \
 def is_logged():
 	session_user = frappe.get_user()
 	user = frappe.get_doc("User", session_user.name)
-	
+
 	if user and user.email[-12:] == "@guest.local":
 		return False
 
@@ -44,14 +48,14 @@ def _create_customer_address(fields, customer, prefix, address_type='Billing'):
 	#address_doc.insert()
 
 	return address_doc
-	
+
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def login(email, password):
 	result = dict(
 		success=False,
 		msg="Internal Unhandled Error"
 	)
-	
+
 	try:
 
 		quotation = cart.get_cart_quotation()["doc"]
@@ -99,8 +103,8 @@ def checkout(form):
 		"email": user.email
 	}
 	result['form'] = form	# set form back to browser to update any ids as neccessary
-		
-	
+
+
 	gateway = None
 
 	try:
@@ -115,15 +119,15 @@ def checkout(form):
 
 	try:
 		if gateway:
-			
+
 			bill_address = None
 			bill_address_insert = False
 			ship_address = None
 			ship_address_insert = False
-			
+
 			# lets extract billing address if one was entered
 			if not billing['fields'].get('bill_address_id', False):
-				bill_address = { 
+				bill_address = {
 					k: billing['fields'].get(k, None) \
 					for k in ["bill_%s" % j for j in ADDRESS_FIELDS]
 				}
@@ -147,17 +151,17 @@ def checkout(form):
 			# setup transaction
 			transaction = create_transaction(quote.grand_total, quote.currency)
 			transaction.email = user.email
-			
+
 			stored_payment = None
 			if form.get("stored_payment", False):
 				stored_payment = None # update with new doctype
-			
+
 			try:
 				success, msg = gateway.process(transaction, form, stored_payment, bill_address, ship_address)
 				if success:
 					result["success"] = True
 
-					# on success insert new addresses						
+					# on success insert new addresses
 					if bill_address_insert:
 						bill_address.insert()
 						billing['fields']['bill_address_id'] = bill_address.name
@@ -167,7 +171,7 @@ def checkout(form):
 						# title to generate id(name) in case
 						# billing address uses same title
 						ship_address.address_title = get_doctype_next_series('Address', "%s-%s" % (shipping['fields']['ship_address_title'], 'Shipping'))
-						
+
 						ship_address.insert()
 						shipping['fields']['ship_address_id'] = ship_address.name
 					# apply addresses to quotation
@@ -215,7 +219,7 @@ def checkout(form):
 						frappe.session['awc_success_so_name'] = so_name
 						frappe.session['awc_success_email'] = user.email
 
-						
+
 				else:
 					result["success"] = False
 					result["msg"] = msg
@@ -224,7 +228,7 @@ def checkout(form):
 				transaction.status = "Failed"
 				transaction.log(traceback.format_exc() + "\n---\n")
 				transaction.save()
-				
+
 				result["success"] = False
 				result["msg"] = 'Internal Error'
 				result["exception"] = traceback.format_exc()
@@ -248,7 +252,7 @@ def register(email, password, password_check, first_name, last_name):
 
 	guest_user = frappe.get_user()
 	user = frappe.get_doc("User", guest_user.name)
-	
+
 	quotation = cart.get_cart_quotation()["doc"]
 
 	if user:
@@ -317,7 +321,7 @@ def register(email, password, password_check, first_name, last_name):
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def start_checkout(amount, currency="USD", date=None):
 	validate_transaction_currency(currency)
-	
+
 	if not isinstance(data, basestring):
 		date = frappe.as_json(data or "{}")
 
@@ -327,7 +331,7 @@ def start_checkout(amount, currency="USD", date=None):
 		reference_doctype = jdata.get("doctype")
 		reference_docname = jdata.get("docname")
 		reference_doc = frappe.get_doc(reference_doctype, reference_docname)
-		
+
 		if reference_doctype == "Payment Request":
 			if reference_doc.status not in ["Draft", "Initiated"]:
 				frappe.local.response["type"] = "redirect"
@@ -342,7 +346,7 @@ def sanitize_checkout_form(form):
 	if "billing" in form:
 		cc = form["billing"]["fields"]["number"]
 		form["billing"]["fields"]["number"][-4:].rjust(len(cc), "X")
-		code = form["billing"]["fields"]["code"] 
+		code = form["billing"]["fields"]["code"]
 		form["billing"]["fields"]["code"] = "*" * len(code)
 
 def create_transaction(amount, currency, gateway=None, data=None, reference_doc=None):
@@ -367,14 +371,11 @@ def create_transaction(amount, currency, gateway=None, data=None, reference_doc=
 
 def find_transaction(refence_doc, status="Initiated"):
 	transaction = frappe.get_doc("AWC Transaction", {"reference_doctype": ("=", reference_doc.doctype), "reference_docname": ("=", reference_doc.name), "status": status})
-	
+
 	return transaction
 
 def validate_transaction_currency(currency):
 	if currency not in ["USD"]:
 		frappe.throw(
 			_("Please select another payment method. '{0}' is unsupported").format(currency)
-		)	
-	
-
-
+		)

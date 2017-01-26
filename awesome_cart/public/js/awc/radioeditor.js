@@ -2,7 +2,7 @@ frappe.provide("awc");
 
 awc.RadioEditor = Class.extend({
 	init: function($el, $actions, formatter, new_label) {
-		
+
 		if ( $el.length == 0 ) {
 			console.log("Invalid jquery object", $el);
 		}
@@ -37,7 +37,7 @@ awc.RadioEditor = Class.extend({
 	},
 
 	select_option: function($el, mode) {
-		
+
 		$el.prop('checked', 'checked'); // make sure ui reflects change
 		this.get_options_el().not($el).closest('label').removeClass('selected');
 		$el.closest('label').addClass('selected');
@@ -45,7 +45,7 @@ awc.RadioEditor = Class.extend({
 		this.get_options_el().not($el).closest('label').find('.content').slideUp('fast');
 		$el.closest('label').find('.content').slideDown('fast');
 		this.$el.trigger('option-' + mode, [$el.val(), $el.data('record'), mode]);
-		
+
 	},
 
 	remove: function(value) {
@@ -72,9 +72,9 @@ awc.RadioEditor = Class.extend({
 			method: this.source,
 			args: { "start": this.start, "limit": this.limit },
 			callback: function(r) {
-				var result = r.message;
+				var result = awc.response(r);
 				scope.$container.empty();
-				if ( result.data.length == 0 ) {
+				if ( result.data === undefined || result.data.length == 0 ) {
 					scope.$btn_new.fadeOut('fast');
 				} else {
 					scope.$btn_new.fadeIn('fast');
@@ -85,7 +85,7 @@ awc.RadioEditor = Class.extend({
 					var id = scope.group + "_" + line.value;
 					var $option = $(
 						'<label for="' + id + '" data-value="' + line.value + '">'+
-							'<div class="row nohmargin" data-value="' + line.value + '">' + 
+							'<div class="row nohmargin" data-value="' + line.value + '">' +
 								'<div class="col-md-12 nohpad">' +
 									'<input type="radio" id="' + id +'" name="'+scope.group+'" value="' + line.value + '" />' +
 									'<div class="label">' + line.label + '</div>'+

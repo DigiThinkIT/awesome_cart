@@ -1,5 +1,6 @@
 {
 	"js/awesome_cart.js": [
+		"public/js/awc/utils.js",
 		"public/js/shopping_cart.js",
 		"public/js/awc/form.js",
 		"public/js/awc/pagespanel.js",

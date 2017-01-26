@@ -6,6 +6,7 @@ import traceback
 
 from frappe import _
 from frappe.utils import cint, cstr
+from frappe.geo.doctype.address.address import get_address_display
 
 class DictCopy:
 	def __init__(self, src, dst):
@@ -63,7 +64,7 @@ def transfer_quotation_to_user(quotation, user, customer = None, contact = None)
 
 	if not contact:
 		contact = find_user_primary_contact(user)
-	
+
 	quotation.customer = customer.name
 	quotation.customer_name = customer.customer_name
 	quotation.contact_person = contact.name
@@ -81,7 +82,7 @@ def find_user_primary_contact(user, or_any_available=True):
 	if not or_any_available:
 		if not contacts[0].get("is_primary_contact", False):
 			return None
-	
+
 	if contacts:
 		return contacts[0]
 
@@ -106,5 +107,3 @@ def get_addresses(key, value):
 	"""Simple generic search for addresses based on a 'key' field and value"""
 	return frappe.get_all("Address", fields="*", filters={key: value},
 		order_by="is_primary_address desc, modified desc")
-
-

@@ -58,6 +58,10 @@ awc.AddressEditor = Class.extend({
 	},
 
 	clip_text: function (text, max_length, elipsis) {
+		if ( text === undefined ) {
+			text = '';
+		}
+
 		if ( elipsis === undefined ) {
 			elipsis = "";
 		}
@@ -66,7 +70,7 @@ awc.AddressEditor = Class.extend({
 		if ( text.length > max_length ) {
 			text_elipsis = elipsis;
 		}
-		
+
 		// do't cut words, move max length to next blank space
 		if ( text.substring(max_length, 1) != " " ) {
 			max_length += text.substring(max_length).indexOf(" ");
@@ -78,7 +82,7 @@ awc.AddressEditor = Class.extend({
 	},
 
 	get_address_label: function(r, max_length, elipsis) {
-		var primary = (r[this.primary_field]?'<span class="special">(PRIMARY)</span>':'');
+		var primary = (r[this.primary_field]?'<span class="special">(?PRIMARY)</span>':'');
 		if ( primary.length > 0 ) {
 			max_length -= 9;
 		}
@@ -94,7 +98,7 @@ awc.AddressEditor = Class.extend({
 		}
 
 		var label = "";
-		
+
 		if ( max_length > 0 ) {
 			label += (r.address_line1?r.address_line1 + " ":"");
 			label += (r.address_line1?r.address_line2 + " ":"");
@@ -170,7 +174,7 @@ awc.AddressEditor = Class.extend({
 	},
 
 	delete_address: function(id) {
-		
+
 	}
 
 });

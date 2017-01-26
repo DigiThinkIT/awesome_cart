@@ -12,7 +12,7 @@ from . import dbug
 
 @frappe.whitelist(xss_safe=True)
 def stored_payments(start=0, limit=5, action="query", payment_id=None):
-	
+
 	if action == "query":
 		return fetch_stored_payments(start, limit)
 
@@ -42,7 +42,7 @@ def delete_stored_payment(payment_id):
 def addresses(start=0, limit=5, action="query", address_id=None):
 	if action == "query":
 		return fetch_addresses(start, limit, "is_primary_address DESC, is_shipping_address DESC, address_type DESC")
-	
+
 	if action == "remove":
 		return delete_address(address_id)
 
@@ -60,10 +60,10 @@ def delete_address(address_id):
 
 	session_user = frappe.get_user()
 	user = frappe.get_doc("User", session_user.name)
-	
+
 	if user and user.email[-12:] == "@guest.local":
 		return []
-	
+
 	quotation = cart.get_cart_quotation()["doc"]
 	customer = frappe.get_doc("Customer", quotation.customer)
 
@@ -79,6 +79,45 @@ def delete_address(address_id):
 
 	return result
 
+def count_customer_addresses(customer):
+	sql = "SELECT COUNT(*) FROM `tabDynamic Link` WHERE \
+				parenttype='Address' \
+				AND link_doctype='Customer' \
+				AND link_name='{}'".format(customer)
+	return cint(frappe.db.sql(sql, as_list=1)[0][0]);
+
+def get_list_from_dynlinks(parent_dt, fields, link_dt, link_name, \
+	order_by=None, limit=None, limit_start=None):
+	if order_by:
+		order_by = "ORDER BY {}".format(order_by)
+
+	limit_start = 0 if not limit_start else cint(limit_start)
+	limit = cint(limit) if limit else None
+
+
+
+	# this is an a quick join to find all dt linked by a dynamic link
+	sql = "SELECT {fields} FROM `tab{parent_dt}` a, \
+			( \
+				SELECT parent FROM `tabDynamic Link` \
+					WHERE parenttype='{parent_dt}' \
+					AND link_doctype='{link_dt}' \
+					AND link_name='{link_name}' \
+			) l \
+			WHERE a.name = l.parent \
+			{order_by} \
+			{limit}".format(
+				fields = ', '.join(['a.{}'.format(n) for n in fields]),
+				parent_dt=parent_dt,
+				link_dt=link_dt,
+				link_name=link_name,
+				order_by=order_by,
+				limit="LIMIT {}, {}".format(limit_start, limit) if limit else ''
+			)
+
+	return frappe.db.sql(sql, as_dict=1)
+
+
 def fetch_addresses(start, limit, order_by):
 	result = {
 		"success": False
@@ -87,24 +126,40 @@ def fetch_addresses(start, limit, order_by):
 	try:
 		session_user = frappe.get_user()
 		user = frappe.get_doc("User", session_user.name)
-		
+
 		if user and user.email[-12:] == "@guest.local":
 			return []
 
 		quotation = cart.get_cart_quotation()["doc"]
 		customer = frappe.get_doc("Customer", quotation.customer)
 
-		count_query = frappe.db.sql("SELECT COUNT(*) FROM tabAddress where customer='{}'".format(customer.name), as_list=1)[0][0];
+		total_addresses = count_customer_addresses(customer.name)
 
-		addresses = frappe.get_list("Address", 
-			fields=["address_title", "address_type", "address_line1", "address_line2", "city", "country", "state", "county", "pincode", "is_primary_address", "is_shipping_address", "name"], 
-			filters={"customer": customer.name},
+		addresses = get_list_from_dynlinks(
+			"Address",
+			fields=["address_title", "address_type", "address_line1",
+				"address_line2", "city", "country", "state", "county", "pincode",
+				"is_primary_address", "is_shipping_address", "name"],
+			link_dt="Customer",
+			link_name=customer.name,
 			order_by=order_by,
 			limit_start=start,
-			limit=limit, ignore_permissions=True)
+			limit=limit
+		)
+
+		#addresses = frappe.get_list("Address",
+		#	fields=["address_title", "address_type", "address_line1",
+		#		"address_line2", "city", "country", "state", "county", "pincode",
+		#		"is_primary_address", "is_shipping_address", "name"],
+		#	filters={ "customer": customer.name },
+		#	order_by=order_by,
+		#	limit_start=start,
+		#	limit=limit,
+		#	ignore_permissions=True)
 
 		result['data'] = addresses
-		result['total'] = cint(count_query)
+		result['total'] = total_addresses
+		result['success'] = True
 	except Exception as ex:
 		result['exception'] = traceback.format_exc()
 		result['success'] = False
