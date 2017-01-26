@@ -4,8 +4,9 @@ awc.PagesPanel = Class.extend({
 	init: function($panel, default_panel) {
 		var scope = this;
 
+		this._default_panel = default_panel;
 		this._on_show_handlers = {};
-
+		this._on_hide_handlers = {};
 		this.$panel = $panel;
 
 		this.$panel.data("awc_pagespanel", this);
@@ -27,15 +28,35 @@ awc.PagesPanel = Class.extend({
 			}
 		});
 
-		this.show(default_panel);
+	},
+	
+	start: function() {
+		this.show(this._default_panel);
 	},
 
 	on_show: function(page_selector, fn) {
-		if ( !(page_selector in this._on_show_handlers) ) {
-			this._on_show_handlers[page_selector] = [];
-		}
+		var parts = page_selector.split(' ');
 
-		this._on_show_handlers[page_selector].push(fn);
+		$.each(parts, (function(i, page_selector) {
+			if ( !(page_selector in this._on_show_handlers) ) {
+				this._on_show_handlers[page_selector] = [];
+			}
+
+			this._on_show_handlers[page_selector].push(fn);
+		}).bind(this));
+	},
+
+	on_hide: function(page_selector, fn) {
+
+		var parts = page_selector.split(' ');
+
+		$.each(parts, (function(i, page_selector) {
+			if ( !(page_selector in this._on_hide_handlers) ) {
+				this._on_hide_handlers[page_selector] = [];
+			}
+
+			this._on_hide_handlers[page_selector].push(fn);
+		}).bind(this));
 	},
 
 	show: function(selector) {
@@ -46,6 +67,16 @@ awc.PagesPanel = Class.extend({
 			var $active = this.$panel.find('.awc-pagespanel-page.active');
 			if ( $active.length > 0 ) {
 				$(selector).attr('data-back-ref', '#' + $active.attr('id'));
+
+				var active_selector = '#' + $active.attr('id');
+				if ( active_selector in this._on_hide_handlers) {
+					for( var i in this._on_hide_handlers[active_selector]) {
+						var fn = this._on_hide_handlers[active_selector][i];
+						if ( typeof fn == 'function' ) {
+							fn();
+						}
+					}
+				}
 			}
 
 			$active.slideUp('fast').removeClass('active');

@@ -24,6 +24,7 @@ awc.RadioEditor = Class.extend({
 			'</div>');
 
 		this.$actions.append(this.$btn_new);
+		this.$btn_new.hide();
 
 		if ( !this.source ) {
 			console.log("Invalid data source [empty]");
@@ -73,6 +74,12 @@ awc.RadioEditor = Class.extend({
 			callback: function(r) {
 				var result = r.message;
 				scope.$container.empty();
+				if ( result.data.length == 0 ) {
+					scope.$btn_new.fadeOut('fast');
+				} else {
+					scope.$btn_new.fadeIn('fast');
+				}
+				$selected = null;
 				$.each(result.data, function(k, v) {
 					var line = scope.formatter(v);
 					var id = scope.group + "_" + line.value;
@@ -91,6 +98,9 @@ awc.RadioEditor = Class.extend({
 							'</div>' +
 						'</label>');
 					scope.$container.append($option);
+					if ( line.selected ) {
+						$selected = $option;
+					}
 					$option.find('input').data('record', v);
 					$option.find('input').data('record_id', line.value);
 					$option.find('.btn-edit').click(function() {
@@ -101,7 +111,6 @@ awc.RadioEditor = Class.extend({
 						var $input = $(this).closest('label').find('input');
 						var record = $input.data('record');
 						var record_id = $input.data('record_id');
-						console.log(record_id);
 						scope.remove(record_id, function() {
 							scope.select_option(record, 'remove');
 						});
@@ -115,6 +124,11 @@ awc.RadioEditor = Class.extend({
 						scope.select_option($checked, 'select');
 					}
 				});
+
+				if ( $selected ) {
+					scope.select_option($selected.find('input'), 'select');
+
+				}
 			}
 		});
 	}
