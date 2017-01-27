@@ -14,7 +14,7 @@ app_license = "GPL-v3"
 # keep track of country->region field changes
 fixtures = [
 	{
-		"dt": "Custom Field", 
+		"dt": "Custom Field",
 		"filters": [
 			["dt", "=", "Country"],
 			["fieldname", "=", "region"]
@@ -23,7 +23,10 @@ fixtures = [
 ]
 
 #update_website_context = "awesome_cart.utils.update_context"
-web_include_js = [ "/assets/js/awesome_cart.js" ]
+web_include_js = [
+	"https://www.promisejs.org/polyfills/promise-7.0.4.min.js",
+	"/assets/js/awesome_cart.js"
+]
 
 # page prerender override to generate guest users
 on_render_page = [ "awesome_cart.utils.on_render_page" ]
