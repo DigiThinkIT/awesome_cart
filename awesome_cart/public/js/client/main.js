@@ -98,13 +98,27 @@
     init: function() {
       this.super()
       this._products = {
-        "sku001": { name: "Demo Item1", price: 10 }
+        "sku001": {
+          name: "Demo Item1",
+          price: 10
+        }
       }
     },
     getCurrency() { return "USD"; },
     getCurrencySymbol() { return "$"; },
     searchProduct(term) { return null; }
-    fetchProductSKUs() { return null; },
+    fetchProducts(tags) {
+      return new Promise((function(resolve, reject) {
+        var products = [];
+        for(var i in this._products) {
+          var prod = this._products[i];
+          if ( prod.tags.every(function(elem) { return tags.indexOf(elem) >= -1; }) ) {
+              products.push(prod);
+          }
+        }
+        resolve(products);
+      }).bind(this));
+    },
     fetchProductDetail(sku) { return null; },
   });
 
