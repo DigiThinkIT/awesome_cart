@@ -1,0 +1,40 @@
+<div class="cart-embeded container-fluid">
+  {{#if is_empty }}
+    <div class="empty">Cart is Empty</div>
+  {{else}}
+    <div class="row">
+      <div class="col-xs-2"></div>
+      <div class="col-xs-6">Item</div>
+      <div class="col-xs-1">Unit</div>
+      <div class="col-xs-1">Qty</div>
+      <div class="col-xs-1">Total</div>
+      <div class="col-xs-1"></div>
+    </div>
+  {{#each items}}
+    <div class="item row" data-id="{{ this.id }}">
+      <div class="col-xs-2">
+        <img class="product-image" src="{{ this.product.imageUrl }}" alt="{{ this.product.name }}" title="{{ this.product.name }}"/>
+      </div>
+      <div class="col-xs-6 product-title">{{ this.product.name }}<br/><a data-awc-removeFromCart data-id="{{ this.id }}">remove</a></div>
+      <div class="col-xs-1 product-unit"><span class="pull-right">{{ currency this.unit }}</span></div>
+      <div class="col-xs-1 product-qty"><span class="pull-right">{{ this.qty }}</span></div>
+      <div class="col-xs-2 product-total"><span class="pull-right">{{ currency this.total }}</span></div>
+    </div>
+  {{/each}}
+  <div class="row">
+    <div class="col-xs-10">Sub Total:</div>
+    <div class="col-xs-1"><span class="pull-right">{{ currency totals.subtotal }}</span></div>
+    <div class="col-xs-1"></div>
+  </div>
+  <div class="row">
+    <div class="col-xs-10">Estimated Shipping:</div>
+    <div class="col-xs-1"><span class="pull-right">{{ currency totals.shipping }}</span></div>
+    <div class="col-xs-1"></div>
+  </div>
+  <div class="row">
+    <div class="col-xs-10">Total:</div>
+    <div class="col-xs-1"><span class="pull-right">{{ currency totals.grand_total }}</span></div>
+    <div class="col-xs-1"></div>
+  </div>
+  {{/if}}
+</div>

@@ -1,0 +1,22 @@
+{{#each items}}
+<div class="item grid-group-item col-xs-4 col-lg-4">
+  <div class="thumbnail">
+    <a href="{{ this.productUrl }}" class="group list-group-image">
+      <img class="group list-group-image" src="{{ this.imageUrl }}" alt="{{ this.name }}" />
+    </a>
+    <div class="caption">
+      <h4 class="group inner list-group-item-heading">
+        {{ this.name }}</h4>
+      <p class="group inner list-group-item-text">{{ this.description }}</p>
+      <div class="row">
+        <div class="col-xs-12 col-md-6 col-sm-4">
+          <p class="lead">{{ currency this.price .. }}</p>
+        </div>
+        <div class="col-xs-12 col-md-6 col-sm-4">
+          <a data-awc-addtocart data-id="{{ this.sku }}" class="btn btn-success">Add to cart</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{{/each}}

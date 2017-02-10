@@ -32,7 +32,9 @@ web_include_js = [
 on_render_page = [ "awesome_cart.utils.on_render_page" ]
 
 website_route_rules = [
-	{ "from_route": "/cart_success/<path:so_name>", "to_route": "cart_success" }
+	{ "from_route": "/cart_success/<path:so_name>", "to_route": "cart_success" },
+	{ "from_route": "/awc_template/<name>", "to_route": "awc_template" },
+	{ "from_route": "/p/<name>", "to_route": "awc_product" }
 ]
 
 # cart context override

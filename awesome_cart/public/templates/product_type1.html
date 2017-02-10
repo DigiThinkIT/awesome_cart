@@ -1,0 +1,50 @@
+<div>
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="image">
+          <img src="{{ imageUrl }}" alt="{{ name }}"/>
+        </div>
+        <div class="gallery">
+          {{#each detail.gallery }}
+            <img src="{{ this.url }}" alg="{{ this.alt }}" />
+          {{/each}}
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="name">{{ name }} <span class="sku">{{ sku }}</span> </div>
+        <div class="description">
+          {{ description }}
+        </div>
+        <div>
+          <a data-awc-addtocart data-id="{{ this.sku }}" class="btn btn-success">Add to cart</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sections">
+    {{#eachEven detail.sections }}
+      <div class="section"{{#if this.background_image_url }} style="background-image: url('{{ this.background_image_url }}')"{{/if}}>
+        <div class="section-content container">
+          {{#if this.$is_even}}
+            {{#eachEven this.content}}
+            <div class="row">
+                {{#html}}
+                <div class="col-sm-6">{{{ . }}}</div>
+                {{/html}}
+            </div>
+            {{/eachEven}}
+          {{else}}
+            {{#eachEven this.content}}
+            <div class="row">
+              {{#html}}
+              <div class="col-sm-6 col-sm-{{#is_even @index }}push{{else}}pull{{/is_even}}-6">{{{ . }}}</div>
+              {{/html}}
+            </div>
+            {{/eachEven}}
+          {{/if}}
+        </div>
+      </div>
+    {{/eachEven}}
+  </div>
+</div>
