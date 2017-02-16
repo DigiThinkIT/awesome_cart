@@ -10,7 +10,11 @@
 {% block script %}
 <script type="text/javascript">
 
+{% if awc_item %}
 var productTemplate = cart.template('{{ awc_item.product_template }}')
+{% else %}
+var productTemplate = null;
+{% endif %}
 
 function updateProductDetails(sku) {
   if ( !sku ) {

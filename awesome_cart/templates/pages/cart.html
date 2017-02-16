@@ -24,53 +24,9 @@
 
 <div class="row aw-row">
 	<div class="col-sm-7 aw-col-left">
-		<h2>{{ _("My Cart") }}</h2>
-		<div class="cart-content">
-			<div id="cart-container">
-				<div id="cart-error" class="alert alert-danger"
-			    style="display: none;"></div>
-			<div id="cart-items">
-			    <div class="row cart-item-header">
-				<div class="col-sm-8 col-xs-6">
-				    Items
-				</div>
-				<div class="col-sm-2 col-xs-3 text-right">
-				    Qty
-				</div>
-				<div class="col-sm-2 col-xs-3 text-right">
-				    Amount
-				</div>
-			    </div>
-			    {% if doc.items %}
-			    <div class="cart-items">
-			    {% include "templates/includes/cart/cart_items.html" %}
-			    </div>
-			    {% else %}
-			    <p>{{ _("Cart is Empty") }}</p>
-			    {% endif %}
-			</div>
-			{% if doc.items %}
-			<!-- taxes -->
-			<div class="cart-taxes row small">
-			    <div class="col-sm-8"><!-- empty --></div>
-			    <div class="col-sm-4 cart-tax-items">
-				{% include "templates/includes/order/order_taxes.html" %}
-			    </div>
-			</div>
-			<div id="cart-totals">
-			</div>
-<!--
-			<div class="cart-addresses">
-			    {% include "templates/includes/cart/cart_address.html" %}
-			</div>
-			<p class="cart-footer text-right">
-			    <button class="btn btn-primary btn-place-order btn-sm" type="button">
-				{{ _("Place Order") }}</button></p>
- -->
-			{% endif %}
 
-		    </div>
-		</div>
+		<h2>{{ _("My Cart") }}</h2>
+		<div id="cart-full"></div>
 
 	</div>
 	<div class="col-sm-5 aw-col-right">
@@ -180,6 +136,12 @@
 <script>{% include "templates/includes/cart.js" %}</script>
 <script type="text/javascript">
 
+// create a full cart feed from awesom cart js
+cart.newCartFeed('cart-full', {
+  container: '#cart-full',
+  tpl: cart.template('cart-full')
+})
+
 // initialize gateway form ui
 awc.login_form = new awc.Form($('#login-form'));
 awc.register_form = new awc.Form($('#register-form'));
@@ -209,7 +171,7 @@ $(function() {
 });
 
 awc.checkout_pages = new awc.PagesPanel(
-	$('#awc-checkout-panel'), 
+	$('#awc-checkout-panel'),
 	{% if is_logged %}'#checkout-billing'{% else %}'#checkout-login'{% endif %}
 );
 
@@ -307,11 +269,11 @@ awc.confirm_form.$form.on('submit_action', function(e, fields, done, error) {
 				window.location = '/cart_success/' + result.so_name;
 			} else {
 				//error(result.msg); Don't show error back in confirm form
-				
+
 				$("#checkout-processing .msg").html("<div>"+result.msg + "</div>" + ('exception' in result?"<pre>" + result.exception + "</pre>":""));
 				$("#checkout-processing .feedback").slideDown('fast');
 				$('#checkout-processing .spinner').slideUp('fast');
-				
+
 			}
 		}
 	});
@@ -327,7 +289,7 @@ awc.login_form.$form.on('submit_action', function(e, fields, done, error) {
 	frappe.call({
 		method: "awesome_cart.cart.login",
 		args: {
-			"email": email, 
+			"email": email,
 			"password": pass,
 		},
 		callback: function(r) {
@@ -359,8 +321,8 @@ awc.register_form.$form.on('submit_action', function(e, fields, done, error) {
 	frappe.call({
 		method: "awesome_cart.cart.register",
 		args: {
-			"email": email, 
-			"password": pass, 
+			"email": email,
+			"password": pass,
 			"password_check": pass_check,
 			"first_name": first,
 			"last_name": last

@@ -16,6 +16,7 @@ def find_index(arr, fn):
     return -1
 
 def get_template(tpl_name):
+    """Get the template by name"""
     if tpl_name and frappe.db.exists("AWC Template", tpl_name):
        tpl = frappe.get_doc("AWC Template", tpl_name)
        return tpl.get("template_body", "")
@@ -23,13 +24,22 @@ def get_template(tpl_name):
     return ""
 
 def get_awc_item_by_route(route):
+    """Retrieves awc item by its route"""
+    # Get awc item name through a get_list and filter call
+    # then query the actual doctype with name.
+    # NOTE: Is there a less convoluted way of searching doctypes and getting
+    #       it's doctype instance?
     awc_item = frappe.get_list("AWC Item", fields="name", filters = {"product_route": route})
     awc_item = frappe.get_doc("AWC Item", awc_item[0].name)
+
+    # Finally get the item associated with this AWC item
     item = frappe.get_doc("Item", awc_item.product_name)
 
+    # return both as they are usually used together
     return (awc_item, item)
 
 def get_awc_item_custom_data(name):
+    """Returns a dictionary of custom key/values in the awc item"""
     if isinstance(name, str) or isinstance(name, unicode):
         awc_item = frappe.get_doc("AWC Item", name)
     else:
@@ -41,7 +51,46 @@ def get_awc_item_custom_data(name):
 
     return custom_data
 
+def build_awc_options_from_varients(item):
+
+    item = frappe.get_doc("Item", item.name)
+
+    context = _dict()
+    context = item.get_context(context)
+
+    options = {'variants': [], 'hashes': {}}
+    if item.get('has_variants'):
+
+        for att in item.get('attributes'):
+            attribute = frappe.get_doc('Item Attribute', att.get('attribute'))
+
+            values = context.get('attribute_values')[attribute.attribute_name]
+
+            options['variants'].append({
+                'id': attribute.name,
+                'label': attribute.attribute_name,
+                'values': values,
+                'default': context.get('selected_attributes').get(attribute.name)
+            })
+
+        for variant in context.get('variants'):
+            tmp_atts = dict()
+            for att in variant.get('attributes', []):
+                att_name = att.get('attribute')
+                att_value = att.get('attribute_value')
+                tmp_atts[att_name] = att_value
+
+            opt_hash = []
+            for opt_variant in options['variants']:
+                opt_hash.append(tmp_atts.get(opt_variant.get('id')))
+
+
+            options["hashes"][",".join(opt_hash)] = variant.get('name')
+
+    return options
+
 def get_content_sections(awc_item):
+    """Returns and groups content by it's leading section"""
     sections = []
     section = None
     for content in awc_item.get("product_content"):
@@ -77,13 +126,19 @@ def get_content_sections(awc_item):
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def get_product_by_sku(sku, detailed=0):
+    """Get's product in awcjs format by its sku and optionally detailed data."""
+    # fetch item by its sku/item_code
     item = frappe.get_list("Item", fields="*", filters = {"item_code": sku})[0]
+    # get item price list information
     _item = _dict(get_product_info(item.item_code))
+    # get awc item name by its item link
     awc_item = frappe.get_list("AWC Item", fields="*", filters = {"product_name": item.name})[0]
+    # finally get awc_item doctype instance
     awc_item = frappe.get_doc("AWC Item", awc_item.name)
-
+    # get awc_item custom data as dictionary
     custom_data = get_awc_item_custom_data(awc_item)
 
+    # format product for awcjs
     product = dict(
         sku=item.name,
         name=item.name,
@@ -95,9 +150,11 @@ def get_product_by_sku(sku, detailed=0):
         listing_widget=awc_item.listing_widget,
         product_widget=awc_item.product_widget,
         product_template=awc_item.product_template,
+        options=build_awc_options_from_varients(item),
         tags=awc_item._user_tags.split(',') if awc_item._user_tags else []
     )
 
+    # append detailed information only if required
     if detailed:
         product["detail"] = dict(
             description_short=awc_item.description_short,
@@ -109,33 +166,38 @@ def get_product_by_sku(sku, detailed=0):
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", start=0, limit=9):
-    tags = tags.split(',')
+    """Fetches a list of products filtered by tags"""
+    tags = tags.split(',')  # split tag string into list
     payload = {
         "success": False
     }
+    # Convert order_by and order_dir values to acceptable values or defaults
     order_by_clean = dict(weight="order_weight").get(order_by if order_by else "", "order_weight")
     order_dir_clean = dict(asc="asc", desc="desc").get(order_dir if order_dir else "", "asc")
 
+    # builds the WHERE part of the sql query to match tags by AND/OR binary matches
+    # matches are grouped into groups of AND matches with extra groups being OR
+    # example:
+    # ( tagmatch AND tagmatch AND tagmatch ) OR ( tagmatch AND tagmatch AND tagmatch )
     tags_match = []
     tag_group = []
     for tag in tags:
         if tag:
+            # anything prepended with a pipe is an OR match
             if tag[0] == '|':
                 if len(tag_group) > 0:
                     tags_match.append(tag_group)
                     tag_group = []
                 tag_group.append(' a._user_tags REGEXP "(^|,){}(,|$)" '.format(tag[1:]))
-            else:
+            else: # anything else is an AND match
                 tag_group.append(' a._user_tags REGEXP "(^|,){}(,|$)" '.format(tag))
 
+    # add any dangly groups to match list
     if len(tag_group) > 0:
         tags_match.append(tag_group)
 
+    # build actual WHERE query part from groups
     if len(tags_match) > 0:
-        #group_list = []
-        #for group in tag_match:
-        #    group_list.append("({})".format(" AND ".join(group)))
-
         tags_match = " OR ".join( \
             ["({})".format(" AND ".join(group)) \
                 for group in tags_match]
@@ -151,12 +213,13 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
         {};\
         ".format("WHERE %s" % tags_match if tags_match else "")
 
-    print(sql_count)
+    #print(sql_count)
     result_count = cint(frappe.db.sql(sql_count, as_list=1)[0][0])
 
     sql = """SELECT
         i.name,
         i.item_code,
+        i.has_variants,
         a.name as awc_item_name,
         a.product_route as awc_product_route,
         a.description_short as awc_description_short,
@@ -197,6 +260,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
             listing_widget=item.awc_listing_widget,
             product_widget=item.awc_product_widget,
             product_template=item.awc_product_template,
+            options=build_awc_options_from_varients(item),
             tags=item.awc_tags.split(',') if item.awc_tags else []
         )
         products.append(product)
@@ -204,8 +268,6 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
     payload["success"] = True
     payload["total_records"] = result_count
     payload["data"] = products
-
-    print(payload)
 
     return payload
 
