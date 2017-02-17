@@ -66,7 +66,6 @@ def delete_address(address_id):
 
 	quotation = cart.get_cart_quotation()["doc"]
 	customer = frappe.get_doc("Customer", quotation.customer)
-
 	address = frappe.get_doc("Address", address_id)
 
 	# sanity check to make sure we only delete addresses which belong
@@ -93,8 +92,6 @@ def get_list_from_dynlinks(parent_dt, fields, link_dt, link_name, \
 
 	limit_start = 0 if not limit_start else cint(limit_start)
 	limit = cint(limit) if limit else None
-
-
 
 	# this is an a quick join to find all dt linked by a dynamic link
 	sql = "SELECT {fields} FROM `tab{parent_dt}` a, \

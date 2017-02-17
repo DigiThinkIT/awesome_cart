@@ -11,8 +11,8 @@ from erpnext.shopping_cart import cart
 from erpnext.accounts.doctype.payment_request import payment_request
 
 from . import embed
+from compat.erpnext import get_address_display
 from .data import \
-	get_address_display, \
 	map_address_widget_to_address_doctype, \
 	get_doctype_next_series, \
 	transfer_quotation_to_user, \
@@ -25,9 +25,8 @@ ADDRESS_FIELDS = ['address_id', 'address_title', \
 
 def is_logged():
 	session_user = frappe.get_user()
-	user = frappe.get_doc("User", session_user.name)
-
-	if user and user.email[-12:] == "@guest.local":
+	
+	if session_user.name == "Guest":
 		return False
 
 	return True

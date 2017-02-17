@@ -6,7 +6,7 @@ import traceback
 
 from frappe import _
 from frappe.utils import cint, cstr
-from frappe.geo.doctype.address.address import get_address_display
+#from frappe.geo.doctype.address.address import get_address_display
 
 class DictCopy:
 	def __init__(self, src, dst):
