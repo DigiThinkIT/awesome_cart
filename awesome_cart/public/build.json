@@ -1,7 +1,6 @@
 {
 	"js/awesome_cart.js": [
 		"public/js/jquery/jquery.helpers.js",
-		"public/js/client/awc.standalone.js",
 		"public/js/client/awc.erpnext.adapter.js",
 		"public/js/awc/utils.js",
 		"public/js/shopping_cart.js",

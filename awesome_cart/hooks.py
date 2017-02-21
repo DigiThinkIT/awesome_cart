@@ -25,6 +25,7 @@ fixtures = [
 #update_website_context = "awesome_cart.utils.update_context"
 web_include_js = [
 	"https://www.promisejs.org/polyfills/promise-7.0.4.min.js",
+	"/assets/awesome_cart/js/client/awc.standalone.js",
 	"/assets/js/awesome_cart.js"
 ]
 
