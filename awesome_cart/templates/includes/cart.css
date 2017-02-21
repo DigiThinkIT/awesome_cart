@@ -27,3 +27,7 @@
 .focus-column.right-col .checkout-page .actions {
 	text-align: center;
 }
+
+.awc-pagespanel-page {
+	display: none;
+}

@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import os
-import importlib
 
 def avail_versions(current_path=None):
     """Scans directory for version modules and returns a list of versions"""
@@ -21,6 +20,7 @@ def match_version(version, versions):
     return ret_version
 
 def find_compat_module(module):
+    import importlib
     module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), module))
     module_version = importlib.import_module(module).__version__
     module_versions_avail = avail_versions(module_path)
@@ -32,3 +32,15 @@ def find_compat_module(module):
     module_import_name = "v%s_%s_%s" % match
     print("[AWC] Importing Compatibility Module: %s %s" % (module, "v%s.%s.%s" % match))
     return importlib.import_module('.%s.%s' % (module, module_import_name), 'awesome_cart.compat')
+
+class CompatException(Exception):
+    def __init__(self, *args, **kwargs):
+        super(CompatException, self).__init__(*args, **kwargs)
+
+    def toResult(result):
+        result["success"] = False
+        result["msg"] = str(self)
+
+class ArgumentMissingError(CompatException):
+    def __init__(self, argument):
+        super(ArgumentMissing, self).__init__("Argument Missing: {}".format(argument))
