@@ -26,6 +26,7 @@ fixtures = [
 web_include_js = [
 	"https://www.promisejs.org/polyfills/promise-7.0.4.min.js",
 	"/assets/awesome_cart/js/client/awc.standalone.js",
+	"/assets/awesome_cart/js/client/awc.erpnext.adapter.js",
 	"/assets/js/awesome_cart.js"
 ]
 
