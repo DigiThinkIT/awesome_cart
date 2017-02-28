@@ -304,8 +304,7 @@ def cart(data=None):
         return { "success": True }
 
     elif action == 'removeFromCart':
-        data = int(data)
-        index = find_index(awc.items, lambda item: item.id==data )
+        index = find_index(awc['items'], lambda item: item.get('id')==data.get('id') )
         if index > -1:
             del awc['items'][index]
             frappe.cache().set_value(sid, awc)

@@ -9,6 +9,7 @@ awc.ErpnextAdapter.prototype.formatCurrency = function(currency, decimals) { ret
 
 awc.ErpnextAdapter.prototype.init = function() {
   var base = this;
+  this.itemCache = {};
   return new awc.Promise(function(resolve, reject) {
     resolve(base.fetchCartSession())
   })
@@ -49,12 +50,31 @@ awc.ErpnextAdapter.prototype.sessionAction = function(action, data) {
 }
 
 awc.ErpnextAdapter.prototype.getProductBySKU = function(sku, detailed) {
-  return new awc.Promise(function(resolve, reject) {
+  var base = this;
+  if ( base.itemCache[sku] !== undefined ) {
+    // return promise if curretly fetching
+    if ( base.itemCache[sku].constructor == awc.Promise ) {
+      return base.itemCache[sku];
+    } else if (base.itemCache[sku].detailed == detailed) {
+      // else return promise with cache data
+      return new awc.Promise(function(resolve) {
+        resolve(base.itemCache[sku]);
+      })
+    }
+  }
+
+  // otherwise, fetch item from backend
+  return base.itemCache[sku] = new awc.Promise(function(resolve, reject) {
     frappe.call({
       method: "awesome_cart.awc.get_product_by_sku",
       args: { sku: sku, detailed: detailed?1:0 },
       callback: function(result) {
         if ( result.message.success ) {
+          // only cache detailed items
+          if ( detailed ) {
+            base.itemCache[sku] = { data: message.data, detailed: detailed };
+          }
+
           resolve(result.message.data)
         } else {
           reject(result.message)
@@ -62,6 +82,7 @@ awc.ErpnextAdapter.prototype.getProductBySKU = function(sku, detailed) {
       }
     })
   })
+
 }
 
 awc.ErpnextAdapter.prototype.fetchProducts = function(tags, terms, start, limit) {
@@ -85,5 +106,7 @@ awc.ErpnextAdapter.prototype.fetchProducts = function(tags, terms, start, limit)
 var cart = new awc.AwesomeCart({
   storeAdapter: new awc.ErpnextAdapter()
 });
+
+awc.debug.level = 5;
 
 $(function() { cart.bootstrap() });
