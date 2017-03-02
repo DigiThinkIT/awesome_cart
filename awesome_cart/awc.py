@@ -29,7 +29,7 @@ def get_awc_item_by_route(route):
     # then query the actual doctype with name.
     # NOTE: Is there a less convoluted way of searching doctypes and getting
     #       it's doctype instance?
-    awc_item = frappe.get_list("AWC Item", fields="name", filters = {"product_route": route})
+    awc_item = frappe.get_list("AWC Item", fields="name", filters = {"product_route": route}, ignore_permissions=1)
     awc_item = frappe.get_doc("AWC Item", awc_item[0].name)
 
     # Finally get the item associated with this AWC item
@@ -128,11 +128,11 @@ def get_content_sections(awc_item):
 def get_product_by_sku(sku, detailed=0):
     """Get's product in awcjs format by its sku and optionally detailed data."""
     # fetch item by its sku/item_code
-    item = frappe.get_list("Item", fields="*", filters = {"item_code": sku})[0]
+    item = frappe.get_list("Item", fields="*", filters = {"item_code": sku}, ignore_permissions=1)[0]
     # get item price list information
     _item = _dict(get_product_info(item.item_code))
     # get awc item name by its item link
-    awc_item = frappe.get_list("AWC Item", fields="*", filters = {"product_name": item.name})[0]
+    awc_item = frappe.get_list("AWC Item", fields="*", filters = {"product_name": item.name}, ignore_permissions=1)[0]
     # finally get awc_item doctype instance
     awc_item = frappe.get_doc("AWC Item", awc_item.name)
     # get awc_item custom data as dictionary
@@ -167,107 +167,114 @@ def get_product_by_sku(sku, detailed=0):
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", start=0, limit=9):
     """Fetches a list of products filtered by tags"""
-    tags = tags.split(',')  # split tag string into list
+
     payload = {
         "success": False
     }
-    # Convert order_by and order_dir values to acceptable values or defaults
-    order_by_clean = dict(weight="order_weight").get(order_by if order_by else "", "order_weight")
-    order_dir_clean = dict(asc="asc", desc="desc").get(order_dir if order_dir else "", "asc")
+    try:
+        tags = tags.split(',')  # split tag string into list
+        # Convert order_by and order_dir values to acceptable values or defaults
+        order_by_clean = dict(weight="order_weight").get(order_by if order_by else "", "order_weight")
+        order_dir_clean = dict(asc="asc", desc="desc").get(order_dir if order_dir else "", "asc")
 
-    # builds the WHERE part of the sql query to match tags by AND/OR binary matches
-    # matches are grouped into groups of AND matches with extra groups being OR
-    # example:
-    # ( tagmatch AND tagmatch AND tagmatch ) OR ( tagmatch AND tagmatch AND tagmatch )
-    tags_match = []
-    tag_group = []
-    for tag in tags:
-        if tag:
-            # anything prepended with a pipe is an OR match
-            if tag[0] == '|':
-                if len(tag_group) > 0:
-                    tags_match.append(tag_group)
-                    tag_group = []
-                tag_group.append(' a._user_tags REGEXP "(^|,){}(,|$)" '.format(tag[1:]))
-            else: # anything else is an AND match
-                tag_group.append(' a._user_tags REGEXP "(^|,){}(,|$)" '.format(tag))
+        # builds the WHERE part of the sql query to match tags by AND/OR binary matches
+        # matches are grouped into groups of AND matches with extra groups being OR
+        # example:
+        # ( tagmatch AND tagmatch AND tagmatch ) OR ( tagmatch AND tagmatch AND tagmatch )
+        tags_match = []
+        tag_group = []
+        for tag in tags:
+            if tag:
+                # anything prepended with a pipe is an OR match
+                if tag[0] == '|':
+                    if len(tag_group) > 0:
+                        tags_match.append(tag_group)
+                        tag_group = []
+                    tag_group.append(' a._user_tags REGEXP "(^|,){}(,|$)" '.format(tag[1:]))
+                else: # anything else is an AND match
+                    tag_group.append(' a._user_tags REGEXP "(^|,){}(,|$)" '.format(tag))
 
-    # add any dangly groups to match list
-    if len(tag_group) > 0:
-        tags_match.append(tag_group)
+        # add any dangly groups to match list
+        if len(tag_group) > 0:
+            tags_match.append(tag_group)
 
-    # build actual WHERE query part from groups
-    if len(tags_match) > 0:
-        tags_match = " OR ".join( \
-            ["({})".format(" AND ".join(group)) \
-                for group in tags_match]
-        )
-        if tags_match:
-            tags_match = "({})".format(tags_match)
+        # build actual WHERE query part from groups
+        if len(tags_match) > 0:
+            tags_match = " OR ".join( \
+                ["({})".format(" AND ".join(group)) \
+                    for group in tags_match]
+            )
+            if tags_match:
+                tags_match = "({})".format(tags_match)
 
-    else:
-        tags_match = ""
+        else:
+            tags_match = ""
 
-    sql_count = "SELECT count(*) \
-        FROM `tabAWC Item` a\
-        {};\
-        ".format("WHERE %s" % tags_match if tags_match else "")
+        sql_count = "SELECT count(*) \
+            FROM `tabAWC Item` a\
+            {};\
+            ".format("WHERE %s" % tags_match if tags_match else "")
 
-    #print(sql_count)
-    result_count = cint(frappe.db.sql(sql_count, as_list=1)[0][0])
+        print(sql_count)
+        result_count = cint(frappe.db.sql(sql_count, as_list=1)[0][0])
+        print(result_count)
 
-    sql = """SELECT
-        i.name,
-        i.item_code,
-        i.has_variants,
-        a.name as awc_item_name,
-        a.product_route as awc_product_route,
-        a.description_short as awc_description_short,
-        a.description_long as awc_description_long,
-        a.listing_widget as awc_listing_widget,
-        a.product_widget as awc_product_widget,
-        a.product_template as awc_product_template,
-        a.product_thumbnail as awc_product_thumbnail,
-        a.slider as awc_slider,
-        a._user_tags as awc_tags
-        FROM `tabAWC Item` a, `tabItem` i
-        WHERE i.name = a.product_name
-        AND a.catalog_visible=1
-        {}
-        ORDER BY {} {}
-        LIMIT {}, {}""".format(
-            "AND %s" % tags_match if tags_match else "",
-            order_by_clean,
-            order_dir_clean,
-            int(start),
-            int(limit))
+        sql = """SELECT
+            i.name,
+            i.item_code,
+            i.has_variants,
+            a.name as awc_item_name,
+            a.product_route as awc_product_route,
+            a.description_short as awc_description_short,
+            a.description_long as awc_description_long,
+            a.listing_widget as awc_listing_widget,
+            a.product_widget as awc_product_widget,
+            a.product_template as awc_product_template,
+            a.product_thumbnail as awc_product_thumbnail,
+            a.slider as awc_slider,
+            a._user_tags as awc_tags
+            FROM `tabAWC Item` a, `tabItem` i
+            WHERE i.name = a.product_name
+            AND a.catalog_visible=1
+            {}
+            ORDER BY {} {}
+            LIMIT {}, {}""".format(
+                "AND %s" % tags_match if tags_match else "",
+                order_by_clean,
+                order_dir_clean,
+                int(start),
+                int(limit))
 
-    #print(sql)
-    result = frappe.db.sql(sql, as_dict=1)
-    #print(result)
+        print(sql)
+        result = frappe.db.sql(sql, as_dict=1)
+        print(result)
 
-    products = []
-    for item in result:
-        _item = _dict(get_product_info(item.item_code))
-        product = dict(
-            sku=item.name,
-            name=item.name,
-            custom=get_awc_item_custom_data(item.awc_item_name),
-            productUrl="/p/%s" % item.awc_product_route,
-            description=item.awc_description_short,
-            imageUrl=item.awc_product_thumbnail,
-            price=_item.price.price_list_rate,
-            listing_widget=item.awc_listing_widget,
-            product_widget=item.awc_product_widget,
-            product_template=item.awc_product_template,
-            options=build_awc_options_from_varients(item),
-            tags=item.awc_tags.split(',') if item.awc_tags else []
-        )
-        products.append(product)
+        products = []
+        for item in result:
+            _item = _dict(get_product_info(item.item_code))
+            product = dict(
+                sku=item.name,
+                name=item.name,
+                custom=get_awc_item_custom_data(item.awc_item_name),
+                productUrl="/p/%s" % item.awc_product_route,
+                description=item.awc_description_short,
+                imageUrl=item.awc_product_thumbnail,
+                price=_item.price.price_list_rate,
+                listing_widget=item.awc_listing_widget,
+                product_widget=item.awc_product_widget,
+                product_template=item.awc_product_template,
+                options=build_awc_options_from_varients(item),
+                tags=item.awc_tags.split(',') if item.awc_tags else []
+            )
+            products.append(product)
 
-    payload["success"] = True
-    payload["total_records"] = result_count
-    payload["data"] = products
+        payload["success"] = True
+        payload["total_records"] = result_count
+        payload["data"] = products
+    except Exception as ex:
+        payload["success"] = False
+        payload["message"] = traceback.format_exc(ex)
+        print(payload["message"])
 
     return payload
 
