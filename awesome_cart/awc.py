@@ -215,9 +215,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
             {};\
             ".format("WHERE %s" % tags_match if tags_match else "")
 
-        print(sql_count)
         result_count = cint(frappe.db.sql(sql_count, as_list=1)[0][0])
-        print(result_count)
 
         sql = """SELECT
             i.name,
@@ -245,9 +243,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
                 int(start),
                 int(limit))
 
-        print(sql)
         result = frappe.db.sql(sql, as_dict=1)
-        print(result)
 
         products = []
         for item in result:

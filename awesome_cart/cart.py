@@ -23,9 +23,9 @@ ADDRESS_FIELDS = ['address_id', 'address_title', \
 	'address_1', 'address_2', 'country', \
 	'city', 'state', 'zip', 'phone' ]
 
-def is_logged():
+def is_logged_in():
 	session_user = frappe.get_user()
-	
+
 	if session_user.name == "Guest":
 		return False
 

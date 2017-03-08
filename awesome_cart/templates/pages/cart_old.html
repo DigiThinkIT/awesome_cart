@@ -1,0 +1,375 @@
+{% extends "templates/web.html" %}
+{% from "awesome_cart/templates/includes/gateway_macros.html" import embed_gateways, embed_shipping %}
+{% from "awesome_cart/templates/includes/gateway_macros.html" import embed_gateways_scripts %}
+{% from "awesome_cart/templates/includes/gateway_macros.html" import embed_gateways_styles %}
+{% import "awesome_cart/templates/includes/awesome_form_macros.html" as form %}
+
+{% block title %} {{ "Shopping Cart" }} {% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block style %}
+<style>
+  {% include "templates/includes/login/login.css" %}
+  {% include "templates/includes/dti-forms.css" %}
+  {% include "templates/includes/cart.css" %}
+  {{ embed_gateways_styles(gateway_forms) }}
+</style>
+{% endblock %}
+
+{% block header_actions %}{% endblock %}
+
+{% block content %}
+
+{% from "templates/includes/macros.html" import item_name_and_description %}
+
+<div class="row aw-row">
+	<div class="col-sm-7 aw-col-left">
+
+		<h2>{{ _("My Cart") }}</h2>
+		<div id="cart-full"></div>
+
+	</div>
+	<div class="col-sm-5 aw-col-right">
+		<div class="col-content focus-column right-col">
+			<div class="checkout-breadcrumb">
+				<div class="page-titles">
+				</div>
+			</div>
+			<div id="awc-checkout-panel">
+{% if not is_logged %}
+
+				<div  id="checkout-login" class="panel">
+
+          <div class="login-content">
+          	<form class="form-signin form-login" role="form">
+
+          		<div class="login_header">Login</div>
+
+          		<input type="text" id="login_email"
+          			class="form-control" placeholder="{{ _('Email address') }}" required autofocus>
+
+          		<input type="password" id="login_password"
+          			class="form-control" placeholder="{{ _('Password') }}" required>
+
+          		<div>
+          			<!-- <p style="float:left" class="text-center small"><input type="checkbox" value="remember-me"> Remember me </p> -->
+          			<p style="float:right" class="text-center small"><a href="#forgot">{{ _("Forgot Password?") }}</a></p>
+          		</div>
+
+          		<button class="btn btn-lg btn-default btn-block btn-login" type="submit">{{ _("Sign in") }}</button>
+          		<div class='social-logins'>
+
+          		{%- if social_login -%}
+          			<h5><span>{{ _("Or login with") }}</span></h5>
+
+
+          			<p class="text-center" style="margin-top: 15px">
+          				{%- if facebook_login is defined %}
+          				<a href="{{ facebook_login }}" class="no-decoration btn-social btn-facebook">
+          					<i class="fa fa-facebook fa-2x"></i></a>
+          				{%- endif -%}
+
+          				{%- if google_login is defined %}
+          				<a href="{{ google_login }}" class="no-decoration btn-social btn-google">
+          					<i class="fa fa-google-plus fa-2x"></i></a>
+          				{%- endif -%}
+
+          				{%- if github_login is defined %}
+          				<a href="{{ github_login }}" class="no-decoration btn-social btn-github">
+          					<i class="fa fa-github fa-2x"></i></a>
+          				{%- endif -%}
+
+          				{%- if frappe_login is defined %}
+          				<a href="{{ frappe_login }}" class="no-decoration">
+          					<img src="/assets/frappe/images/favicon.png"></a>
+          				{%- endif -%}
+          			</p>
+          		{%- endif -%}
+          		{% if ldap_settings.enabled %}
+          			<p>
+          				<button class="btn btn-lg btn-default btn-block btn-login btn-ldpa-login">
+          						{{ _("Login via LDAP") }}</button>
+          			</p>
+          		{% endif %}
+          	</div>
+
+          		<div style="margin-top: 25px">
+          		{%- if not disable_signup -%}
+          			<p class="text-center">
+          				{{ _("Dont have an account? ") }} <a class="btn btn-default" href="#signup" style="margin-top: -2px;">{{ _("Sign up.") }}</a>
+          			</p>
+          		{%- endif -%}
+          		</div>
+          		<div class='padding'></div>
+          	</form>
+
+          	<form class="form-signin form-signup hide" role="form">
+          		<input type="text" id="signup_fullname"
+          			class="form-control" placeholder="{{ _('Full Name') }}" required autofocus>
+          		<input type="email" id="signup_email"
+          			class="form-control" placeholder="{{ _('Email Id') }}" required>
+              <input type="password" id="signup_password"
+                class="form-control" placeholder="{{ _('Password') }}" required>
+              <input type="password" id="signup_password_check"
+          			class="form-control" placeholder="{{ _('Retype Password') }}" required>
+
+          		<br>
+          		<button class="btn btn-lg btn-default btn-block btn-signup" type="submit">{{ _("Sign up") }}</button>
+          		<p class="text-center small">
+          			{{ _("Have an account? ") }} <a href="#login" class="blue">{{ _("Login") }}</a>
+          		</p>
+          	</form>
+
+          	<form class="form-signin form-forgot hide" role="form">
+          		<input type="email" id="forgot_email"
+          			class="form-control" placeholder="{{ _('Email Id') }}" required autofocus>
+          		<br>
+          		<button class="btn btn-lg btn-default btn-block btn-forgot" type="submit">{{ _("Send Password") }}</button>
+          		<p class="text-center small">
+          		<br><a href="#login" class="blue">{{ _("Back to Login") }}</a>
+          	</p>
+          	</form>
+          </div>
+
+
+				</div>
+{% else %}
+        <div id="checkout-panels" style="display: none;">
+  				<div  id="checkout-billing" data-next="#checkout-shipping" class="panel">
+  					{% if gateway_forms|length > 0 %}
+  					{{ embed_gateways(gateway_forms, has_stored_payments, enable_billing_address, "!next", countries=countries) }}
+  					{% else %}
+  					<p>No payment/gateway modules available</p>
+  					<p>Enable at least one gateway module to continue</p>
+  					{% endif %}
+  				</div>
+  				<div  id="checkout-shipping" data-next="#checkout-confirmation" class="{% if not shipping_enabled %}disabled{% endif %}" class="panel">
+  					{% if shipping_enabled %}
+  					{{ embed_shipping("!next", countries=countries) }}
+  					{% endif %}
+  				</div>
+  				<div  id="checkout-confirmation" data-next="#checkout-processing" class="panel">
+  					<p>Please check review your information before once more before completing checkout</p>
+  					<div class="confirm-box dti-form" id="checkout-confirm-billing">
+  						<h4>Billing Information</h4>
+  						<div class="content"></div>
+  						{{ form.awbutton("Edit", 1, data={ "aw-goto": "#checkout-billing" }) }}
+  					</div>
+
+  					{% if shipping_enabled %}
+  					<div class="confirm-box dti-form" id="checkout-confirm-shipping">
+  						<h4>Shipping Information</h4>
+  						<div class="content"></div>
+  						{{ form.awbutton("Edit", 1, data={ "aw-goto": "#checkout-shipping" }) }}
+  					</div>
+  					{% endif %}
+
+  					<div class="dti-form" id="confirm-form">
+  						{{ form.awinput("checkbox", "terms", "I agree with the Terms and Conditions", cls="required label-visible", value="1", reverse_label=1 ) }}
+  						{{ form.awbutton("Confirm and Pay", 1, "btn-confirm") }}
+  					</div>
+  				</div>
+  				<div id="checkout-processing" class="dti-form" class="panel">
+  					<p>Processing, please wait...</p>
+  					<div class="feedback">
+  						<div class="msg"></div>
+  						{{ form.awbutton("Back", 1, data={ "aw-goto": "#checkout-billing" }) }}
+  					</div>
+  					<div class="spinner"></div>
+  				</div>
+  				<div id="checkout-success" class="panel">
+  					<p>Success!</p>
+  					<p>Now redirecting. Please wait...</p>
+  				</div>
+        </div>
+{% endif %}
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- no-sidebar -->
+{% endblock %}
+
+{% block script %}
+<script>{% include "templates/includes/cart.js" %}</script>
+<script type="text/javascript">
+
+// create a full cart feed from awesom cart js
+cart.newCartFeed('cart-full', {
+  container: '#cart-full',
+  tpl: cart.template('cart-full')
+})
+
+frappe.on_login_redirect_handler = function(url) {
+  console.log("Prevent redirect to: ", url);
+  window.location.reload();
+}
+
+function onCartChanges() {
+
+  // make sure panels are visible once cart is processed and has items
+  if ( cart.totaItems > 0 ) {
+    $('#checkout-panels').fadeIn('fast');
+
+  } else {
+    $('#checkout-panels').hide();
+
+  }
+}
+
+cart.on('init', onCartChanges);
+cart.on('update', onCartChanges);
+
+{% if is_logged %}
+
+// initialize gateway form ui
+awc.login_form = new awc.Form($('#login-form'));
+awc.register_form = new awc.Form($('#register-form'));
+awc.confirm_billing_form = new awc.Form($('#checkout-confirm-billing'));
+awc.confirm_shipping_form = new awc.Form($('#checkout-confirm-shipping'));
+awc.confirm_form = new awc.Form($('#confirm-form'));
+awc.gateway.init($('#gateway-form'));
+awc.shipping.init($('#shipping-form'));
+awc.shipping_enabled = {{ shipping_enabled }};
+awc.address_widgets = [];
+awc.is_logged = {% if is_logged %}true{% else %}false{% endif %};
+//awc.shipping_editor = new awc.AddressEditor($('#shipping-form'));
+
+// enable address editors
+$('.awc-address.editable').each(function() {
+	var $addr_editor = new awc.AddressEditor($(this));
+	awc.address_widgets.push($addr_editor);
+});
+
+$('#awc-checkout-panel').on('awc-refresh', function() {
+	$.each(awc.address_widgets, function(i, editor) {
+		editor.update();
+	});
+});
+
+awc.checkout_pages = new awc.PagesPanel(
+	$('#awc-checkout-panel'),
+	{% if is_logged %}'#checkout-billing'{% else %}'#checkout-login'{% endif %}
+);
+
+/**
+ * Formats confirmation fields
+ */
+function format_confirm_field(name, meta) {
+	if ( meta.type == 'hidden' ) {
+		return false;
+	}
+
+	var $line = $(
+		'<div class="confirm-line field-'+name+'">'+
+			'<span class="label">'+meta.label+'</span>: <span class="value">'+meta.human_value+'</span>'+
+		'</div>');
+	return $line
+}
+
+awc.checkout_pages.on_hide('#checkout-confirmation', function() {
+	// re-enable shopping cart editing if billing information is displayed
+	$('.cart-items .input-group-btn').stop().fadeIn('fast');
+	$('.cart-items input').prop('disabled', false);
+});
+
+awc.checkout_pages.on_show('#checkout-confirmation #checkout-processing #checkout-success', function() {
+	// disable shopping cart editing if billing information is displayed
+	$('.cart-items .input-group-btn').stop().fadeOut('fast');
+	$('.cart-items input').prop('disabled', true);
+});
+
+awc.checkout_pages.on_show('#checkout-confirmation', function() {
+	// gather billing and shipping fields to display user a confirmation of their
+	// value selections.
+
+	var billing_fields = awc.gateway.get_selected_fields();
+	var $bill_content = $('#checkout-confirm-billing .content').empty();
+	$.each(billing_fields.meta, function(name, meta) {
+		if ( meta.has_value ) {
+			var $line = format_confirm_field(name, meta);
+			if ( $line ) {
+				$bill_content.append($line);
+			}
+		}
+	});
+
+	var $ship_content = $('#checkout-confirm-shipping .content').empty();
+	if ( awc.shipping_enabled ) {
+		var shipping_fields = awc.shipping.get_selected_fields();
+		console.log(shipping_fields);
+		$.each(shipping_fields.meta, function(name, meta) {
+			if ( meta.has_value ) {
+				var $line = format_confirm_field(name, meta);
+				if ( $line ) {
+					$ship_content.append($line);
+				}
+			}
+		});
+	}
+});
+
+awc.confirm_form.$form.on('submit_action', function(e, fields, done, error) {
+	var billing_gateway = awc.gateway.get_selected_form();
+	var billing_fields = awc.gateway.get_selected_fields();
+	var confirm_fields = awc.confirm_form.get_fields();
+	var form = {
+		billing: {
+			gateway: billing_gateway.value,
+			fields: billing_fields.fields
+		},
+		shipping: null,
+		confim: {
+			fields: confirm_fields.fields
+		}
+	}
+
+	if ( awc.shipping_enabled ) {
+		var shipping_fields = awc.shipping.get_selected_fields();
+		form.shipping = {
+			fields: shipping_fields.fields
+		};
+	}
+
+	awc.checkout_pages.show('#checkout-processing');
+	$('#checkout-processing .msg').empty();
+	$('#checkout-processing .feedback').hide();
+	$('#checkout-processing .spinner').show();
+
+	frappe.call({
+		method: "awesome_cart.cart.checkout",
+		args: { form: form },
+		callback: function(r) {
+			var result = r.message;
+			if ( result.success ) {
+				awc.checkout_pages.show('#checkout-success');
+				window.location = '/cart_success/' + result.so_name;
+			} else {
+				//error(result.msg); Don't show error back in confirm form
+
+				$("#checkout-processing .msg").html("<div>"+result.msg + "</div>" + ('exception' in result?"<pre>" + result.exception + "</pre>":""));
+				$("#checkout-processing .feedback").slideDown('fast');
+				$('#checkout-processing .spinner').slideUp('fast');
+
+			}
+		}
+	});
+
+	done(); // spinner will appear on processing page
+
+});
+
+$(function() {
+	$('#awc-checkout-panel').trigger('awc-refresh');
+});
+awc.checkout_pages.start();
+{% endif %}
+
+</script>
+<script>{% include "templates/includes/login/login.js" %}</script>
+
+{{ embed_gateways_scripts(gateway_forms) }}
+
+{% endblock %}

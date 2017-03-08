@@ -24,10 +24,11 @@ fixtures = [
 
 #update_website_context = "awesome_cart.utils.update_context"
 web_include_js = [
+	# polyfills for browser compatibility
 	"https://www.promisejs.org/polyfills/promise-7.0.4.min.js",
+	"/assets/awesome_cart/js/jquery/jquery.helpers.js",
 	"/assets/awesome_cart/js/client/awc.standalone.js",
-	"/assets/awesome_cart/js/client/awc.erpnext.adapter.js",
-	"/assets/js/awesome_cart.js"
+	"/assets/awesome_cart/js/client/awc.erpnext.adapter.js"
 ]
 
 # page prerender override to generate guest users
@@ -42,15 +43,6 @@ website_route_rules = [
 # cart context override
 extend_website_page_controller_context = {
 	"erpnext.templates.pages.cart": "awesome_cart.templates.pages.cart"
-}
-
-doc_events = {
-	"Payment Request": {
-		"get_payment_url": "awesome_cart.utils.get_payment_url"
-	},
-	"Shopping Cart Settings": {
-		"validate": "awesome_cart.utils.validate_price_list_currency"
-	}
 }
 
 awc_shipping_api = {

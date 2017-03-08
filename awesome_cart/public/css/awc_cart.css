@@ -1,0 +1,11 @@
+#checkout-panels {
+  display: none;
+}
+
+#checkout-panels .panel {
+  display: block;
+}
+
+#checkout-panels > .panel ~ .panel{
+  display: none;
+}

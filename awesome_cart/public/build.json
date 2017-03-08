@@ -1,13 +1,9 @@
 {
-	"js/awesome_cart.js": [
+	"js/awc_cart.js": [
 		"public/js/jquery/jquery.helpers.js",
-		"public/js/awc/utils.js",
-		"public/js/shopping_cart.js",
-		"public/js/awc/form.js",
-		"public/js/awc/pagespanel.js",
-		"public/js/awc/radioeditor.js",
-		"public/js/awc/addresseditor.js",
-		"public/js/awc/gateway/form.js",
-		"public/js/awc/shipping/form.js"
+		"public/js/awc_cart.js"
+	],
+	"css/awc_cart.css": [
+		"public/css/awc_cart.css"
 	]
 }
