@@ -8,6 +8,8 @@ from frappe.utils import cint, cstr
 from erpnext.stock.get_item_details import apply_price_list_on_item
 from erpnext.shopping_cart.product import get_product_info
 
+from compat.customer import get_current_customer
+
 def find_index(arr, fn):
     for i, item in enumerate(arr):
         if fn(item):
@@ -318,3 +320,33 @@ def cart(data=None):
 
     else:
         return { "success": False, "message": "Unknown Command." }
+
+@frappe.whitelist
+def create_transaction():
+    result = {
+        "success": False,
+        "error": "Unknown Internal Error"
+    }
+    customer = get_current_customer()
+
+    transaction = frappe.get_doc({
+        "doctype": "AWC Transaction",
+        "title": "Web Order",
+        "description", "Online Web Order",
+        "status": "Initiated",
+        "payer_name": customer.full_name
+    })
+
+    transaction.flags.ignore_permissions = 1
+    transaction.save()
+
+    frappe.db.commit()
+
+    result["data"] = { key: transaction.get(key) for key in \
+                    ('amount', 'currency', 'order_id', 'title', \
+                     'description', 'payer_email', 'payer_name')}
+
+    result["reference_doctype"] = "AWC Transaction"
+    result["reference_docname"] = transaction.name
+
+    return result

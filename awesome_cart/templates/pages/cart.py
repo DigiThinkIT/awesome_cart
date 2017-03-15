@@ -2,9 +2,6 @@
 # License: GNU General Public License v3. See license.txt
 from __future__ import unicode_literals
 
-no_cache = 1
-no_sitemap = 1
-
 import frappe
 import json
 from frappe import _
@@ -14,6 +11,9 @@ from awesome_cart import cart
 from awesome_cart.compat.frappe import login_context
 
 from widgets_collection import login
+
+no_cache = 1
+no_sitemap = 1
 
 def get_context(context):
     """This is a controller extension for erpnext.templates.pages.cart"""
@@ -28,5 +28,10 @@ def get_context(context):
     # flag to display login form
     context.is_logged = cart.is_logged_in()
     login.apply_context(context)
+
+    # load gateway provider into context
+    gateway_provider = frappe.get_hooks('awc_gateway_form_provider')
+    if gateway_provider and len(gateway_provider) > 0:
+        context['gateway_provider'] = frappe.call(gateway_provider[0])
 
     return context

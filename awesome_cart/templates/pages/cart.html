@@ -5,13 +5,18 @@
 {% block header %}{% endblock %}
 
 {% block style %}
-<link href="/assets/css/awc_cart.css" type="text/css" rel="stylesheet"/>
-{# Only load login widget if not logged in #}
-{% if not is_logged %}
-<style>
-  {% include "templates/widgets/login/css/widget.css" %}
-</style>
-{% endif %}
+  <link href="/assets/css/awc_cart.css" type="text/css" rel="stylesheet"/>
+  {# Only load login widget if not logged in #}
+  {% if not is_logged %}
+    <style>
+      {% include "templates/widgets/login/css/widget.css" %}
+    </style>
+  {% endif %}
+  {%- if gateway_provider %}
+    {%- for style in gateway_provider.styles %}
+      <link type="text/css" rel="stylesheet" href="{{ style }}"/>
+    {% endfor -%}
+  {% endif -%}
 
 {% endblock %}
 
@@ -20,21 +25,21 @@
 {% block content %}
 
 <div class="row aw-row">
-	<div class="col-sm-7 aw-col-left">
+  <div class="col-sm-7 aw-col-left">
 
-		<h2>{{ _("My Cart") }}</h2>
-		<div id="cart-full"></div>
+    <h2>{{ _("My Cart") }}</h2>
+    <div id="cart-full"></div>
 
-	</div>
-	<div class="col-sm-5 aw-col-right">
-		<div class="col-content focus-column right-col">
-			<div id="awc-forms">
+  </div>
+  <div class="col-sm-5 aw-col-right">
+    <div class="col-content focus-column right-col">
+      <div id="awc-forms">
 
 {# Only load login widget if not logged in #}
 {% if not is_logged %}
-				<div  id="checkout-login">
+        <div  id="checkout-login">
           {% include "templates/widgets/login/widget.html" with context %}
-				</div>
+        </div>
 {% else %}
         <div id="checkout-panels">
           <h2 class="text-center">Checkout</h2>
@@ -48,50 +53,59 @@
             [[TODO: Embed Shipping Modules]]
 
             <button class="btn btn-default btn-primary btn-next">Next</button>
-  				</div>
-          <div id="checkout-billing" data-bc="#bc-shipping" class="panel">
+          </div>
+          <div id="checkout-billing" data-bc="#bc-billing" class="panel">
 
-            [[TODO: Embed Gateway Modules]]
+              {# embeds gateway provider form #}
+              {% if gateway_provider %}
+                {{ gateway_provider.form }}
+              {% else %}
+                <div class="alert">No Gateway Provider Found!</div>
+              {% endif %}
 
             <button class="btn btn-default btn-primary btn-next">Next</button>
-  				</div>
-  				<div id="checkout-confirmation" data-bc="#bc-checkout" class="panel">
-  					<p>Please check review your information before once more before completing checkout</p>
+          </div>
+          <div id="checkout-confirmation" data-bc="#bc-checkout" class="panel">
+            <p>Please check review your information before once more before completing checkout</p>
 
-  					<div class="confirm-box dti-form" id="checkout-confirm-shipping">
-  						<h4>Shipping Information</h4>
-  						<div class="content"></div>
+            <div class="confirm-box dti-form" id="checkout-confirm-shipping">
+              <h4>Shipping Information</h4>
+              <div class="content"></div>
               <button class="btn btn-default btn-primary">Edit Shipping</button>
-  					</div>
+            </div>
 
-  					<div class="confirm-box dti-form" id="checkout-confirm-billing">
-  						<h4>Billing Information</h4>
-  						<div class="content"></div>
+            <div class="confirm-box dti-form" id="checkout-confirm-billing">
+              <h4>Billing Information</h4>
+              <div class="content"></div>
               <button class="btn btn-default btn-primary">Edit Billing</button>
-  					</div>
+            </div>
 
-  					<div class="dti-form" id="confirm-form">
-  						<label><input type="checkbox" value="1"/><span>I agree with the Terms and Conditions</span></label>
-              <button class="btn btn-default btn-primary">Continue And Pay</button>
-  					</div>
-  				</div>
-  				<div id="checkout-processing" class="panel">
-  					<p>Processing, please wait...</p>
-  					<div class="feedback">
-  						<div class="msg"></div>
+            <div class="dti-form" id="confirm-form">
+              <label><input type="checkbox" value="1"/><span>I agree with the Terms and Conditions</span></label>
+              {% if gateway_provider %}
+                {{ gateway_provider.submit }}
+              {% else %}
+                <div class="alert">No Gateway Provider Found!</div>
+              {% endif %}
+            </div>
+          </div>
+          <div id="checkout-processing" class="panel">
+            <p>Processing, please wait...</p>
+            <div class="feedback">
+              <div class="msg"></div>
               <button class="btn btn-default btn-primary">Back</button>
-  					</div>
-  					<div class="spinner"></div>
-  				</div>
-  				<div id="checkout-success" class="panel">
-  					<p>Success!</p>
-  					<p>Now redirecting. Please wait...</p>
-  				</div>
+            </div>
+            <div class="spinner"></div>
+          </div>
+          <div id="checkout-success" class="panel">
+            <p>Success!</p>
+            <p>Now redirecting. Please wait...</p>
+          </div>
         </div>
 {% endif %}
-			</div>
-		</div>
-	</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- no-sidebar -->
@@ -99,6 +113,21 @@
 
 {% block script %}
 <script type="text/javascript" src="/assets/js/awc_cart.js"></script>
+
+{% if gateway_provider %}
+  {% for script in gateway_provider.scripts %}
+    <script type="text/javascript" src="{{script}}"></script>
+  {% endfor %}
+
+  <script type="text/javascript">
+    $(function() {
+      var gateway_provider = new {{gateway_provider.js_api_factory}}();
+      cart.gateway_info = {}
+      gateway_provider.form(cart.gateway_info);
+      gateway_provider.on_validate = cart.validate.bind(cart);
+    });
+  </script>
+{% endif %}
 
 {# Only load login widget if not logged in #}
 {% if not is_logged %}

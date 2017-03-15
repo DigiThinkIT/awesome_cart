@@ -3,8 +3,11 @@ awc.ErpnextAdapter = function() {
 }
 
 awc.ErpnextAdapter.prototype = Object.create(awc.StoreAdapter)
+/* TODO: fetch actual default currency from ERPNEXT */
 awc.ErpnextAdapter.prototype.getCurrency = function() { return "USD"; }
+/* TODO: fetch actual currecy symbol from ERPNext */
 awc.ErpnextAdapter.prototype.getCurrencySymbol = function() { return "$"; }
+/* TODO: fetch currecy formatting from ERPNext */
 awc.ErpnextAdapter.prototype.formatCurrency = function(currency, decimals) { return `$${currency.toFixed(decimals)}`; }
 
 awc.ErpnextAdapter.prototype.init = function() {
@@ -100,6 +103,40 @@ awc.ErpnextAdapter.prototype.fetchProducts = function(tags, terms, start, limit)
       }
     })
   })
+}
+
+awc.ErpnextAdapter.prototype.validate = function(gateway_request) {
+  /* We expect this method to be called when awc's gateway provider's submit
+     button is clicked.
+
+     We'll use this call to feed payment request information to the gateway
+     before it can be submitted */
+
+    console.log(user)
+    frappe.call({
+      method: "awesome_cart.awc.validate",
+      args: {},
+      callback: function(data) {
+        var result = data.message;
+        if ( result.success ) {
+          // copy validation data to continue checkout process
+          for(var k in result.data ) {
+            gateway_request[k] = result.data[k];
+          }
+
+          console.log("Preparing for checkout!", gateway_request);
+          gateway_provider.process(gateway_request, function(err, data) {
+            if ( err ) {
+              console.error(err);
+            } else {
+              window.location.href = data.redirect_to;
+            }
+          });
+        } else {
+          console.error(data);
+        }
+      }
+    })
 }
 
 // Initialize awc cart
