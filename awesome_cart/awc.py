@@ -9,6 +9,7 @@ from erpnext.stock.get_item_details import apply_price_list_on_item
 from erpnext.shopping_cart.product import get_product_info
 
 from compat.customer import get_current_customer
+from compat.shopping_cart import get_cart_quotation, apply_cart_settings
 
 def find_index(arr, fn):
     for i, item in enumerate(arr):
@@ -283,38 +284,172 @@ def cart(data=None):
         payload = json.loads(data)
         action = payload['action']
         data = payload['data']
-
     else:
         action = None
+
+    customer = get_current_customer()
+    quotation = None
+    if customer:
+        cart_info = get_cart_quotation()
+        quotation = cart_info.get('doc')
 
     sid = '%s_awc_cart' % frappe.local.session.sid
     awc = frappe.cache().get_value(sid)
 
     if not awc:
-        awc = { "items": [] }
+        awc = { "items": [], "totals": { "grand_total": 0 } }
+
+    if quotation:
+        # convert quotation to awc object
+        # and merge items in the case where items are added before logging in.
+
+        # steps:
+        # 1) loop over all awc items and update quotation items matching names/ids
+        # 2) remove invalid awc items who's skus do not match any products(awc items)
+        # 3) loop over remaining unmatched quotation items and create awc items
+        # 4) remove invalid quotation items who's skus do not match any products(awc items)
+
+        quotation_is_dirty = False
+        awc_is_dirty = False
+        awc_items_to_remove = []
+        awc_items_matched = []
+        # step 1
+        # iterate over all awc items and update quotation to match values
+        awc_items = awc.get("items", [])
+        for awc_idx in range(0, len(awc_items)):
+            awc_item = awc_items[awc_idx]
+            idx = find_index(quotation.get("items", []), lambda itm: itm.get("name") == awc_item.get("id"))
+
+            if awc_item.get("id"):
+                if idx > -1:
+                    item = quotation.items[idx]
+                    # make sure product exists
+                    product = get_product_by_sku(awc_item.get("sku"))
+                    if product.get("success"):
+                        product = product.get("data")
+                        if item.qty != awc_item.get("qty"):
+                            item.qty = awc_item.get("qty")
+                            quotation_is_dirty = True
+
+                        if item.item_code != awc_item.get("sku"):
+                            item.item_code = awc_item.get("sku")
+                            quotation_is_dirty = True
+
+                        awc_items_matched.append(awc_item.get("id"))
+                    else:
+                        # sku is invalid. Flag item to be removed from awc session
+                        awc_items_to_remove.append(awc_item)
+                else:
+                    # no quotation item matched, so lets create one
+                    quotation.append("items", {
+                        "doctype": "Quotation Item",
+                        "item_code": awc_item.get("sku"),
+                        "qty": awc_item.get("qty")
+                    })
+                    quotation_is_dirty = True
+            else:
+                # drop awc items if they have invalid ids
+                awc_items_to_remove.append(awc_item)
+
+        # step 2
+        # remove invalid awc items
+        for awc_item in awc_items_to_remove:
+            idx = awc["items"].index(awc_item)
+            del awc["items"][idx]
+            awc_is_dirty = True
+
+        quotation_item_to_remove = []
+        # step 3
+        # now create awc items for quotation items not matched with existing awc session
+        for item in [qitem for qitem in quotation.get("items", []) \
+            if qitem.name not in awc_items_matched]:
+
+            product = get_product_by_sku(item.get("item_code"))
+            if product.get("success"):
+                product = product.get("data")
+                awc_item = {
+                    "id": item.name,
+                    "sku": item.item_code,
+                    "qty": item.qty
+                }
+                awc["items"].append(awc_item)
+                awc_is_dirty = True
+            else:
+                quotation_item_to_remove.append(item)
+
+        # step 4
+        # remove invalid quotation items
+        for item in quotation_item_to_remove:
+            idx = quotation.items.index(item)
+            del quotation.items[idx]
+            quotation_is_dirty = True
+
+        if quotation_is_dirty:
+            apply_cart_settings(quotation=quotation)
+            quotation.flags.ignore_permissions = True
+            quotation.save()
+            frappe.db.commit()
+
+        if awc_is_dirty:
+            frappe.cache().set_value(sid, awc)
+
+        awc["totals"]["grand_total"] = quotation.get("grand_total")
 
     if not action:
         return { "data": awc, "success": True}
 
-    elif action == 'addToCart':
+    elif action == "addToCart":
         data = data
 
         # need basic data validation here
-        if not data.get('sku'):
+        if not data.get("sku"):
             return { "success": False, "message": "Invalid Data" }
-        if not data.get('qty'):
+        if not data.get("qty"):
             return { "success": False, "message": "Invalid Data" }
 
-        awc['items'].append(data)
+        if quotation:
+            item = quotation.append("items", {
+                "doctype": "Quotation Item",
+                "item_code": data.get("sku"),
+                "qty": data.get("qty")
+            })
+
+            print(item)
+
+            apply_cart_settings(quotation=quotation)
+            quotation.flags.ignore_permissions = True
+            quotation.save()
+            frappe.db.commit()
+
+            awc["totals"]["grand_total"] = quotation.get("grand_total")
+
+            data["id"] = item.name
+
+        awc["items"].append(data)
         frappe.cache().set_value(sid, awc)
-        return { "success": True }
 
-    elif action == 'removeFromCart':
-        index = find_index(awc['items'], lambda item: item.get('id')==data.get('id') )
+
+
+
+        return { "success": True, "totals": awc.get("totals") }
+
+    elif action == "removeFromCart":
+        index = find_index(awc["items"], lambda item: item.get("id")==data.get("id") )
         if index > -1:
-            del awc['items'][index]
+            del awc["items"][index]
             frappe.cache().set_value(sid, awc)
-            return { "success": True }
+
+            if quotation:
+                quotation.set("items", quotation.get("items", {"name": ["!=", data.get("id")]}))
+                apply_cart_settings(quotation=quotation)
+                quotation.flags.ignore_permissions = True
+                quotation.save()
+                frappe.db.commit()
+
+                awc["totals"]["grand_total"] = quotation.get("grand_total")
+
+
+            return { "success": True, "totals": awc.get("totals") }
 
         return { "success": False, "message": "Item not found."}
 
