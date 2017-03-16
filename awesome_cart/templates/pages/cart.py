@@ -29,9 +29,10 @@ def get_context(context):
     context.is_logged = cart.is_logged_in()
     login.apply_context(context)
 
-    # load gateway provider into context
-    gateway_provider = frappe.get_hooks('awc_gateway_form_provider')
-    if gateway_provider and len(gateway_provider) > 0:
-        context['gateway_provider'] = frappe.call(gateway_provider[0])
+    if context.is_logged:
+        # load gateway provider into context
+        gateway_provider = frappe.get_hooks('awc_gateway_form_provider')
+        if gateway_provider and len(gateway_provider) > 0:
+            context['gateway_provider'] = frappe.call(gateway_provider[0])
 
     return context

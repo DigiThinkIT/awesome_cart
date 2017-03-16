@@ -332,7 +332,7 @@ def create_transaction():
     transaction = frappe.get_doc({
         "doctype": "AWC Transaction",
         "title": "Web Order",
-        "description", "Online Web Order",
+        "description": "Online Web Order",
         "status": "Initiated",
         "payer_name": customer.full_name
     })
