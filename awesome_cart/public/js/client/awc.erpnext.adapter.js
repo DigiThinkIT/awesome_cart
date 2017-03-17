@@ -1,8 +1,9 @@
 awc.ErpnextAdapter = function() {
+  awc.StoreAdapter.prototype.constructor.call(this)
   this._templates = {}
 }
 
-awc.ErpnextAdapter.prototype = Object.create(awc.StoreAdapter)
+awc.ErpnextAdapter.prototype = Object.create(awc.StoreAdapter.prototype)
 /* TODO: fetch actual default currency from ERPNEXT */
 awc.ErpnextAdapter.prototype.getCurrency = function() { return "USD"; }
 /* TODO: fetch actual currecy symbol from ERPNext */
@@ -30,26 +31,40 @@ awc.ErpnextAdapter.prototype.loadTemplate = function(name) {
 }
 
 awc.ErpnextAdapter.prototype.fetchCartSession = function() {
+  var base = this;
   return awc.get('/api/method/awesome_cart.awc.cart')
-    .then(function(resp) {
+    .then(function(resp, xhr) {
       var data = JSON.parse(resp.body).message;
+      if ( data.data.totals ) {
+        base._totals = data.data.totals;
+      }
       return data;
     })
 }
 
 awc.ErpnextAdapter.prototype.sessionAction = function(action, data) {
-  return awc.post({
-      url: '/api/method/awesome_cart.awc.cart',
-      body: JSON.stringify({action: action, data: data}),
-      headers: {
-        "X-Frappe-CSRF-Token": frappe.csrf_token,
-        "Content-Type": "application/json"
+  var base = this;
+  return new awc.Promise(function(resolve, reject) {
+    frappe.call({
+      method: "awesome_cart.awc.cart",
+      args: {
+        action: action,
+        data: data
+      },
+      callback: function(result) {
+        if ( result.message.success ) {
+          if ( result.message.totals ) {
+            base._totals = result.message.totals;
+          }
+
+          resolve(result.message.data)
+        } else {
+          reject(result.message.data)
+        }
       }
     })
-    .then(function(resp) {
-      var data = JSON.parse(resp.body).message
-      return data;
-    })
+  })
+
 }
 
 awc.ErpnextAdapter.prototype.getProductBySKU = function(sku, detailed) {
@@ -90,12 +105,17 @@ awc.ErpnextAdapter.prototype.getProductBySKU = function(sku, detailed) {
 
 awc.ErpnextAdapter.prototype.fetchProducts = function(tags, terms, start, limit) {
   if ( !tags ) tags = []
+  var base = this;
   return new awc.Promise(function(resolve, reject) {
     frappe.call({
       method: "awesome_cart.awc.fetch_products",
       args: { tags: tags.join(','), terms: terms, start: start?start:0, limit: limit?limit:9 },
       callback: function(result) {
         if ( result.message.success ) {
+          if ( result.message.data.totals ) {
+            base._totals = result.message.data.totals;
+          }
+
           resolve(result.message.data)
         } else {
           reject(result.message.data)
@@ -112,10 +132,13 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request) {
      We'll use this call to feed payment request information to the gateway
      before it can be submitted */
 
-    console.log(user)
+    if ( !gateway_request ) {
+      throw "gateway_request is not set";
+    }
+
     frappe.call({
-      method: "awesome_cart.awc.validate",
-      args: {},
+      method: "awesome_cart.awc.create_transaction",
+      freeze: true,
       callback: function(data) {
         var result = data.message;
         if ( result.success ) {
@@ -125,6 +148,7 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request) {
           }
 
           console.log("Preparing for checkout!", gateway_request);
+
           gateway_provider.process(gateway_request, function(err, data) {
             if ( err ) {
               console.error(err);

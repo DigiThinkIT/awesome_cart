@@ -12,11 +12,32 @@ awc_checkout = {
         .removeClass('active');
       $bc.addClass('active');
     }
+
+    // run through validations as necessary to update summaries
+    // TODO: Add shipping validation
+    var checkout_enabled = true;
+    if ( awc_checkout.gateway_provider ) {
+      var billing_summary = awc_checkout.gateway_provider.getSummary();
+      $('#checkout-confirm-billing .content').empty().append(billing_summary);
+
+      var billing_validation_response = awc_checkout.gateway_provider.validate();
+      console.log(billing_validation_response);
+
+      if ( typeof billing_validation_response == "object") {
+        console.log("Disable checkout")
+        checkout_enabled = false;
+      }
+
+      awc_checkout.gateway_provider.enable(checkout_enabled);
+    }
+
   },
+
   nextPage: function() {
     var $page = $('.panel:visible');
     awc_checkout.showPage($page.next());
   },
+
   setupPage: function() {
     $('.panel .btn-next').click(awc_checkout.nextPage);
 

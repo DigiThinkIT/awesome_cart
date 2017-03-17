@@ -121,10 +121,10 @@
 
   <script type="text/javascript">
     $(function() {
-      var gateway_provider = new {{gateway_provider.js_api_factory}}();
+      awc_checkout.gateway_provider = new {{gateway_provider.js_api_factory}}();
       cart.gateway_info = {}
-      gateway_provider.form(cart.gateway_info);
-      gateway_provider.on_validate = cart.validate.bind(cart);
+      awc_checkout.gateway_provider.form(cart.gateway_info);
+      awc_checkout.gateway_provider.on_validate = cart.validate.bind(cart);
     });
   </script>
 {% endif %}

@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 from datetime import datetime
+from awesome_cart.compat.shopping_cart import convert_quotation_to_sales_order
+from awesome_cart.compat.accounts import payment_request
 
 LOG_LEVELS = {
 	"None": 0,
@@ -19,10 +21,19 @@ class AWCTransaction(Document):
 		self.data += txt.format(*args) + "\n"
 
 	def on_payment_authorized(self, payment_status):
-		result = frappe.get_doc(
-			self.reference_doctype,
-			self.reference_docname).run_method("on_payment_authorized",
-			payment_status)
+
+		quotation = frappe.get_doc("Quotation", this.order_id)
+		so = convert_quotation_to_sales_order(quotation)
+
+		preq = payment_request.make_payment_request(dt="Sales Order", dn=so.name, submiti_doc=1, return_doc=1)
+
+		self.reference_doctype = "Payment Request"
+		self.reference_docname = preq.name
+		self.order_id = so.name
+		self.flags.ignore_permissions = 1
+		self.save()
+
+		result = preq.run_method("on_payment_authorized", payment_status)
 
 		return result
 
@@ -37,4 +48,3 @@ class AWCTransaction(Document):
 				"level": level,
 				"timestamp": datetime.now().strftime("%Y-%d-%m %H:%M:%S")
 			})
-	
