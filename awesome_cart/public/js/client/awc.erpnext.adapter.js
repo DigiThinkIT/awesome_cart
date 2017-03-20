@@ -132,6 +132,8 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request) {
      We'll use this call to feed payment request information to the gateway
      before it can be submitted */
 
+     console.log(arguments);
+
     if ( !gateway_request ) {
       throw "gateway_request is not set";
     }
