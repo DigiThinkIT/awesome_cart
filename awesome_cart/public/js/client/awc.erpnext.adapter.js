@@ -125,14 +125,12 @@ awc.ErpnextAdapter.prototype.fetchProducts = function(tags, terms, start, limit)
   })
 }
 
-awc.ErpnextAdapter.prototype.validate = function(gateway_request) {
+awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_service) {
   /* We expect this method to be called when awc's gateway provider's submit
      button is clicked.
 
      We'll use this call to feed payment request information to the gateway
      before it can be submitted */
-
-     console.log(arguments);
 
     if ( !gateway_request ) {
       throw "gateway_request is not set";
@@ -140,7 +138,13 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request) {
 
     frappe.call({
       method: "awesome_cart.awc.create_transaction",
+      args: {
+        gateway_service: gateway_service,
+        billing_address: awc_checkout.billing_address,
+        shipping_address: awc_checkout.shipping_address
+      },
       freeze: true,
+      freeze_message: "Validating Order",
       callback: function(data) {
         var result = data.message;
         if ( result.success ) {
@@ -150,8 +154,7 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request) {
           }
 
           console.log("Preparing for checkout!", gateway_request);
-
-          gateway_provider.process(gateway_request, function(err, data) {
+          awc_checkout.gateway_provider.process(gateway_request, function(err, data) {
             if ( err ) {
               console.error(err);
             } else {
@@ -161,6 +164,9 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request) {
         } else {
           console.error(data);
         }
+      },
+      error: function(err) {
+        console.error(err)
       }
     })
 }

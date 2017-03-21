@@ -120,11 +120,11 @@
   {% endfor %}
 
   <script type="text/javascript">
-    $(function() {
-      awc_checkout.gateway_provider = new {{gateway_provider.js_api_factory}}();
+    cart.on('init', function() {
       cart.gateway_info = {}
-      awc_checkout.gateway_provider.form(cart.gateway_info);
+      awc_checkout.gateway_provider = new {{gateway_provider.js_api_factory}}();
       awc_checkout.gateway_provider.on_process = cart.validate.bind(cart);
+      awc_checkout.gateway_provider.form(cart.gateway_info);
     });
   </script>
 {% endif %}

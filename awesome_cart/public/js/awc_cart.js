@@ -23,10 +23,19 @@ awc_checkout = {
       var billing_validation_response = awc_checkout.gateway_provider.validate();
       console.log(billing_validation_response);
 
-      if ( typeof billing_validation_response == "object") {
+      if ( billing_validation_response.valid == false) {
         console.log("Disable checkout")
-        checkout_enabled = false;
+        checkout_enabled = false
       }
+
+      awc_checkout.billing_address = billing_validation_response.address
+      //TODO: replace shipping address with actual data
+      awc_checkout.shipping_address = {}
+      for(key in awc_checkout.billing_address) {
+        var k = key.replace("billing_", "shipping_")
+        awc_checkout.shipping_address[k] = awc_checkout.billing_address[key]
+      }
+
 
       awc_checkout.gateway_provider.enable(checkout_enabled);
     }
