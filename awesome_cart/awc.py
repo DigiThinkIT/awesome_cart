@@ -114,7 +114,7 @@ def get_content_sections(awc_item):
 			section_content = { "html": [content.data_content_1] }
 
 			# check if we want more than one content pice
-			if content.data_content_count > 1:
+			if cint(content.data_content_count) > 1:
 				# then add it to our content array
 				section_content["html"].append(content.data_content_2)
 
