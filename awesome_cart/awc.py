@@ -522,6 +522,7 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 
 	print(billing_address)
 	print(shipping_address)
+	
 	data.update(billing_address)
 	data.update(shipping_address)
 
