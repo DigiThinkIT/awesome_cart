@@ -13,11 +13,47 @@ app_license = "GPL-v3"
 
 # keep track of country->region field changes
 fixtures = [
-	{
+	{ #TODO: Region no longer necessary? remove this filter if not!!
 		"dt": "Custom Field",
 		"filters": [
 			["dt", "=", "Country"],
 			["fieldname", "=", "region"]
+		]
+	}, {
+		"dt": "Custom Field",
+		"filters": [
+			["dt", "=", "Quotation Item"],
+			["fieldname", "=", "awc_custom_sb1"]
+		]
+	}, {
+		"dt": "Custom Field",
+		"filters": [
+			["dt", "=", "Quotation Item"],
+			["fieldname", "=", "awc_custom_cb1"]
+		]
+	}, {
+		"dt": "Custom Field",
+		"filters": [
+			["dt", "=", "Quotation Item"],
+			["fieldname", "=", "awc_custom"]
+		]
+	}, {
+		"dt": "Custom Field",
+		"filters": [
+			["dt", "=", "Quotation Item"],
+			["fieldname", "=", "awc_group"]
+		]
+	}, {
+		"dt": "Custom Field",
+		"filters": [
+			["dt", "=", "Quotation Item"],
+			["fieldname", "=", "awc_subgroup"]
+		]
+	}, {
+		"dt": "Custom Field",
+		"filters": [
+			["dt", "=", "Quotation Item"],
+			["fieldname", "=", "awc_group_label"]
 		]
 	}
 ]

@@ -18,6 +18,14 @@ def find_index(arr, fn):
 
 	return -1
 
+def find_indexes(arr, fn):
+	results = []
+	for i, item in enumerate(arr):
+		if fn(item):
+			results.append(i)
+
+	return results
+
 def get_template(tpl_name):
 	"""Get the template by name"""
 	if tpl_name and frappe.db.exists("AWC Template", tpl_name):
@@ -130,6 +138,7 @@ def get_content_sections(awc_item):
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def get_product_by_sku(sku, detailed=0):
 	"""Get's product in awcjs format by its sku and optionally detailed data."""
+	print("get_product_by_sku: %s" % sku);
 	# fetch item by its sku/item_code
 	item = frappe.get_list("Item", fields="*", filters = {"item_code": sku}, ignore_permissions=1)[0]
 	# get item price list information
@@ -336,6 +345,18 @@ def sync_awc_and_quotation(awc, quotation):
 						item.item_code = awc_item.get("sku")
 						quotation_is_dirty = True
 
+					if item.awc_group != awc_item.get('options', {}).get('group'):
+						item.awc_group = awc_item.get('options', {}).get('group')
+						quotation_is_dirty = True
+
+					if item.awc_subgroup != awc_item.get('options', {}).get('subgroup'):
+						item.awc_subgroup = awc_item.get('options', {}).get('subgroup')
+						quotation_is_dirty = True
+
+					if item.awc_group_label != awc_item.get('options', {}).get('label'):
+						item.awc_group_label = awc_item.get('options', {}).get('label')
+						quotation_is_dirty = True
+
 					item.warehouse = product.get("warehouse")
 
 					awc_items_matched.append(awc_item.get("id"))
@@ -346,12 +367,21 @@ def sync_awc_and_quotation(awc, quotation):
 				if product.get("success"):
 					product = product.get("data")
 					# no quotation item matched, so lets create one
-					quotation.append("items", {
+					item_data = {
 						"doctype": "Quotation Item",
 						"item_code": awc_item.get("sku"),
 						"qty": awc_item.get("qty"),
 						"warehouse": product.get("warehouse")
-					})
+					}
+
+					if item.get('options'):
+						item_data['awc_group'] = awc_item['options'].get('group')
+						item_data['awc_subgroup'] = awc_item['options'].get('subgroup')
+						item_data['awc_group_label'] = awc_item['options'].get('label')
+						if awc_item['options'].get('description'):
+							item_data['description'] = awc_item['options'].get('description')
+
+					quotation.append("items", item_data)
 					quotation_is_dirty = True
 				else:
 					awc_items_to_remove.append(awc_item)
@@ -379,8 +409,16 @@ def sync_awc_and_quotation(awc, quotation):
 				"id": item.name,
 				"sku": item.item_code,
 				"qty": item.qty,
-				"warehouse": product.get("warehouse")
+				"warehouse": product.get("warehouse"),
 			}
+
+			if item.awc_group:
+				awc_item["options"] = {
+					"group": item.awc_group,
+					"subgroup": item.awc_subgroup,
+					"label": item.awc_group_label,
+				}
+
 			awc["items"].append(awc_item)
 			awc_is_dirty = True
 		else:
@@ -409,6 +447,10 @@ def cart(data=None, action=None):
 	if data and isinstance(data, basestring):
 		data = json.loads(data)
 
+	# make sure we can handle bulk actions
+	if not isinstance(data, list):
+		data = [data]
+
 	customer = get_current_customer()
 	quotation = None
 	if customer:
@@ -428,53 +470,86 @@ def cart(data=None, action=None):
 
 	elif action == "addToCart":
 
-		# need basic data validation here
-		if not data.get("sku"):
-			return { "success": False, "message": "Invalid Data" }
+		print(data)
 
-		if not data.get("qty"):
-			return { "success": False, "message": "Invalid Data" }
+		for item in data:
+			# need basic data validation here
+			if not item.get("sku"):
+				return { "success": False, "message": "Invalid Data" }
+
+			if not item.get("qty"):
+				return { "success": False, "message": "Invalid Data" }
+
+			if quotation:
+				product = get_product_by_sku(item.get("sku")).get("data")
+
+				item_data = {
+					"doctype": "Quotation Item",
+					"item_code": item.get("sku"),
+					"qty": item.get("qty"),
+					"warehouse": product.get("warehouse")
+				}
+
+				if item.get('options'):
+					item_data['awc_group'] = item['options'].get('group')
+					item_data['awc_subgroup'] = item['options'].get('subgroup')
+					item_data['awc_group_label'] = item['options'].get('label')
+					if item['options'].get('description'):
+						item_data['description'] = item['options'].get('description')
+
+				quotation_item = quotation.append("items", item_data)
+
+				item["id"] = quotation_item.name
+
+			awc["items"].append(item)
 
 		if quotation:
-			product = get_product_by_sku(data.get("sku")).get("data")
-
-			item = quotation.append("items", {
-				"doctype": "Quotation Item",
-				"item_code": data.get("sku"),
-				"qty": data.get("qty"),
-				"warehouse": product.get("warehouse")
-			})
-
+			collect_totals(quotation, awc)
 			apply_cart_settings(quotation=quotation)
 			quotation.flags.ignore_permissions = True
 			quotation.save()
 			frappe.db.commit()
-
-			collect_totals(quotation, awc)
-			data["id"] = item.name
-
-		awc["items"].append(data)
-		set_awc_session(awc)
+			set_awc_session(awc)
 
 		return { "success": True, "data": data, "totals": awc.get("totals") }
 
 	elif action == "removeFromCart":
-		index = find_index(awc["items"], lambda item: item.get("id")==data.get("id") )
-		if index > -1:
-			del awc["items"][index]
+
+		success = False
+		removed_ids = []
+		for item in data:
+
+			# find master item
+			index = find_index(awc["items"], lambda itm: itm.get("id")==item.get("id") )
+
+			# find all sub items
+			related_indexes = find_indexes(awc["items"], \
+				lambda itm: itm.get("options", {}).get("group")==item.get("options", {}).get("group") if item.get("options", {}).get("group") else False )
+
+			# put it all in one list
+			related_indexes.append(index)
+
+			# remove all found items
+			for index in related_indexes:
+				removed_ids.append(awc["items"][index]["id"])
+				del awc["items"][index]
+				success = True
+
+				if quotation:
+					quotation.set("items", quotation.get("items", {"name": ["!=", item.get("id")]}))
+
+
+		if success:
 			set_awc_session(awc)
 
 			if quotation:
-				quotation.set("items", quotation.get("items", {"name": ["!=", data.get("id")]}))
+				collect_totals(quotation, awc)
 				apply_cart_settings(quotation=quotation)
 				quotation.flags.ignore_permissions = True
 				quotation.save()
 				frappe.db.commit()
 
-				collect_totals(quotation, awc)
-
-
-			return { "success": True, "totals": awc.get("totals") }
+			return { "success": True, "totals": awc.get("totals"), "data": removed_ids }
 
 		return { "success": False, "message": "Item not found."}
 
@@ -522,7 +597,7 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 
 	print(billing_address)
 	print(shipping_address)
-	
+
 	data.update(billing_address)
 	data.update(shipping_address)
 

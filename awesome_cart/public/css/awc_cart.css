@@ -9,3 +9,7 @@
 #checkout-panels > .panel ~ .panel{
   display: none;
 }
+
+.no-pad {
+  padding: 0;
+}

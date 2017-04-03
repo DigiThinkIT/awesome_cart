@@ -9,7 +9,7 @@ awc.ErpnextAdapter.prototype.getCurrency = function() { return "USD"; }
 /* TODO: fetch actual currecy symbol from ERPNext */
 awc.ErpnextAdapter.prototype.getCurrencySymbol = function() { return "$"; }
 /* TODO: fetch currecy formatting from ERPNext */
-awc.ErpnextAdapter.prototype.formatCurrency = function(currency, decimals) { return `$${currency.toFixed(decimals)}`; }
+awc.ErpnextAdapter.prototype.formatCurrency = function(currency, decimals) { return this.getCurrencySymbol() + currency.toFixed(decimals?decimals:2); }
 
 awc.ErpnextAdapter.prototype.init = function() {
   var base = this;
@@ -47,6 +47,7 @@ awc.ErpnextAdapter.prototype.sessionAction = function(action, data) {
   return new awc.Promise(function(resolve, reject) {
     frappe.call({
       method: "awesome_cart.awc.cart",
+      freeze: 1,
       args: {
         action: action,
         data: data
@@ -86,6 +87,7 @@ awc.ErpnextAdapter.prototype.getProductBySKU = function(sku, detailed) {
     frappe.call({
       method: "awesome_cart.awc.get_product_by_sku",
       args: { sku: sku, detailed: detailed?1:0 },
+      freeze: 1,
       callback: function(result) {
         if ( result.message.success ) {
           // only cache detailed items
@@ -110,6 +112,7 @@ awc.ErpnextAdapter.prototype.fetchProducts = function(tags, terms, start, limit)
     frappe.call({
       method: "awesome_cart.awc.fetch_products",
       args: { tags: tags.join(','), terms: terms, start: start?start:0, limit: limit?limit:9 },
+      freeze: 1,
       callback: function(result) {
         if ( result.message.success ) {
           if ( result.message.data.totals ) {

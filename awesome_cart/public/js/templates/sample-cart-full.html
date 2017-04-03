@@ -1,0 +1,69 @@
+<div class="cart-embeded container-fluid cart-full no-pad">
+	{{#if is_empty }}
+	<div class="empty">Cart is Empty</div>
+	{{else}}
+	<div class="row no-pad" id="cart-breakdown">
+		<!--
+			<div class="col-xs-2"></div>
+		 	-->
+		<div class="col-xs-7">Item</div>
+		<div class="col-xs-2 no-pad"><span class="pull-right">Unit</span></div>
+		<div class="col-xs-1 no-pad"><span class="pull-right">Qty</span></div>
+		<div class="col-xs-2"><span class="pull-right">Total</span></div>
+	</div>
+	{{#each items}}
+  <div class="item row is-table-row no-pad" data-id="{{ this.id }}">
+  	<div class="col-sm-12 row" data-id="{{ this.id }}">
+  		<div class="col-xs-2">
+  			<img class="product-image" src="{{ this.product.imageUrl }}" alt="{{ this.product.name }}" title="{{ this.product.name }}" />
+  		</div>
+      <div class="col-xs-5 no-pad"><span class="product-title">{{ this.product.name }}</span></div>
+      <div class="col-xs-2 no-pad product-unit"><span class="pull-right">{{ currency this.unit }}</span></div>
+      <div class="col-xs-1 no-pad product-qty"><span class="pull-right">{{ this.qty }}</span></div>
+      <div class="col-xs-2 no-pad product-total"><span class="pull-right">{{ currency this.total }}</span></div>
+  	</div>
+    {{#subgroups}}
+    <div class="col-xs-12 no-pad subgroup {{name}} no-pad">
+      <div class="row col-xs-12">
+        <div class="col-xs-2 no-pad"></div>
+        <div class="col-xs-10 no-pad subgroup-name"></div>
+      </div>
+      {{#items}}
+      <div class="row col-xs-12 subgroup-item" data-id="{{ this.id }}">
+        <div class="col-xs-2"></div>
+        <div class="col-xs-5 no-pad"><span class="product-title">{{ this.product.name }}</span></div>
+        <div class="col-xs-2 no-pad product-unit"><span class="pull-right">{{ currency this.unit }}</span></div>
+        <div class="col-xs-1 no-pad product-qty"><span class="pull-right">{{ this.qty }}</span></div>
+        <div class="col-xs-2 no-pad product-total"><span class="pull-right">{{ currency this.total }}</span></div>
+      </div>
+      {{/items}}
+    </div>
+    {{/subgroups}}
+    <div class="row col-xs-12 actions">
+      <div class="col-xs-2 no-pad"></div>
+      <div class="col-xs-10 no-pad"><a data-awc-removeFromCart data-id="{{ this.id }}">remove</a></div>
+    </div>
+  </div>
+	{{/each}}
+	<div class="row">
+		<div class="col-xs-12 line"></div>
+	</div>
+	<div class="estimate">
+		<div class="row">
+			<div class="col-xs-10"><span class="pull-right">Sub Total:</span></div>
+      <div class="col-xs-2"><span class="pull-right">{{ currency $cart.totals.sub_total }}</span></div>
+		</div>
+		<div class="row">
+			<div class="col-xs-10"><span class="pull-right">Estimated Shipping:</span></div>
+			<div class="col-xs-2"><span class="pull-right">{{ currency $cart.totals.shipping }}</span </div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 line"></div>
+	</div>
+	<div class="row total">
+		<div class="col-xs-10"><span class="pull-right">Total:</span></div>
+		<div class="col-xs-2"><span class="pull-right">{{ currency $cart.totals.grand_total }}</span></div>
+	</div>
+	{{/if}}
+</div>
