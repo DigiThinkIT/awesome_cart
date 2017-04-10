@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
 import frappe
 import json
-from dbug import log
+from dbug import log, deprecated
 
+deprecated("""This Module is deprecated from an earlier version of the cart.
+			  It is safe to remove once all other references are gone""")
 """
 def get_gateway_forms():
 	hooks = frappe.get_hooks("awc_setup_gateway_forms") or []
@@ -52,7 +54,7 @@ def api_get_shipping_rates(items, address):
 
 	return rates
 
-	
+
 
 def get_gateway_module(name):
 	gateways = get_gateway_plugins()

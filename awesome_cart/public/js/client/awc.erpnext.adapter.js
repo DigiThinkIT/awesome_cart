@@ -111,9 +111,11 @@ awc.ErpnextAdapter.prototype.fetchProducts = function(tags, terms, start, limit)
   return new awc.Promise(function(resolve, reject) {
     frappe.call({
       method: "awesome_cart.awc.fetch_products",
-      args: { tags: tags.join(','), terms: terms, start: start?start:0, limit: limit?limit:9 },
+      args: { tags: tags.join(','), terms: terms, start: start?start:0, limit: limit },
       freeze: 1,
       callback: function(result) {
+        console.log("Fetch products");
+        console.log(result);
         if ( result.message.success ) {
           if ( result.message.data.totals ) {
             base._totals = result.message.data.totals;
@@ -177,6 +179,10 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
 // Initialize awc cart
 var cart = new awc.AwesomeCart({
   storeAdapter: new awc.ErpnextAdapter()
+});
+
+cart.on("after-add-to-cart", function(items) {
+  console.log("Products added", items);
 });
 
 awc.debug.level = 5;

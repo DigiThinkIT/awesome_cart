@@ -1,0 +1,32 @@
+<h2 class="accessories-logos">{{#if custom.title}}{{ custom.title }}{{else}}{{ name }}{{/if}}</h2>
+
+<img alt="{{ name }}" class="group list-group-image" src="{{ this.imageUrl }}">
+
+<div class="caption">
+
+  {{#if options }}
+    {{#each options.variants }}
+  <div id="{{cssEscape ../sku}}-option-{{cssEscape id}}-container" class="option" data-awc-option="{{cssEscape id}}">
+    <select id="{{cssEscape ../sku}}-option-{{cssEscape id}}">
+              <option value="{{id}}"> - Select {{label}} - </option>
+              {{#each values }}
+              <option value="{{ . }}" {{#if (eq this ../default) }}selected{{/if}}>{{ . }}</option>
+              {{/each}}
+            </select>
+  </div>
+    {{/each}}
+  {{/if}}
+
+	<p class="group inner list-group-item-text">{{{ this.description }}}</p>
+
+	<div class="catalog-price-holder">
+		<span class="hide-grid from">Starting from<span class="lead price">{{ currency this.price }}</span></span>
+		<a data-awc-addtocart
+      data-awc-options data-awc-options-hashes="{{json this.options.hashes}}"
+		  data-awc-options-selectors="{{#each this.options.variants }},#{{ cssEscape ../sku }}-option-{{cssEscape id}}{{/each}}"
+		  class="btn btn-success">Add to cart</a>
+	</div>
+
+</div>
+
+<span class="hide-list from">Starting from<span class="lead price">{{ currency this.price }}</span></span>

@@ -1,0 +1,48 @@
+<div class="section-content container">
+  <div class="row">
+    <div class="col-sm-6">
+      <div class="image">
+        <img alt="{{ name }}" src="{{ imageUrl }}">
+      </div>
+    </div>
+    <div class="col-sm-6">
+     <div class="product-name">
+{{#if custom.listing_logo_url }}
+  <img class="iem-logos" src="{{custom.listing_logo_url}}">
+{{else}}
+  <h2 class="group inner list-group-item-heading">{{ this.name }}</h2>
+{{/if}}
+      </div>
+      <div class="description">
+        {{{ detail.description_long }}}
+      </div>
+
+      {{#if options }}
+        {{#each options.variants }}
+      <div id="{{cssEscape ../sku}}-option-{{cssEscape id}}-container" class="option" data-awc-option="{{cssEscape id}}">
+        <div class="option-name">{{label}}</div>
+        <select id="{{cssEscape ../sku}}-option-{{cssEscape id}}">
+                  {{#each values }}
+                  <option value="{{ . }}" {{#if (eq this ../default) }}selected{{/if}}>{{ . }}</option>
+                  {{/each}}
+                </select>
+      </div>
+        {{/each}}
+      {{/if}}
+
+      <div class="text-center">
+        {{#if custom.designer}}
+          <a data-jhaudio3d-options="06fb226d82" data-template="Page 3D Designer Widget" data-target="#product-widget" class="btn btn-success" data-sku="{{ this.sku }}">Customize</a>
+        {{else}}
+          <a data-awc-addtocart
+          {{#if options.variants}}
+            data-awc-options data-awc-options-hashes="{{json this.options.hashes}}"
+    		    data-awc-options-selectors="{{#each this.options.variants }},#{{ cssEscape ../sku }}-option-{{cssEscape id}}{{/each}}"
+          {{/if}}
+             data-id="{{ this.sku }}"
+             class="btn btn-success">Add to cart</a>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+</div>

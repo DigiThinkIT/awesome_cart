@@ -11,49 +11,12 @@ app_color = "grey"
 app_email = "forellana@digithinkit.com"
 app_license = "GPL-v3"
 
-# keep track of country->region field changes
 fixtures = [
-	{ #TODO: Region no longer necessary? remove this filter if not!!
-		"dt": "Custom Field",
-		"filters": [
-			["dt", "=", "Country"],
-			["fieldname", "=", "region"]
-		]
-	}, {
+	{
 		"dt": "Custom Field",
 		"filters": [
 			["dt", "=", "Quotation Item"],
-			["fieldname", "=", "awc_custom_sb1"]
-		]
-	}, {
-		"dt": "Custom Field",
-		"filters": [
-			["dt", "=", "Quotation Item"],
-			["fieldname", "=", "awc_custom_cb1"]
-		]
-	}, {
-		"dt": "Custom Field",
-		"filters": [
-			["dt", "=", "Quotation Item"],
-			["fieldname", "=", "awc_custom"]
-		]
-	}, {
-		"dt": "Custom Field",
-		"filters": [
-			["dt", "=", "Quotation Item"],
-			["fieldname", "=", "awc_group"]
-		]
-	}, {
-		"dt": "Custom Field",
-		"filters": [
-			["dt", "=", "Quotation Item"],
-			["fieldname", "=", "awc_subgroup"]
-		]
-	}, {
-		"dt": "Custom Field",
-		"filters": [
-			["dt", "=", "Quotation Item"],
-			["fieldname", "=", "awc_group_label"]
+			["fieldname", "in", ("awc_custom_sb1", "awc_custom_cb1", "awc_custom", "awc_group", "awc_subgroup", "awc_group_label")]
 		]
 	}
 ]
@@ -77,6 +40,9 @@ website_route_rules = [
 extend_website_page_controller_context = {
 	"erpnext.templates.pages.cart": "awesome_cart.templates.pages.cart"
 }
+
+#on_session_creation = "awesome_cart.utils.on_session_creation"
+on_logout = "awesome_cart.utils.on_logout"
 
 awc_shipping_api = {
 	"get_rates": "awesome_cart.dummy.get_shipping_rates"

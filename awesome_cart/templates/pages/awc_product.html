@@ -24,9 +24,16 @@ function updateProductDetails(sku) {
 
   if ( sku ) {
     cart.getProductBySKU(sku)
+      .then(function(product) {
+        if ( product.tags ) {
+          $.each(product.tags, function(k,v) {
+            $('body').addClass("product-category-" + v);
+          });
+        }
+        return product;
+      })
       .then(cart.applyTpl.bind(cart, '#product', productTemplate))
       .then((result) => {
-        console.log('update product template result: ', result)
         cart.updateUI();
       })
       .catch(console.error)

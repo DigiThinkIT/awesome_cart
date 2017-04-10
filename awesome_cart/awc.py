@@ -4,12 +4,14 @@ import json
 import traceback
 import frappe
 from frappe import _dict
-from frappe.utils import cint, cstr
+from frappe.utils import cint, cstr, random_string
 from erpnext.stock.get_item_details import apply_price_list_on_item
 from erpnext.shopping_cart.product import get_product_info
 
 from compat.customer import get_current_customer
 from compat.shopping_cart import get_cart_quotation, apply_cart_settings
+
+from .dbug import pretty_json, log
 
 def find_index(arr, fn):
 	for i, item in enumerate(arr):
@@ -33,6 +35,14 @@ def get_template(tpl_name):
 	   return tpl.get("template_body", "")
 
 	return ""
+
+def is_logged_in():
+	session_user = frappe.get_user()
+
+	if session_user.name == "Guest":
+		return False
+
+	return True
 
 def get_awc_item_by_route(route):
 	"""Retrieves awc item by its route"""
@@ -138,7 +148,6 @@ def get_content_sections(awc_item):
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def get_product_by_sku(sku, detailed=0):
 	"""Get's product in awcjs format by its sku and optionally detailed data."""
-	print("get_product_by_sku: %s" % sku);
 	# fetch item by its sku/item_code
 	item = frappe.get_list("Item", fields="*", filters = {"item_code": sku}, ignore_permissions=1)[0]
 	# get item price list information
@@ -164,7 +173,7 @@ def get_product_by_sku(sku, detailed=0):
 		product_widget=awc_item.product_widget,
 		product_template=awc_item.product_template,
 		options=build_awc_options_from_varients(item),
-		tags=awc_item._user_tags.split(',') if awc_item._user_tags else []
+		tags=awc_item.tags.split(',') if awc_item.tags else []
 	)
 
 	# append detailed information only if required
@@ -178,7 +187,7 @@ def get_product_by_sku(sku, detailed=0):
 	return { "success": True, "data": product }
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
-def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", start=0, limit=9):
+def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", start=0, limit=None):
 	"""Fetches a list of products filtered by tags"""
 
 	payload = {
@@ -203,9 +212,9 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 					if len(tag_group) > 0:
 						tags_match.append(tag_group)
 						tag_group = []
-					tag_group.append(' a._user_tags REGEXP "(^|,){}(,|$)" '.format(tag[1:]))
+					tag_group.append(' a.tags REGEXP "(^|,){}(,|$)" '.format(tag[1:]))
 				else: # anything else is an AND match
-					tag_group.append(' a._user_tags REGEXP "(^|,){}(,|$)" '.format(tag))
+					tag_group.append(' a.tags REGEXP "(^|,){}(,|$)" '.format(tag))
 
 		# add any dangly groups to match list
 		if len(tag_group) > 0:
@@ -244,18 +253,20 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 			a.product_template as awc_product_template,
 			a.product_thumbnail as awc_product_thumbnail,
 			a.slider as awc_slider,
-			a._user_tags as awc_tags
+			a.tags as awc_tags
 			FROM `tabAWC Item` a, `tabItem` i
 			WHERE i.name = a.product_name
 			AND a.catalog_visible=1
 			{}
 			ORDER BY {} {}
-			LIMIT {}, {}""".format(
+			{}""".format(
 				"AND %s" % tags_match if tags_match else "",
 				order_by_clean,
 				order_dir_clean,
-				int(start),
-				int(limit))
+				"LIMIT {}, {}".format(
+					int(start),
+					int(limit)) if limit != None else ""
+				)
 
 		result = frappe.db.sql(sql, as_dict=1)
 
@@ -284,32 +295,71 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 	except Exception as ex:
 		payload["success"] = False
 		payload["message"] = traceback.format_exc(ex)
-		print(payload["message"])
+		log(payload["message"])
 
 	return payload
 
 def collect_totals(quotation, awc):
-	awc["totals"]["sub_total"] = quotation.get("total")
-	awc["totals"]["grand_total"] = quotation.get("grand_total")
+	if quotation:
+		awc["totals"]["sub_total"] = quotation.get("total")
+		awc["totals"]["grand_total"] = quotation.get("grand_total")
+	else:
+		awc["totals"]["sub_total"] = 0
+		awc["totals"]["grand_total"] = 0
+		for awc_item in awc["items"]:
+			product = get_product_by_sku(awc_item.get("sku"))
+			if product.get('success'):
+				awc["totals"]["sub_total"] = awc["totals"]["sub_total"] + product["data"].get("price") * cint(awc_item.get("qty"))
 
-def get_awc_session_id():
-	return '%s_awc_cart' % frappe.local.session.sid
+		awc["totals"]["grand_total"] = awc["totals"]["sub_total"]
 
 def get_awc_session():
-	sid = get_awc_session_id()
-	awc = frappe.cache().get_value(sid)
-	return awc
+	# get session id from request
+	sid = frappe.local.session.get("awc_sid", frappe.local.request.cookies.get("awc_sid"))
+	if sid:
+		awc_sid = "awc_session_{0}".format(sid)
+	awc_session = None
 
-def set_awc_session(awc):
-	sid = get_awc_session_id()
-	frappe.cache().set_value(sid, awc)
+	pretty_json(awc_session)
+
+	# lets make sure IPs match before applying this sid
+	if sid != None:
+		awc_session = frappe.cache().get_value(awc_sid)
+		if awc_session:
+			if awc_session.get("session_ip") != frappe.local.request_ip:
+				# IP do not match... force build session from scratch
+				sid = None
+				awc_sid = None
+				awc_session = None
+
+	if awc_session is None:
+		if not sid:
+			sid = random_string(64)
+			awc_sid = "awc_session_{0}".format(sid)
+
+		awc_session = {
+			"session_ip": frappe.local.request_ip,
+			"cart": { "items": [], "totals": { "sub_total": 0, "grand_total": 0 } }
+		}
+
+		frappe.cache().set_value(awc_sid, awc_session)
+
+	frappe.local.session["awc_sid"] = sid
+	frappe.local.cookie_manager.set_cookie("awc_sid", frappe.local.session["awc_sid"] )
+
+	return awc_session
+
+def set_awc_session(session):
+	awc_session = get_awc_session()
+	frappe.cache().set_value("awc_session_{0}".format(frappe.local.session["awc_sid"]), session)
+	return session
 
 def clear_awc_session():
-	awc = { "items": [], "totals": { "sub_total": 0, "grand_total": 0 } }
-	set_awc_session(awc)
-	return awc
+	awc_session = get_awc_session()
+	awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0 } }
+	return set_awc_session(awc_session)
 
-def sync_awc_and_quotation(awc, quotation):
+def sync_awc_and_quotation(awc_session, quotation):
 	# convert quotation to awc object
 	# and merge items in the case where items are added before logging in.
 
@@ -318,8 +368,8 @@ def sync_awc_and_quotation(awc, quotation):
 	# 2) remove invalid awc items who's skus do not match any products(awc items)
 	# 3) loop over remaining unmatched quotation items and create awc items
 	# 4) remove invalid quotation items who's skus do not match any products(awc items)
-
 	quotation_is_dirty = False
+	awc = awc_session.get("cart")
 	awc_is_dirty = False
 	awc_items_to_remove = []
 	awc_items_matched = []
@@ -328,10 +378,10 @@ def sync_awc_and_quotation(awc, quotation):
 	awc_items = awc.get("items", [])
 	for awc_idx in range(0, len(awc_items)):
 		awc_item = awc_items[awc_idx]
-		idx = find_index(quotation.get("items", []), lambda itm: itm.get("name") == awc_item.get("id"))
 		product = get_product_by_sku(awc_item.get("sku"))
 
 		if awc_item.get("id"):
+			idx = find_index(quotation.get("items", []), lambda itm: itm.get("name") == awc_item.get("id"))
 			if idx > -1:
 				item = quotation.items[idx]
 				# make sure product exists
@@ -363,6 +413,10 @@ def sync_awc_and_quotation(awc, quotation):
 				else:
 					# sku is invalid. Flag item to be removed from awc session
 					awc_items_to_remove.append(awc_item)
+
+			elif awc_item.get('id')[0:4] == "QUOD":
+				# remove orphaned items
+				awc_items_to_remove.append(awc_item)
 			else:
 				if product.get("success"):
 					product = product.get("data")
@@ -370,19 +424,30 @@ def sync_awc_and_quotation(awc, quotation):
 					item_data = {
 						"doctype": "Quotation Item",
 						"item_code": awc_item.get("sku"),
+						"item_name": product.get("name"),
+						"description": product.get("name"),
 						"qty": awc_item.get("qty"),
 						"warehouse": product.get("warehouse")
 					}
 
-					if item.get('options'):
-						item_data['awc_group'] = awc_item['options'].get('group')
-						item_data['awc_subgroup'] = awc_item['options'].get('subgroup')
-						item_data['awc_group_label'] = awc_item['options'].get('label')
-						if awc_item['options'].get('description'):
-							item_data['description'] = awc_item['options'].get('description')
+					# if awc_item.get('options'):
+					# 	item_data['awc_group'] = awc_item['options'].get('group')
+					# 	item_data['awc_subgroup'] = awc_item['options'].get('subgroup')
+					# 	item_data['awc_group_label'] = awc_item['options'].get('label')
+					# 	if awc_item['options'].get('description'):
+					# 		item_data['description'] = awc_item['options'].get('description')
 
-					quotation.append("items", item_data)
-					quotation_is_dirty = True
+					update_quotation_item_awc_fields(item_data, awc_item)
+
+					new_quotation_item = quotation.append("items", item_data)
+					# BUGFIX: makes sure this item gets a name during login
+					new_quotation_item.save()
+					awc_item["id"] = new_quotation_item.name
+					# make sure we won't add this new item again on step 2
+					awc_items_matched.append(awc_item.get("id"))
+
+					quotation_is_dirty = True 	# update quotation records
+					awc_is_dirty = True			# flag awc session for storage
 				else:
 					awc_items_to_remove.append(awc_item)
 		else:
@@ -397,6 +462,7 @@ def sync_awc_and_quotation(awc, quotation):
 		awc_is_dirty = True
 
 	quotation_item_to_remove = []
+
 	# step 3
 	# now create awc items for quotation items not matched with existing awc session
 	for item in [qitem for qitem in quotation.get("items", []) \
@@ -437,10 +503,23 @@ def sync_awc_and_quotation(awc, quotation):
 		quotation.save()
 		frappe.db.commit()
 
-	if awc_is_dirty:
-		set_awc_session(awc)
-
 	collect_totals(quotation, awc)
+
+	if awc_is_dirty:
+		set_awc_session(awc_session)
+
+
+def update_quotation_item_awc_fields(quotation_item, awc_item):
+	if awc_item.get('options'):
+		quotation_item['awc_group'] = awc_item['options'].get('group')
+		quotation_item['awc_subgroup'] = awc_item['options'].get('subgroup')
+		quotation_item['awc_group_label'] = awc_item['options'].get('label')
+		if awc_item['options'].get('description'):
+			quotation_item['description'] = awc_item['options'].get('description')
+
+		if awc_item['options'].get('custom'):
+			for field, value in awc_item['options']['custom'].items():
+				quotation_item[field] = value
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def cart(data=None, action=None):
@@ -453,24 +532,24 @@ def cart(data=None, action=None):
 
 	customer = get_current_customer()
 	quotation = None
+
 	if customer:
 		cart_info = get_cart_quotation()
 		quotation = cart_info.get('doc')
 
-	awc = get_awc_session()
+	awc_session = get_awc_session()
+	awc = awc_session.get("cart")
 
 	if not awc:
 		awc = clear_awc_session()
 
 	if quotation:
-		sync_awc_and_quotation(awc, quotation)
+		sync_awc_and_quotation(awc_session, quotation)
 
 	if not action:
 		return { "data": awc, "success": True}
 
 	elif action == "addToCart":
-
-		print(data)
 
 		for item in data:
 			# need basic data validation here
@@ -486,30 +565,40 @@ def cart(data=None, action=None):
 				item_data = {
 					"doctype": "Quotation Item",
 					"item_code": item.get("sku"),
+					"item_name": product.get("name"),
+					"description": product.get("name"),
 					"qty": item.get("qty"),
 					"warehouse": product.get("warehouse")
 				}
 
-				if item.get('options'):
-					item_data['awc_group'] = item['options'].get('group')
-					item_data['awc_subgroup'] = item['options'].get('subgroup')
-					item_data['awc_group_label'] = item['options'].get('label')
-					if item['options'].get('description'):
-						item_data['description'] = item['options'].get('description')
+				# if item.get('options'):
+				# 	item_data['awc_group'] = item['options'].get('group')
+				# 	item_data['awc_subgroup'] = item['options'].get('subgroup')
+				# 	item_data['awc_group_label'] = item['options'].get('label')
+				# 	if item['options'].get('description'):
+				# 		item_data['description'] = item['options'].get('description')
+
+				update_quotation_item_awc_fields(item_data, item)
 
 				quotation_item = quotation.append("items", item_data)
+				quotation_item.save()
 
+				item["old_id"] = item["id"]
 				item["id"] = quotation_item.name
 
 			awc["items"].append(item)
 
+		set_awc_session(awc_session)
+
 		if quotation:
-			collect_totals(quotation, awc)
 			apply_cart_settings(quotation=quotation)
 			quotation.flags.ignore_permissions = True
 			quotation.save()
 			frappe.db.commit()
-			set_awc_session(awc)
+
+			collect_totals(quotation, awc)
+		else:
+			collect_totals(None, awc)
 
 		return { "success": True, "data": data, "totals": awc.get("totals") }
 
@@ -517,37 +606,45 @@ def cart(data=None, action=None):
 
 		success = False
 		removed_ids = []
-		for item in data:
+		quotation_items = quotation.get("items")[:]
+		awc_items = awc["items"][:]
 
-			# find master item
-			index = find_index(awc["items"], lambda itm: itm.get("id")==item.get("id") )
+		for rm_item in data:
+			item_id = rm_item.get("id")
+			item = next((x for x in awc_items if x.get("id") == item_id), None)
+			if item:
+				group_name = item.get("options", {}).get("group", None)
 
-			# find all sub items
-			related_indexes = find_indexes(awc["items"], \
-				lambda itm: itm.get("options", {}).get("group")==item.get("options", {}).get("group") if item.get("options", {}).get("group") else False )
+				# remove item and related grouped items from cart
+				awc_items = [ itm for itm in awc_items \
+					if itm["id"] != item["id"] ]
 
-			# put it all in one list
-			related_indexes.append(index)
+				if group_name:
+					log("Remove group: {0}", group_name)
+					awc_items = [ itm for itm in awc_items \
+						if itm.get("options", {}).get("group") != group_name ]
 
-			# remove all found items
-			for index in related_indexes:
-				removed_ids.append(awc["items"][index]["id"])
-				del awc["items"][index]
 				success = True
 
-				if quotation:
-					quotation.set("items", quotation.get("items", {"name": ["!=", item.get("id")]}))
-
-
 		if success:
-			set_awc_session(awc)
+
+			removed_ids = [itm.get("id") for itm in awc["items"] if itm not in awc_items ]
+			awc["items"] = awc_items
 
 			if quotation:
-				collect_totals(quotation, awc)
+				# remove item and related grouped items from quote
+				quotation_items = [ itm for itm in quotation_items \
+					if itm.name not in removed_ids ]
+
+				quotation.set("items", quotation_items)
+
 				apply_cart_settings(quotation=quotation)
 				quotation.flags.ignore_permissions = True
 				quotation.save()
 				frappe.db.commit()
+
+			collect_totals(quotation, awc)
+			set_awc_session(awc_session)
 
 			return { "success": True, "totals": awc.get("totals"), "data": removed_ids }
 
@@ -576,7 +673,8 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 	cart_info = get_cart_quotation()
 	quotation = cart_info.get('doc')
 	# fetch awc
-	awc = get_awc_session()
+	awc_session = get_awc_session()
+	awc = awc_session.get("cart")
 	# make sure quotation and awc match
 	sync_awc_and_quotation(awc, quotation)
 	# create awc transaction to process payments first
@@ -595,8 +693,8 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 		"gateway_service": gateway_service
 	}
 
-	print(billing_address)
-	print(shipping_address)
+	log(billing_address)
+	log(shipping_address)
 
 	data.update(billing_address)
 	data.update(shipping_address)

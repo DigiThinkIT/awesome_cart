@@ -6,7 +6,11 @@ import traceback
 
 from frappe import _
 from frappe.utils import cint, cstr
+from .dbug import deprecated
 #from frappe.geo.doctype.address.address import get_address_display
+
+deprecated("""This Module is deprecated from an earlier version of the cart.
+			  It is safe to remove once all other references are gone""")
 
 class DictCopy:
 	def __init__(self, src, dst):

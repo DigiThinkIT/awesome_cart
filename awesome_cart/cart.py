@@ -18,12 +18,15 @@ from .data import \
 	transfer_quotation_to_user, \
 	find_user_customer
 
+from .dbug import deprecated, log, get_trace
+
 
 ADDRESS_FIELDS = ['address_id', 'address_title', \
 	'address_1', 'address_2', 'country', \
 	'city', 'state', 'zip', 'phone' ]
 
 def is_logged_in():
+	log("Are we still using this method?\n{0}".format(get_trace()))
 	session_user = frappe.get_user()
 
 	if session_user.name == "Guest":
@@ -32,6 +35,7 @@ def is_logged_in():
 	return True
 
 def _create_customer_address(fields, customer, prefix, address_type='Billing'):
+	log("Are we still using this method?\n{0}".format(get_trace()))
 
 	address = map_address_widget_to_address_doctype(fields, prefix)
 	# set the doctype field so we can insert this record
@@ -54,6 +58,8 @@ def login(email, password):
 		success=False,
 		msg="Internal Unhandled Error"
 	)
+
+	log("Are we still using this method?\n{0}".format(get_trace()))
 
 	try:
 
@@ -81,6 +87,8 @@ def login(email, password):
 
 @frappe.whitelist(allow_guest=False, xss_safe=True)
 def checkout(form):
+	log("Are we still using this method?\n{0}".format(get_trace()))
+
 	result = {
 		"success": False,
 		"msg": "Not Implemented",
@@ -244,6 +252,8 @@ def checkout(form):
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def register(email, password, password_check, first_name, last_name):
+	log("Are we still using this method?\n{0}".format(get_trace()))
+
 	result = dict(
 		success=False,
 		msg="Unhandled Error"
@@ -319,6 +329,8 @@ def register(email, password, password_check, first_name, last_name):
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def start_checkout(amount, currency="USD", date=None):
+	log("Are we still using this method?\n{0}".format(get_trace()))
+
 	validate_transaction_currency(currency)
 
 	if not isinstance(data, basestring):
@@ -342,6 +354,7 @@ def start_checkout(amount, currency="USD", date=None):
 		frappe.local.response["location"] = get_url("/gateway?name={0}&source={1}".format(reference_docname, reference_doctype))
 
 def sanitize_checkout_form(form):
+	log("Are we still using this method?\n{0}".format(get_trace()))
 	if "billing" in form:
 		cc = form["billing"]["fields"]["number"]
 		form["billing"]["fields"]["number"][-4:].rjust(len(cc), "X")
@@ -349,6 +362,7 @@ def sanitize_checkout_form(form):
 		form["billing"]["fields"]["code"] = "*" * len(code)
 
 def create_transaction(amount, currency, gateway=None, data=None, reference_doc=None):
+	log("Are we still using this method?\n{0}".format(get_trace()))
 	transaction = frappe.get_doc({
 		"doctype": "AWC Transaction",
 		"status": "Initiated",
@@ -369,11 +383,13 @@ def create_transaction(amount, currency, gateway=None, data=None, reference_doc=
 	return transaction
 
 def find_transaction(refence_doc, status="Initiated"):
+	log("Are we still using this method?\n{0}".format(get_trace()))
 	transaction = frappe.get_doc("AWC Transaction", {"reference_doctype": ("=", reference_doc.doctype), "reference_docname": ("=", reference_doc.name), "status": status})
 
 	return transaction
 
 def validate_transaction_currency(currency):
+	log("Are we still using this method?\n{0}".format(get_trace()))
 	if currency not in ["USD"]:
 		frappe.throw(
 			_("Please select another payment method. '{0}' is unsupported").format(currency)

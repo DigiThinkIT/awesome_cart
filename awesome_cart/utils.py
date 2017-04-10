@@ -9,15 +9,21 @@ import traceback
 from frappe import _
 from frappe.utils import random_string
 
+from .dbug import pretty_json
+
 def update_context(context):
 
 	path = frappe.local.request.path[1:]
 	print("Path: %s" % frappe.local.request.path)
-
 	context.current_date = ''
 
-	#if path == 'cart':
-	#	from .templates.pages import cart
-	#	cart.get_context(context)
-	#
-	#	log("Context for: \n%s" % json.dumps(context, indent=2, default=json_default))
+
+def on_session_creation(login_manager):
+	pass
+
+def on_logout(login_manager):
+	# destroys cart session on logout
+	sid = frappe.local.session.get("awc_sid", frappe.local.request.cookies.get("awc_sid"))
+	if sid:
+		awc_sid = "awc_session_{0}".format(sid)
+		frappe.cache().set_value(awc_sid, None)

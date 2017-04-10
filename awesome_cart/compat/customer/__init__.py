@@ -42,11 +42,10 @@ def delete_address(customer_name, address_id, ignore_permissions=False):
 
 def get_current_customer():
     session_user = frappe.get_user()
-    user = frappe.get_doc("User", session_user.name)
-
-    if user == "Guest":
+    if session_user.name == "Guest":
         return None
 
+    user = frappe.get_doc("User", session_user.name)
     quotation = cart.get_cart_quotation()["doc"]
     customer = frappe.get_doc("Customer", quotation.customer)
     return customer
