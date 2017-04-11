@@ -536,6 +536,8 @@ def cart(data=None, action=None):
 	if customer:
 		cart_info = get_cart_quotation()
 		quotation = cart_info.get('doc')
+		log(quotation)
+		quotation.save()
 
 	awc_session = get_awc_session()
 	awc = awc_session.get("cart")
