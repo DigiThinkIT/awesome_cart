@@ -370,6 +370,11 @@ def sync_awc_and_quotation(awc_session, quotation):
 	# 4) remove invalid quotation items who's skus do not match any products(awc items)
 	quotation_is_dirty = False
 	awc = awc_session.get("cart")
+
+	if not awc:
+		# abnormal, there should be a cart instance on the session
+		log(awc_session, trace=1)
+
 	awc_is_dirty = False
 	awc_items_to_remove = []
 	awc_items_matched = []
@@ -678,7 +683,7 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 	awc_session = get_awc_session()
 	awc = awc_session.get("cart")
 	# make sure quotation and awc match
-	sync_awc_and_quotation(awc, quotation)
+	sync_awc_and_quotation(awc_session, quotation)
 	# create awc transaction to process payments first
 	# sales order and friends will be generated from this data
 	data = {
