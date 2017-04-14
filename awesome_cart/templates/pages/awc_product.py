@@ -12,5 +12,8 @@ def get_context(context):
     awc_item, item = get_awc_item_by_route(route)
     context["awc_item"] = awc_item
     context["item"] = item
+    if not item or not awc_item:
+        frappe.local.flags.redirect_location = "404"
+        raise frappe.Redirect
 
     return context

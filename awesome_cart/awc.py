@@ -51,6 +51,9 @@ def get_awc_item_by_route(route):
 	# NOTE: Is there a less convoluted way of searching doctypes and getting
 	#       it's doctype instance?
 	awc_item = frappe.get_list("AWC Item", fields="name", filters = {"product_route": route}, ignore_permissions=1)
+	if len(awc_item) == 0:
+		return None, None
+		
 	awc_item = frappe.get_doc("AWC Item", awc_item[0].name)
 
 	# Finally get the item associated with this AWC item
