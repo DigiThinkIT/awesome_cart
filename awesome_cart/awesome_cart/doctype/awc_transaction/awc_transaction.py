@@ -40,7 +40,7 @@ class AWCTransaction(Document):
 					address_2=self.get("billing_address_2"),
 					city=self.get("billing_city"),
 					state=self.get("billing_state"),
-					postal_code=self.get("billing_postal_code"),
+					pincode=self.get("billing_pincode"),
 					country=self.get("billing_country"),
 					return_name=1
 				)
@@ -57,7 +57,7 @@ class AWCTransaction(Document):
 					address_2=self.get("shipping_address_2"),
 					city=self.get("shipping_city"),
 					state=self.get("shipping_state"),
-					postal_code=self.get("shipping_postal_code"),
+					pincode=self.get("shipping_pincode"),
 					country=self.get("shipping_country"),
 					return_name=1
 				)

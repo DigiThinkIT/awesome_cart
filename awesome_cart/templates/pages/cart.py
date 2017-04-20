@@ -16,23 +16,35 @@ no_cache = 1
 no_sitemap = 1
 
 def get_context(context):
-    """This is a controller extension for erpnext.templates.pages.cart"""
+	"""This is a controller extension for erpnext.templates.pages.cart"""
 
-    context["no_cache"] = 1
+	context["no_cache"] = 1
 
-    settings = frappe.db.get("Awc Settings")
+	settings = frappe.db.get("Awc Settings")
 
-    # remove? shipping is essential here anyways
-    context.shipping_enabled = 1 if settings.awc_shipping_enabled else 0
+	context["countries"] = [ x for x in frappe.get_list("Country", fields=["country_name", "name"]) ]
 
-    # flag to display login form
-    context.is_logged = awc.is_logged_in()
-    login.apply_context(context)
+	default_country = frappe.get_value("System Settings", "System Settings", "country")
+	default_country_doc = next((x for x in context["countries"] if x.name == default_country), None)
 
-    if context.is_logged:
-        # load gateway provider into context
-        gateway_provider = frappe.get_hooks('awc_gateway_form_provider')
-        if gateway_provider and len(gateway_provider) > 0:
-            context['gateway_provider'] = frappe.call(gateway_provider[0])
+	country_idx = context["countries"].index(default_country_doc)
+	context["countries"].pop(country_idx)
+	context["countries"] = [default_country_doc] + context["countries"]
 
-    return context
+	context["shipping_rate_api"] = frappe.get_hooks("shipping_rate_api")[0]
+	print(context["shipping_rate_api"])
+
+	# remove? shipping is essential here anyways
+	context.shipping_enabled = 1 if settings.awc_shipping_enabled else 0
+
+	# flag to display login form
+	context.is_logged = awc.is_logged_in()
+	login.apply_context(context)
+
+	if context.is_logged:
+		# load gateway provider into context
+		gateway_provider = frappe.get_hooks('awc_gateway_form_provider')
+		if gateway_provider and len(gateway_provider) > 0:
+			context['gateway_provider'] = frappe.call(gateway_provider[0])
+
+	return context

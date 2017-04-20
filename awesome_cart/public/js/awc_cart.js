@@ -1,89 +1,131 @@
 window.awc_checkout = {};
 
 awc_checkout = {
-  showPage: function(page) {
-    $('.panel').slideUp('fast');
-    $(page).slideDown('fast');
-    var bcSelector = $(page).attr('data-bc');
-    if ( bcSelector ) {
-      var $bc = $(bcSelector);
-      $('#checkout-breadcrumb .breadcrumb')
-        .not($bc)
-        .removeClass('active');
-      $bc.addClass('active');
-    }
+	showPage: function(page) {
+		this.validate();
 
-    // run through validations as necessary to update summaries
-    // TODO: Add shipping validation
-    var checkout_enabled = true;
-    if ( awc_checkout.gateway_provider ) {
-      var billing_summary = awc_checkout.gateway_provider.getSummary();
-      $('#checkout-confirm-billing .content').empty().append(billing_summary);
+		$('.panel').slideUp('fast');
+		$(page).slideDown('fast');
+		var bcSelector = $(page).attr('data-bc');
+		if ( bcSelector ) {
+			var $bc = $(bcSelector);
+			$('#checkout-breadcrumb .breadcrumb')
+				.not($bc)
+				.removeClass('active');
+			$bc.addClass('active');
+		}
 
-      var billing_validation_response = awc_checkout.gateway_provider.validate();
-      console.log(billing_validation_response);
+	},
 
-      if ( billing_validation_response.valid == false) {
-        console.log("Disable checkout")
-        checkout_enabled = false
-      }
+	validate: function() {
+		var checkout_enabled = true;
 
-      awc_checkout.billing_address = billing_validation_response.address
-      //TODO: replace shipping address with actual data
-      awc_checkout.shipping_address = {}
-      for(key in awc_checkout.billing_address) {
-        var k = key.replace("billing_", "shipping_")
-        awc_checkout.shipping_address[k] = awc_checkout.billing_address[key]
-      }
+		if ( awc_checkout.shipping_provider ) {
+			var shipping_validation_response = awc_checkout.shipping_provider.validate();
+			var shipping_summary = awc_checkout.shipping_provider.getSummary();
+			console.log("Shipping summary", shipping_summary);
+			$('#checkout-confirm-shipping .content').empty().append(shipping_summary);
 
+			if ( shipping_validation_response.valid == false ) {
+				checkout_enabled = false;
+			}
 
-      awc_checkout.gateway_provider.enable(checkout_enabled);
-    }
+			awc_checkout.shipping_address = shipping_validation_response.address;
+		}
 
-  },
+		if ( awc_checkout.gateway_provider ) {
+			var billing_validation_response = awc_checkout.gateway_provider.validate();
+			var billing_summary = awc_checkout.gateway_provider.getSummary();
+			$('#checkout-confirm-billing .content').empty().append(billing_summary);
 
-  nextPage: function() {
-    var $page = $('.panel:visible');
-    awc_checkout.showPage($page.next());
-  },
+			if ( billing_validation_response.valid == false ) {
+				checkout_enabled = false
+			}
 
-  setupPage: function() {
-    $('.panel .btn-next').click(awc_checkout.nextPage);
+			awc_checkout.billing_address = billing_validation_response.address
+		}
 
-    $('#checkout-confirm-shipping .btn-primary').click(function() {
-      awc_checkout.showPage('#checkout-shipping');
-    })
+		awc_checkout.gateway_provider.enable(checkout_enabled);
 
-    $('#checkout-confirm-billing .btn-primary').click(function() {
-      awc_checkout.showPage('#checkout-billing');
-    })
+	},
 
-    $('#bc-shipping').click(function(e) { e.preventDefault(); awc_checkout.showPage('#checkout-shipping'); });
-    $('#bc-billing').click(function(e) { e.preventDefault(); awc_checkout.showPage('#checkout-billing'); });
-    $('#bc-checkout').click(function(e) { e.preventDefault(); awc_checkout.showPage('#checkout-confirmation'); });
+	nextPage: function() {
+		var $page = $('.panel:visible');
+		awc_checkout.showPage($page.next());
+	},
 
-    // create a full cart feed from awesom cart js
-    cart.newCartFeed('cart-full', {
-      container: '#cart-full',
-      tpl: cart.template('cart-full')
-    })
+	setupPage: function() {
+		$('.panel .btn-next').click(awc_checkout.nextPage);
 
-    function onCartChanges() {
+		// map address "edit" Button clicks ----------------------------
 
-      // FIX: Babelfish issue, cart.totalItems getter not invoked in IF statement
-      var totalItems = cart.totalItems;
-      // make sure panels are visible once cart is processed and has items
-      if ( totalItems > 0 ) {
-        $('#checkout-panels').fadeIn('fast')
-      } else {
-        $('#checkout-panels').hide()
+		$('#checkout-confirm-shipping .btn-primary')
+			.click(function() {
+				awc_checkout.showPage('#checkout-shipping');
+			})
+		$('#checkout-confirm-billing .btn-primary')
+			.click(function() {
+				awc_checkout.showPage('#checkout-billing');
+			})
 
-      }
-    }
+		// map breadcrumb clicks ---------------------------------------
+		$('#bc-shipping').click(function(e) { e.preventDefault(); awc_checkout.showPage('#checkout-shipping'); });
+		$('#bc-billing').click(function(e) { e.preventDefault(); awc_checkout.showPage('#checkout-billing'); });
+		$('#bc-checkout').click(function(e) { e.preventDefault(); awc_checkout.showPage('#checkout-confirmation'); });
+		$('#bc-shipping-method').click(function(e) { e.preventDefault(); awc_checkout.showPage('#checkout-shipping-method'); });
 
-    cart.on('init', onCartChanges);
-    cart.on('update', onCartChanges);
-  }
+		// create a full cart feed from awesom cart js
+		cart.newCartFeed('cart-full', {
+			container: '#cart-full',
+			tpl: cart.template('cart-full')
+		})
+
+		function onCartChanges() {
+
+			// FIX: Babelfish issue, cart.totalItems getter not invoked in IF statement
+			var totalItems = cart.totalItems;
+			// make sure panels are visible once cart is processed and has items
+			if ( totalItems > 0 ) {
+				$('#checkout-panels').fadeIn('fast')
+			} else {
+				$('#checkout-panels').hide()
+
+			}
+		}
+
+		cart.on('init', onCartChanges);
+		cart.on('update', onCartChanges);
+
+		cart.on('init', function() {
+			// handle smart placeholder labels
+			$('.awc-form .field').each(function() {
+				var $field = $(this);
+				var $input = $(this).find('input:first, select:first');
+
+				$input
+					.change(function() {
+						if ( $(this).val() ) {
+							$field.addClass('hasvalue');
+						} else {
+							$field.removeClass('hasvalue');
+						}
+					})
+					.keyup(function() {
+						if ( $(this).val() ) {
+							$field.addClass('hasvalue');
+						} else {
+							$field.removeClass('hasvalue');
+						}
+					})
+					.blur(function() {
+						$field.removeClass('focus');
+					})
+					.focus(function() {
+						$field.addClass('focus');
+					});
+			});
+		})
+	}
 }
 
 awc_checkout.setupPage();

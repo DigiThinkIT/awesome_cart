@@ -53,7 +53,7 @@ def get_awc_item_by_route(route):
 	awc_item = frappe.get_list("AWC Item", fields="name", filters = {"product_route": route}, ignore_permissions=1)
 	if len(awc_item) == 0:
 		return None, None
-		
+
 	awc_item = frappe.get_doc("AWC Item", awc_item[0].name)
 
 	# Finally get the item associated with this AWC item
@@ -167,6 +167,7 @@ def get_product_by_sku(sku, detailed=0):
 		sku=item.name,
 		name=item.name,
 		custom=custom_data,
+		weight=item.get("net_weight", 0),
 		warehouse=item.get("default_warehouse"),
 		description=awc_item.description_short,
 		imageUrl=awc_item.product_thumbnail,
@@ -247,6 +248,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 			i.item_code,
 			i.has_variants,
 			i.standard_rate,
+			i.net_weight,
 			a.name as awc_item_name,
 			a.product_route as awc_product_route,
 			a.description_short as awc_description_short,
@@ -279,6 +281,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 			product = dict(
 				sku=item.name,
 				name=item.name,
+				weight=item.get("net_weight", 0),
 				custom=get_awc_item_custom_data(item.awc_item_name),
 				productUrl="/p/%s" % item.awc_product_route,
 				description=item.awc_description_short,
@@ -582,13 +585,6 @@ def cart(data=None, action=None):
 					"warehouse": product.get("warehouse")
 				}
 
-				# if item.get('options'):
-				# 	item_data['awc_group'] = item['options'].get('group')
-				# 	item_data['awc_subgroup'] = item['options'].get('subgroup')
-				# 	item_data['awc_group_label'] = item['options'].get('label')
-				# 	if item['options'].get('description'):
-				# 		item_data['description'] = item['options'].get('description')
-
 				update_quotation_item_awc_fields(item_data, item)
 
 				quotation_item = quotation.append("items", item_data)
@@ -665,6 +661,51 @@ def cart(data=None, action=None):
 		return { "success": False, "message": "Unknown Command." }
 
 @frappe.whitelist()
+def get_shipping_rate(address):
+
+	try:
+		address = json.loads(address)
+	except Exception as ex:
+		return []
+
+	log(pretty_json(address))
+
+	awc_session = get_awc_session()
+	awc = awc_session.get("cart")
+
+	shipping_rate_api = frappe.get_hooks("shipping_rate_api")[0]
+	address_link = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
+	from_address = frappe.get_doc("Address", address_link)
+
+	log(pretty_json(from_address.as_dict()))
+
+	packages=[]
+
+	for item in awc["items"]:
+		if not item.get("options", {}).get("subgroup"):
+			product = get_product_by_sku(item.get("sku"))
+			if product.get("success"):
+				product = product.get("data")
+				for i in range(0, cint(item.get('qty', 1))):
+					weight = product.get("weight")
+					if weight == 0:
+						weight = 0.1
+					package = {
+						"weight_value": weight,
+						"weight_units": "LB"
+					}
+					packages.append(package)
+
+	log(pretty_json(shipping_rate_api))
+	log(pretty_json(packages))
+
+	rates = frappe.call(shipping_rate_api["module"], from_address=from_address, to_address=address, packages=packages)
+
+	log(pretty_json(rates))
+
+	return rates
+
+@frappe.whitelist()
 def create_transaction(gateway_service, billing_address, shipping_address):
 
 	if isinstance(billing_address, basestring):
@@ -707,8 +748,8 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 	log(billing_address)
 	log(shipping_address)
 
-	data.update(billing_address)
-	data.update(shipping_address)
+	data.update({ "billing_%s" % key: value for key, value in billing_address.iteritems() })
+	data.update({ "shipping_%s" % key: value for key, value in shipping_address.iteritems() })
 
 	log(pretty_json(data))
 

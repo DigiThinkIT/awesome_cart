@@ -176,6 +176,203 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
     })
 }
 
+var AwcShippingProvider = Class.extend({
+	init: function(cart) {
+		this._last_values = "";
+		this._packages = [];
+		this._cart = cart;
+		this._cart.on("update", this._on_cart_update);
+		this._on_cart_update()
+		this.valid = false;
+		this.method_valid = false;
+
+	},
+	_on_cart_update: function() {
+		var base = this;
+		this._packages = [];
+		this._cart.fetchCartItems()
+			.then(function(items) {
+				base._last_values = "#invalid";
+			});
+	},
+	form: function(data) {
+		this.data = data;
+	},
+	validate: function() {
+		var base = this;
+		var $form = $('#awc-shipping-form');
+		var $method_form = $('#awc-shipping-method');
+
+		this.data.address_1 = $form.find('input[name="address_1"]').val();
+		this.data.address_2 = $form.find('input[name="address_2"]').val();
+		this.data.city = $form.find('input[name="city"]').val();
+		this.data.state = $form.find('input[name="state"]').val();
+		this.data.pincode = $form.find('input[name="pincode"]').val();
+		this.data.country = $form.find('select[name="country"] option:checked').attr('value');
+
+		var result = {
+			valid: true,
+			address: this.data
+		}
+
+		if ( !this.data.address_1 ) {
+			result.valid = false;
+		}
+		if ( !this.data.city ) {
+			result.valid = false;
+		}
+		if ( !this.data.state ) {
+			result.valid = false;
+		}
+		if ( !this.data.pincode ) {
+			result.valid = false;
+		}
+		if ( !this.data.country ) {
+			result.valid = false;
+		}
+		if ( !this.data.ship_method ) {
+			result.method_valid = false;
+		}
+
+		this.valid = result.valid;
+		if ( result.valid ) {
+			$("#bc-shipping").addClass("valid");
+
+			// build values hash to avoid sending
+			var last_values = this.data.address_1 +
+				this.data.address_2 + this.data.city +
+				this.data.state + this.data.pincode +
+				this.data.country;
+
+			if ( last_values != this._last_values ) {
+				this._last_values = last_values;
+				$method_form.empty();
+
+				frappe.call({
+					method: "awesome_cart.awc.get_shipping_rate",
+					args: {
+						address: this.data,
+					},
+					callback: function(response) {
+						var result = response.message;
+						if ( result && result.constructor == Array && result.length > 0 ) {
+							base._shipping_methods = result;
+
+							$.each(result, function(i, method) {
+								var checked="";
+								var is_default = false;
+								if ( base.data.ship_method && base.data.ship_method == method.name ) {
+									is_default = true;		// auto select last ship method selection if available
+								} else if ( !base.data.ship_method ) {
+									is_default = i == 0;	// select first item by default
+								}
+
+								if ( is_default ) {
+									checked="checked='checked'";
+									base.data.ship_method = method.name;
+									base.method_valid = true;
+									$("#bc-shipping-method").addClass("valid");
+								}
+								var $method = $(
+									'<li>'+
+										'<label>'+
+											'<input type="radio" name="awc_shipping_method" value="' + method.name + '"' + checked + '>' +
+											'<span class="label">' + method.label + " + $" + method.fee + '</span>' +
+										'</label>' +
+									'</li>');
+								$method_form.append($method);
+								$method.find('input').change(function() {
+									if ( $(this).is(":checked") ) {
+										base.data.ship_method = $(this).val();
+										base.method_valid = true;
+										console.log("Ship Method", base.data.ship_method);
+										// force cart ui validation so ui updates with new data on click
+										awc_checkout.validate();
+									}
+								})
+							});
+
+							if ( !base.data.ship_method ) {
+								// if there was nothing selected by default, go back and select
+								// first item. This can occur if address method was removed due
+								// to a change of address from a previous selection
+								$method_form.find('index[type="radio"]:first').click();
+
+							}
+
+							// finally trigger validation once more to update ui with default selections
+							awc_checkout.validate();
+						} else {
+							base.method_valid = false;
+							$("#bc-shipping-method").removeClass("valid");
+							$method_form.empty();
+							$method_form.append('<li class="error">Invalid Shipping Address. Edit your shipping information to get shipping quote.</li>');
+						}
+					}
+				})
+			}
+		} else {
+			$("#bc-shipping").removeClass("valid");
+			$method_form.empty();
+			$method_form.append('<li class="error">Invalid Shipping Address. Edit your shipping information to get shipping quote.</li>');
+		}
+
+		// only validate if both address and shipping method validated
+		result.valid = result.valid && base.method_valid
+
+		return result;
+	},
+	getSummary: function() {
+		var base = this;
+		// NOTE: lazy way of setting up address dom.
+		// consider moving to templates(will require checking script load order)
+		var ln=function(name, nl) {
+			if ( nl === undefined ) {
+				nl = true;
+			}
+
+			var txt = "";
+			if ( name in base.data && base.data[name] ) {
+				txt = base.data[name];
+				if ( nl ) {
+					txt += "<br>";
+				}
+			}
+
+			return txt;
+		}
+
+		if ( this.valid ) {
+			// find shipping method label data
+			var ship_method = "";
+			for(var i in this._shipping_methods) {
+				var method = this._shipping_methods[i];
+				console.log(method.name, base.data.ship_method);
+				if ( base.data.ship_method == method.name ) {
+					ship_method = '<div class="row"><div class="col-sm-6 shipping_method label">Shipping method</div>' +
+						'<div class="col-sm-6 shipping_method value">' + method.label + ' + $' + method.fee + '</div>' +
+						'</div>';
+					break;
+				}
+			}
+
+			console.log("Ship method? ", ship_method);
+			return '<div class="row">' +
+				'<address class="col-sm-12">' +
+					ln("address_1") +
+					ln("address_2") +
+					ln("city", 0) + ", " + ln("state", 0) + ln("pincode") +
+					ln("country") +
+				'</address>' +
+			'</div>'+
+			ship_method;
+		} else {
+			return '<p class="error">Shipping address incomplete. Please go back and review.</p>';
+		}
+
+	}
+})
+
 // Initialize awc cart
 var cart = new awc.AwesomeCart({
   storeAdapter: new awc.ErpnextAdapter()
