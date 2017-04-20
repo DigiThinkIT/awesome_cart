@@ -22,7 +22,7 @@ def get_context(context):
 
 	settings = frappe.db.get("Awc Settings")
 
-	context["countries"] = [ x for x in frappe.get_list("Country", fields=["country_name", "name"]) ]
+	context["countries"] = [ x for x in frappe.get_list("Country", fields=["country_name", "name"], ignore_permissions=1) ]
 
 	default_country = frappe.get_value("System Settings", "System Settings", "country")
 	default_country_doc = next((x for x in context["countries"] if x.name == default_country), None)
