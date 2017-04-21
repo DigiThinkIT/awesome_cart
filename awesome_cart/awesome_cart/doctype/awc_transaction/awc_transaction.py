@@ -12,6 +12,8 @@ from awesome_cart.compat.addresses import get_address_display, create_address
 
 from awesome_cart import awc
 
+from dti_devtools.debug import log, pretty_json
+
 # simple log level translation table to match ints
 LOG_LEVELS = {
 	"None": 0,
@@ -103,7 +105,7 @@ class AWCTransaction(Document):
 
 			return result
 		except Exception as ex:
-			print(frappe.get_traceback())
+			log(frappe.get_traceback())
 			self.log_action(frappe.get_traceback(), "Debug")
 			raise ex
 
