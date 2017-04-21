@@ -94,7 +94,10 @@ class AWCTransaction(Document):
 
 			# finally let payment request run its own code to finalize transaction
 			# invoice, payment entry docs should be created here
+			log("before auth payment request")
 			result = preq.run_method("on_payment_authorized", payment_status)
+			log(result)
+			log("after auth payment request")
 
 			# this is here to remove duplication warning messages.
 			# TODO: Consider bring this to erpnext team to remove warning
@@ -106,7 +109,7 @@ class AWCTransaction(Document):
 			return result
 		except Exception as ex:
 			log(frappe.get_traceback())
-			self.log_action(frappe.get_traceback(), "Debug")
+			self.log_action(frappe.get_traceback(), "Error")
 			raise ex
 
 	def max_log_level(self, level):
