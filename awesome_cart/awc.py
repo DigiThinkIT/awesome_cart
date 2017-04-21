@@ -595,8 +595,6 @@ def cart(data=None, action=None):
 
 			awc["items"].append(item)
 
-		set_awc_session(awc_session)
-
 		if quotation:
 			apply_cart_settings(quotation=quotation)
 			quotation.flags.ignore_permissions = True
@@ -606,6 +604,8 @@ def cart(data=None, action=None):
 			collect_totals(quotation, awc)
 		else:
 			collect_totals(None, awc)
+
+		set_awc_session(awc_session)
 
 		return { "success": True, "data": data, "totals": awc.get("totals") }
 
