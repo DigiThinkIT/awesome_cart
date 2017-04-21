@@ -62,6 +62,14 @@ class AWCTransaction(Document):
 					return_name=1
 				)
 
+			if self.get("shipping_method"):
+				quotation.append("taxes", {
+					"charge_type": "Actual",
+					"account_head": frappe.get_value("Awc Settings", "Awc Settings", "shipping_account"),
+					"description": self.get("shipping_method", "Shipping Charges"),
+					"tax_amount": self.get("shipping_fee", 0)
+				})
+
 			# assign formatted address text
 			quotation.address_display = get_address_display(frappe.get_doc("Address", quotation.customer_address).as_dict())
 			quotation.shipping_address = get_address_display(frappe.get_doc("Address", quotation.shipping_address_name).as_dict())

@@ -361,7 +361,7 @@ var AwcShippingProvider = Class.extend({
 				'<address class="col-sm-12">' +
 					ln("address_1") +
 					ln("address_2") +
-					ln("city", 0) + ", " + ln("state", 0) + ln("pincode") +
+					ln("city", 0) + ", " + ln("state", 0) + " " + ln("pincode") +
 					ln("country") +
 				'</address>' +
 			'</div>'+

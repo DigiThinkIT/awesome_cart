@@ -700,6 +700,12 @@ def get_shipping_rate(address):
 	log(pretty_json(packages))
 
 	rates = frappe.call(shipping_rate_api["module"], from_address=from_address, to_address=address, packages=packages)
+	# cache quoted rates to reference later on checkout
+	awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
+	set_awc_session(awc_session)
+
+	log("Updated shipping rates cache?")
+	log(pretty_json(awc_session))
 
 	log(pretty_json(rates))
 
@@ -745,19 +751,31 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 		"gateway_service": gateway_service
 	}
 
-	log(billing_address)
-	log(shipping_address)
+	log("Shipping address data. Is method data available?")
+	log(pretty_json(shipping_address))
+
+	if shipping_address.get("ship_method"):
+		# retrieve quoted charges
+		rates = awc_session.get("shipping_rates")
+		data["shipping_method"] = shipping_address.get("ship_method")
+		if rates:
+			data["shipping_fee"] = rates.get(data["shipping_method"], {}).get("fee")
 
 	data.update({ "billing_%s" % key: value for key, value in billing_address.iteritems() })
 	data.update({ "shipping_%s" % key: value for key, value in shipping_address.iteritems() })
 
+	log("Building Transaction.")
 	log(pretty_json(data))
+	log(pretty_json(awc_session))
 
 	transaction = frappe.get_doc(data)
 
 	transaction.flags.ignore_permissions = 1
 	transaction.save()
 	frappe.db.commit()
+
+	# check AWCTransaction.on_payment_authorized implementation which is
+	# where this transaction continues when payment processing kicks in
 
 	# fetch only payment request info
 	result["data"] = { key: transaction.get(key) for key in \

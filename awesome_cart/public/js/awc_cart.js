@@ -23,7 +23,6 @@ awc_checkout = {
 		if ( awc_checkout.shipping_provider ) {
 			var shipping_validation_response = awc_checkout.shipping_provider.validate();
 			var shipping_summary = awc_checkout.shipping_provider.getSummary();
-			console.log("Shipping summary", shipping_summary);
 			$('#checkout-confirm-shipping .content').empty().append(shipping_summary);
 
 			if ( shipping_validation_response.valid == false ) {
