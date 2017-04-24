@@ -25,13 +25,13 @@
 {% block content %}
 
 <div class="row aw-row">
-	<div class="col-sm-7 aw-col-left">
+	<div class="col-md-7 aw-col-left">
 
 		<h2>{{ _("My Cart") }}</h2>
 		<div id="cart-full"></div>
 
 	</div>
-	<div class="col-sm-5 aw-col-right">
+	<div class="col-md-5 aw-col-right">
 		<div class="col-content focus-column right-col">
 			<div id="awc-forms">
 
@@ -42,12 +42,14 @@
 				</div>
 {% else %}
 				<div id="checkout-panels">
-					<h2 class="text-center">Checkout</h2>
-					<div id="checkout-breadcrumb">
-							<a href="" id="bc-shipping" class="breadcrumb active">Shipping</a>
-							<a href="" id="bc-billing" class="breadcrumb">Billing</a>
-							<a href="" id="bc-shipping-method" class="breadcrumb">Shipping Method</a>
-							<a href="" id="bc-checkout" class="breadcrumb">Checkout</a>
+					<div class="header">
+						<div class="title">Checkout</div>
+						<ul id="checkout-breadcrumb">
+								<a href="" id="bc-shipping" class="breadcrumb active">Shipping</a>
+								<a href="" id="bc-billing" class="breadcrumb">Billing</a>
+								<a href="" id="bc-shipping-method" class="breadcrumb">Shipping Method</a>
+								<a href="" id="bc-checkout" class="breadcrumb">Checkout</a>
+						</ul>
 					</div>
 
 					<div id="checkout-shipping" data-bc="#bc-shipping" class="panel">
@@ -72,7 +74,7 @@
 						<ul class="content" id="awc-shipping-method"></ul>
 						<button class="btn btn-default btn-primary btn-next">Next</button>
 					</div>
-					
+
 					<div id="checkout-confirmation" data-bc="#bc-checkout" class="panel">
 						<p>Please check review your information before once more before completing checkout</p>
 
