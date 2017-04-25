@@ -152,7 +152,11 @@ def get_content_sections(awc_item):
 def get_product_by_sku(sku, detailed=0):
 	"""Get's product in awcjs format by its sku and optionally detailed data."""
 	# fetch item by its sku/item_code
-	item = frappe.get_list("Item", fields="*", filters = {"item_code": sku}, ignore_permissions=1)[0]
+	item = frappe.get_list("Item", fields="*", filters = {"item_code": sku}, ignore_permissions=1)
+	if not item or len(item) == 0:
+		return { "success": False, "data": None }
+
+	item = item[0]
 	# get item price list information
 	_item = _dict(get_product_info(item.item_code))
 	# get awc item name by its item link
