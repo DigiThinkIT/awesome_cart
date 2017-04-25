@@ -617,7 +617,11 @@ def cart(data=None, action=None):
 
 		success = False
 		removed_ids = []
-		quotation_items = quotation.get("items")[:]
+		quotation_item = []
+		
+		if quotation:
+			quotation_items = quotation.get("items")[:]
+
 		awc_items = awc["items"][:]
 
 		for rm_item in data:
