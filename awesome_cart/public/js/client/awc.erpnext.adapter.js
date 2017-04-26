@@ -221,9 +221,6 @@ var AwcShippingProvider = Class.extend({
 		if ( !this.data.city ) {
 			result.valid = false;
 		}
-		if ( !this.data.state ) {
-			result.valid = false;
-		}
 		if ( !this.data.pincode ) {
 			result.valid = false;
 		}
