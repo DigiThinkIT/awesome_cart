@@ -166,6 +166,9 @@ def get_product_by_sku(sku, detailed=0):
 	# get awc_item custom data as dictionary
 	custom_data = get_awc_item_custom_data(awc_item)
 
+	#log(pretty_json(_item))
+	price = _item.get("price", {}).get("price_list_rate", item.get("standard_rate", "[[ERROR MISSING RATE]]"))
+
 	# format product for awcjs
 	product = dict(
 		sku=item.name,
@@ -176,7 +179,7 @@ def get_product_by_sku(sku, detailed=0):
 		description=awc_item.description_short,
 		imageUrl=awc_item.product_thumbnail,
 		productUrl="/p/%s" % awc_item.product_route,
-		price=_item.get("price.price_list_rate", item.get("standard_rate", "[[ERROR MISSING RATE]]")),
+		price=price,
 		listing_widget=awc_item.listing_widget,
 		product_widget=awc_item.product_widget,
 		product_template=awc_item.product_template,
@@ -618,7 +621,7 @@ def cart(data=None, action=None):
 		success = False
 		removed_ids = []
 		quotation_item = []
-		
+
 		if quotation:
 			quotation_items = quotation.get("items")[:]
 
