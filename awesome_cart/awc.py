@@ -160,9 +160,13 @@ def get_product_by_sku(sku, detailed=0):
 	# get item price list information
 	_item = _dict(get_product_info(item.item_code))
 	# get awc item name by its item link
-	awc_item = frappe.get_list("AWC Item", fields="*", filters = {"product_name": item.name}, ignore_permissions=1)[0]
+	awc_item = frappe.get_list("AWC Item", fields="*", filters = {"product_name": item.name}, ignore_permissions=1)
+
+	if not awc_item or len(awc_item) == 0:
+		return { "success": False, "data": None, "error": "Missing AWC Item for {0}".format(item.name) }
+
 	# finally get awc_item doctype instance
-	awc_item = frappe.get_doc("AWC Item", awc_item.name)
+	awc_item = frappe.get_doc("AWC Item", awc_item[0].name)
 	# get awc_item custom data as dictionary
 	custom_data = get_awc_item_custom_data(awc_item)
 
