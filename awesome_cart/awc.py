@@ -79,6 +79,10 @@ def build_awc_options_from_varients(item):
 
 	item = frappe.get_doc("Item", item.name)
 
+	# early exit for items which are already variants to another item
+	if item.get('variant_of'):
+		return {'variants': [], 'hashes': {}}
+
 	context = _dict()
 	context = item.get_context(context)
 
@@ -162,8 +166,19 @@ def get_product_by_sku(sku, detailed=0):
 	# get awc item name by its item link
 	awc_item = frappe.get_list("AWC Item", fields="*", filters = {"product_name": item.name}, ignore_permissions=1)
 
+	missing_awc_item = False
+	# lets check if we have an AWC Item for this Item
 	if not awc_item or len(awc_item) == 0:
-		return { "success": False, "data": None, "error": "Missing AWC Item for {0}".format(item.name) }
+		# if not, lets check if we have an AWC Item for its variant_of value if set
+		if item.get('variant_of'):
+			awc_item = frappe.get_list("AWC Item", fields="*", filters = {"product_name": item.variant_of}, ignore_permissions=1)
+			if not awc_item or len(awc_item) == 0:
+				missing_awc_item = "{0}(Parent), {1}(Variant)".format(item.variant_of, item.name)
+		else:
+			missing_awc_item = item.name
+
+	if missing_awc_item:
+		return { "success": False, "data": None, "error": "Missing AWC Item for {0}".format(missing_awc_item) }
 
 	# finally get awc_item doctype instance
 	awc_item = frappe.get_doc("AWC Item", awc_item[0].name)
