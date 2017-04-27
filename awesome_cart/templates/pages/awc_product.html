@@ -11,7 +11,7 @@
 <script type="text/javascript">
 
 {% if awc_item %}
-var productTemplate = cart.template('{{ awc_item.product_template }}')
+var productTemplate = cart.template({{ awc_item.product_template|json }})
 {% else %}
 var productTemplate = null;
 {% endif %}
@@ -41,7 +41,7 @@ function updateProductDetails(sku) {
 }
 
 // trigger fetching product details and rendering template at runtime
-cart.on('init', updateProductDetails.bind(null, '{{ item.item_code }}' ))
+cart.on('init', updateProductDetails.bind(null, {{ item.item_code|json }} ))
 cart.on('hashchange', updateProductDetails) // update details on hashchange
 
 </script>
