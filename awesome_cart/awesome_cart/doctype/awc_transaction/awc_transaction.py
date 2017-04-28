@@ -98,10 +98,11 @@ class AWCTransaction(Document):
 
 			# finally let payment request run its own code to finalize transaction
 			# invoice, payment entry docs should be created here
-			log("before auth payment request")
 			result = preq.run_method("on_payment_authorized", payment_status)
-			log(result)
-			log("after auth payment request")
+
+			# override redirection to orders page
+			if result:
+				result = '/orders'
 
 			# this is here to remove duplication warning messages.
 			# TODO: Consider bring this to erpnext team to remove warning

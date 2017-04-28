@@ -114,8 +114,8 @@ awc.ErpnextAdapter.prototype.fetchProducts = function(tags, terms, start, limit)
       args: { tags: tags.join(','), terms: terms, start: start?start:0, limit: limit },
       freeze: 1,
       callback: function(result) {
-        console.log("Fetch products");
-        console.log(result);
+        //console.log("Fetch products");
+        //console.log(result);
         if ( result.message.success ) {
           if ( result.message.data.totals ) {
             base._totals = result.message.data.totals;
@@ -181,18 +181,19 @@ var AwcShippingProvider = Class.extend({
 		this._last_values = "";
 		this._packages = [];
 		this._cart = cart;
-		this._cart.on("update", this._on_cart_update);
+		this._cart.on("update", this._on_cart_update.bind(this));
 		this._on_cart_update()
 		this.valid = false;
 		this.method_valid = false;
-
+		this.fee = 0;
+		this.label = "";
 	},
 	_on_cart_update: function() {
 		var base = this;
 		this._packages = [];
 		this._cart.fetchCartItems()
 			.then(function(items) {
-				base._last_values = "#invalid";
+				//base._last_values = "#invalid";
 			});
 	},
 	form: function(data) {
@@ -229,7 +230,22 @@ var AwcShippingProvider = Class.extend({
 		}
 		if ( !this.data.ship_method ) {
 			result.method_valid = false;
+			base.fee = 0;
+			base.label = "";
+		} else {
+			for(var i in this._shipping_methods) {
+				var method = this._shipping_methods[i];
+				if ( this.data.ship_method == method.name ) {
+					base.fee = method.fee;
+					cart.totals["shipping"] = method.fee;
+					cart._emitUpdated();
+					base.label = method.label;
+					break;
+				}
+			}
 		}
+
+
 
 		this.valid = result.valid;
 		if ( result.valid ) {
@@ -278,11 +294,12 @@ var AwcShippingProvider = Class.extend({
 										'</label>' +
 									'</li>');
 								$method_form.append($method);
+								$method.find('input').data('fee', method.fee);
 								$method.find('input').change(function() {
 									if ( $(this).is(":checked") ) {
 										base.data.ship_method = $(this).val();
 										base.method_valid = true;
-										console.log("Ship Method", base.data.ship_method);
+										//console.log("Ship Method", base.data.ship_method);
 										// force cart ui validation so ui updates with new data on click
 										awc_checkout.validate();
 									}
@@ -344,7 +361,6 @@ var AwcShippingProvider = Class.extend({
 			var ship_method = "";
 			for(var i in this._shipping_methods) {
 				var method = this._shipping_methods[i];
-				console.log(method.name, base.data.ship_method);
 				if ( base.data.ship_method == method.name ) {
 					ship_method = '<div class="row"><div class="col-sm-6 shipping_method label">Shipping method</div>' +
 						'<div class="col-sm-6 shipping_method value">' + method.label + ' + $' + method.fee + '</div>' +
@@ -353,7 +369,6 @@ var AwcShippingProvider = Class.extend({
 				}
 			}
 
-			console.log("Ship method? ", ship_method);
 			return '<div class="row">' +
 				'<address class="col-sm-12">' +
 					ln("address_1") +
@@ -361,8 +376,8 @@ var AwcShippingProvider = Class.extend({
 					ln("city", 0) + ", " + ln("state", 0) + " " + ln("pincode") +
 					ln("country") +
 				'</address>' +
-			'</div>'+
-			ship_method;
+			'</div>';/*+
+			ship_method;*/
 		} else {
 			return '<p class="error">Shipping address incomplete. Please go back and review.</p>';
 		}
@@ -373,10 +388,6 @@ var AwcShippingProvider = Class.extend({
 // Initialize awc cart
 var cart = new awc.AwesomeCart({
   storeAdapter: new awc.ErpnextAdapter()
-});
-
-cart.on("after-add-to-cart", function(items) {
-  console.log("Products added", items);
 });
 
 awc.debug.level = 5;
