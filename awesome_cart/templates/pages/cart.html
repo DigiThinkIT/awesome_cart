@@ -90,6 +90,15 @@
 							<button class="btn btn-default btn-primary">Edit Billing</button>
 						</div>
 
+						<div class="confirm-box dti-form" id="checkout-confirm-totals">
+							<h4>Your Totals:</h4>
+							<div class="content">
+								<div class="sub-total">Subtotal: <span class="value"></span></div>
+								<div class="shipping-total">Shipping<span class="method"></span>: <span class="value"></span></div>
+								<div class="grand-total">Total: <span class="value"></span></div>
+							</div>
+						</div>
+
 						<div class="dti-form" id="confirm-form">
 							<label><input type="checkbox" value="1"/><span>I agree with the Terms and Conditions</span></label>
 							{% if gateway_provider %}

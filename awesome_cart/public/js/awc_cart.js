@@ -27,6 +27,13 @@ awc_checkout = {
 
 			if ( shipping_validation_response.valid == false ) {
 				checkout_enabled = false;
+				$('#checkout-confirm-totals .shipping-total .value').append('<span class="error">-</span>');
+				$('#checkout-confirm-totals .shipping-total .method').append('<span class="error">(missing)</span>');
+			} else {
+				if ( awc_checkout.shipping_provider.fee ) {
+					$('#checkout-confirm-totals .shipping-total .value').empty().text(cart.storeAdapter.formatCurrency(awc_checkout.shipping_provider.fee));
+					$('#checkout-confirm-totals .shipping-total .method').empty().text("("+awc_checkout.shipping_provider.label+")");
+				}
 			}
 
 			awc_checkout.shipping_address = shipping_validation_response.address;
@@ -80,6 +87,12 @@ awc_checkout = {
 		})
 
 		function onCartChanges() {
+			var totals = cart.totals;
+			console.log("awc was updated")
+			console.log('totals', totals);
+
+			$('#checkout-confirm-totals .sub-total .value').text(cart.storeAdapter.formatCurrency(totals.sub_total));
+			$('#checkout-confirm-totals .grand-total .value').text(cart.storeAdapter.formatCurrency(totals.grand_total));
 
 			// FIX: Babelfish issue, cart.totalItems getter not invoked in IF statement
 			var totalItems = cart.totalItems;
