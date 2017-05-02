@@ -195,6 +195,20 @@ var AwcShippingProvider = Class.extend({
 		this.method_valid = false;
 		this.fee = 0;
 		this.label = "";
+
+		var $form = $('#awc-shipping-form');
+		var on_update = function() {
+			var field = {name: $(this).attr('data-type'), value: $(this).val()};
+			console.log(field);
+			$form.trigger('field-change', field);
+		}
+
+		$form.find('input[name="address_1"]').change(on_update);
+		$form.find('input[name="address_2"]').change(on_update);
+		$form.find('input[name="city"]').change(on_update);
+		$form.find('input[name="state"]').change(on_update);
+		$form.find('input[name="pincode"]').change(on_update);
+		$form.find('select[name="country"]').change(on_update);
 	},
 	_on_cart_update: function() {
 		var base = this;
@@ -218,6 +232,8 @@ var AwcShippingProvider = Class.extend({
 		this.data.state = $form.find('input[name="state"]').val();
 		this.data.pincode = $form.find('input[name="pincode"]').val();
 		this.data.country = $form.find('select[name="country"] option:checked').attr('value');
+
+		$form.trigger('address_change', this.data);
 
 		var result = {
 			valid: true,
