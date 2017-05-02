@@ -6,7 +6,7 @@
 	    <div class="col-sm-12">
 	      <div class="field required">
 	        <label for="awc_ship__line1">Address</label>
-	        <input id="awc_ship__line1" name="address_1" placeholder="Address 1"/>
+	        <input id="awc_ship__line1" name="address_1" placeholder="Address 1" data-type="address_1"/>
 	      </div>
 	    </div>
 	  </div>
@@ -14,7 +14,7 @@
 	    <div class="col-sm-12">
 	      <div class="field">
 	        <label for="awc_ship__line2">Address 2</label>
-	        <input id="awc_ship__line2" name="address_2" placeholder="Address 2"/>
+	        <input id="awc_ship__line2" name="address_2" placeholder="Address 2" data-type="address_2"/>
 	      </div>
 	    </div>
 	  </div>
@@ -22,19 +22,19 @@
 	    <div class="col-xs-6 nopad-right">
 	      <div class="field required">
 	        <label for="awc_ship__city">City</label>
-	        <input id="awc_ship__city" name="city" placeholder="City"/>
+	        <input id="awc_ship__city" name="city" placeholder="City" data-type="city"/>
 	      </div>
 	    </div>
 	    <div class="col-xs-3 nopad-right">
 	      <div class="field">
 	        <label for="awc_ship__state">State</label>
-	        <input id="awc_ship__state" name="state" placeholder="State"/>
+	        <input id="awc_ship__state" name="state" placeholder="State" data-type="state"/>
 	      </div>
 	    </div>
 	    <div class="col-xs-3 nopad-left">
 	      <div class="field required">
 	        <label for="awc_ship__zip">Postal Code</label>
-	        <input id="awc_ship__zip" name="pincode" placeholder="Postal Code"/>
+	        <input id="awc_ship__zip" name="pincode" placeholder="Postal Code" data-type="pincode"/>
 	      </div>
 	    </div>
 	  </div>
@@ -42,7 +42,7 @@
 	    <div class="col-sm-12">
 	      <div class="field required">
 	        <label for="awc_ship__country">Country</label>
-	        <select id="awc_ship__country" name="country">
+	        <select id="awc_ship__country" name="country" data-type="country">
 	          <option selected>- Select Country -</option>
 	          {% for country in countries %}
 	          <option value="{{country.name}}">{{country.country_name}}</option>

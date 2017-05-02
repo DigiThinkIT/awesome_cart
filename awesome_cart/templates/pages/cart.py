@@ -45,6 +45,10 @@ def get_context(context):
 		# load gateway provider into context
 		gateway_provider = frappe.get_hooks('awc_gateway_form_provider')
 		if gateway_provider and len(gateway_provider) > 0:
-			context['gateway_provider'] = frappe.call(gateway_provider[0])
+			context['gateway_provider'] = frappe.call(gateway_provider[0], context=dict(
+				use_address_same_as=1,
+				address_same_as_label="Same as Shipping Address",
+				address_same_as_source="#awc-shipping-form"
+			))
 
 	return context

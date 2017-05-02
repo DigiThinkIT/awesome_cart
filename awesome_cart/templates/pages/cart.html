@@ -100,7 +100,7 @@
 						</div>
 
 						<div class="dti-form" id="confirm-form">
-							<label><input type="checkbox" value="1"/><span>I agree with the Terms and Conditions</span></label>
+							<label><input name="accept_terms" type="checkbox" value="1"/><span>I agree with the Terms and Conditions</span></label>
 							{% if gateway_provider %}
 								{{ gateway_provider.submit }}
 							{% else %}
@@ -144,7 +144,7 @@
 			cart.gateway_info = {}
 			cart.shipping_info = {}
 
-			awc_checkout.gateway_provider = new {{gateway_provider.js_api_factory}}();
+			awc_checkout.gateway_provider = new {{gateway_provider.js_api_factory}}({{ gateway_provider.context|json }});
 			awc_checkout.gateway_provider.on_process = cart.validate.bind(cart);
 			awc_checkout.gateway_provider.form(cart.gateway_info);
 
