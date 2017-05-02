@@ -76,7 +76,7 @@
 					</div>
 
 					<div id="checkout-confirmation" data-bc="#bc-checkout" class="panel">
-						<p>Please check review your information before once more before completing checkout</p>
+						<p>Please review your information before once more before completing checkout</p>
 
 						<div class="confirm-box dti-form" id="checkout-confirm-shipping">
 							<h4>Shipping Information</h4>
@@ -110,11 +110,12 @@
 					</div>
 					<div id="checkout-processing" class="panel">
 						<p>Processing, please wait...</p>
-						<div class="feedback">
-							<div class="msg"></div>
-							<button class="btn btn-default btn-primary">Back</button>
-						</div>
 						<div class="spinner"></div>
+					</div>
+					<div id="checkout-error" class="panel">
+						<p>There was an error while processing your order:</p>
+						<div class="msg error"></div>
+						<button class="btn btn-default btn-primary">Back</button>
 					</div>
 					<div id="checkout-success" class="panel">
 						<p>Success!</p>
