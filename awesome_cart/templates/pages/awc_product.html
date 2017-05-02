@@ -43,6 +43,9 @@ function updateProductDetails(sku) {
 // trigger fetching product details and rendering template at runtime
 cart.on('init', updateProductDetails.bind(null, {{ item.item_code|json }} ))
 cart.on('hashchange', updateProductDetails) // update details on hashchange
+{% if cart_tag -%}
+cart.tag = {{ cart_tag|json }};
+{%- endif %}
 
 </script>
 {% endblock %}
