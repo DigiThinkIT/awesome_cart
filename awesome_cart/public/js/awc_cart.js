@@ -27,12 +27,12 @@ awc_checkout = {
 
 			if ( shipping_validation_response.valid == false ) {
 				checkout_enabled = false;
-				$('#checkout-confirm-totals .shipping-total .value').append('<span class="error">-</span>');
-				$('#checkout-confirm-totals .shipping-total .method').append('<span class="error">(missing)</span>');
+				$('#checkout-confirm-totals .shipping-total .value').empty().append('<span class="error">-</span>');
+				$('#checkout-confirm-totals .shipping-total .method').empty().append('<span class="error">(missing)</span>');
 			} else {
 				if ( awc_checkout.shipping_provider.fee ) {
 					$('#checkout-confirm-totals .shipping-total .value').empty().text(cart.storeAdapter.formatCurrency(awc_checkout.shipping_provider.fee));
-					$('#checkout-confirm-totals .shipping-total .method').empty().text("("+awc_checkout.shipping_provider.label+")");
+					$('#checkout-confirm-totals .shipping-total .method').empty().text("(" + awc_checkout.shipping_provider.label + ")");
 				}
 			}
 
@@ -69,7 +69,13 @@ awc_checkout = {
 			.click(function() {
 				awc_checkout.showPage('#checkout-shipping');
 			})
+
 		$('#checkout-confirm-billing .btn-primary')
+			.click(function() {
+				awc_checkout.showPage('#checkout-billing');
+			})
+
+		$('#checkout-error .btn-primary')
 			.click(function() {
 				awc_checkout.showPage('#checkout-billing');
 			})

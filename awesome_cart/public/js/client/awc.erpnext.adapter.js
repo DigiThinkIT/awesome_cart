@@ -141,6 +141,7 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
       throw "gateway_request is not set";
     }
 
+		awc_checkout.showPage('#checkout-processing')
     frappe.call({
       method: "awesome_cart.awc.create_transaction",
       args: {
@@ -161,17 +162,24 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
           console.log("Preparing for checkout!", gateway_request);
           awc_checkout.gateway_provider.process(gateway_request, function(err, data) {
             if ( err ) {
-              console.error(err);
+							$('#checkout-error .msg').text(err.error);
+							console.error(err);
+							awc_checkout.showPage('#checkout-error');
             } else {
+							awc_checkout.showPage('#checkout-success');
               window.location.href = data.redirect_to;
             }
           });
         } else {
-          console.error(data);
+					$('#checkout-error .msg').text(err.error);
+					console.error(result.error);
+					awc_checkout.showPage('#checkout-error');
         }
       },
       error: function(err) {
-        console.error(err)
+				$('#checkout-error .msg').text(err.error);
+				console.error(err);
+				awc_checkout.showPage('#checkout-error');
       }
     })
 }
