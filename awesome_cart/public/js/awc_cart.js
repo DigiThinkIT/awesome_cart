@@ -16,7 +16,7 @@ awc_checkout = {
 		}
 
 	},
-
+	
 	validate: function() {
 		var checkout_enabled = true;
 
