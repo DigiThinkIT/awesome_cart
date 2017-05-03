@@ -199,7 +199,6 @@ var AwcShippingProvider = Class.extend({
 		var $form = $('#awc-shipping-form');
 		var on_update = function() {
 			var field = {name: $(this).attr('data-type'), value: $(this).val()};
-			console.log(field);
 			$form.trigger('field-change', field);
 		}
 
