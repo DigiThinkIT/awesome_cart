@@ -85,6 +85,11 @@ awc_checkout = {
 				awc_checkout.showPage('#checkout-billing');
 			})
 
+		$('#checkout-confirmation input[name="accept_terms"]')
+			.change(function() {
+				awc_checkout.validate();
+			})
+
 		// map breadcrumb clicks ---------------------------------------
 		$('#bc-shipping').click(function(e) { e.preventDefault(); awc_checkout.showPage('#checkout-shipping'); });
 		$('#bc-billing').click(function(e) { e.preventDefault(); awc_checkout.showPage('#checkout-billing'); });
@@ -99,8 +104,6 @@ awc_checkout = {
 
 		function onCartChanges() {
 			var totals = cart.totals;
-			console.log("awc was updated")
-			console.log('totals', totals);
 
 			$('#checkout-confirm-totals .sub-total .value').text(cart.storeAdapter.formatCurrency(totals.sub_total));
 			$('#checkout-confirm-totals .grand-total .value').text(cart.storeAdapter.formatCurrency(totals.grand_total));
