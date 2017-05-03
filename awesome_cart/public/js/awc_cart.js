@@ -122,35 +122,6 @@ awc_checkout = {
 		cart.on('init', onCartChanges);
 		cart.on('update', onCartChanges);
 
-		cart.on('init', function() {
-			// handle smart placeholder labels
-			$('.awc-form .field').each(function() {
-				var $field = $(this);
-				var $input = $(this).find('input:first, select:first');
-
-				$input
-					.change(function() {
-						if ( $(this).val() ) {
-							$field.addClass('hasvalue');
-						} else {
-							$field.removeClass('hasvalue');
-						}
-					})
-					.keyup(function() {
-						if ( $(this).val() ) {
-							$field.addClass('hasvalue');
-						} else {
-							$field.removeClass('hasvalue');
-						}
-					})
-					.blur(function() {
-						$field.removeClass('focus');
-					})
-					.focus(function() {
-						$field.addClass('focus');
-					});
-			});
-		})
 	}
 }
 

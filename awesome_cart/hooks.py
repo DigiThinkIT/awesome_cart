@@ -30,6 +30,10 @@ web_include_js = [
 	"/assets/awesome_cart/js/client/awc.erpnext.adapter.js"
 ]
 
+web_include_css = [
+	"/assets/awesome_cart/css/awc_cart.css"
+]
+
 website_route_rules = [
 	{ "from_route": "/cart_success/<path:so_name>", "to_route": "cart_success" },
 	{ "from_route": "/awc_template/<name>", "to_route": "awc_template" },
