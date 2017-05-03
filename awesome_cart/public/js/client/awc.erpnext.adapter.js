@@ -415,4 +415,43 @@ var cart = new awc.AwesomeCart({
 
 awc.debug.level = 5;
 
+cart.scan_forms = function() {
+	console.log("Binding forms")
+	// handle smart placeholder labels
+	$('.awc-form .field').not('.awc-form-bound').each(function() {
+		var $field = $(this);
+		var $input = $(this).find('input:first, select:first');
+		$field.addClass(".awc-form-bound");
+
+		$input
+			.change(function() {
+				if ( $(this).val() ) {
+					$field.addClass('hasvalue');
+				} else {
+					$field.removeClass('hasvalue');
+				}
+			})
+			.keyup(function() {
+				if ( $(this).val() ) {
+					$field.addClass('hasvalue');
+				} else {
+					$field.removeClass('hasvalue');
+				}
+			})
+			.blur(function() {
+				$field.removeClass('focus');
+			})
+			.focus(function() {
+				$field.addClass('focus');
+			});
+
+		// allow priming classes with defaults
+		$input.change();
+	});
+}
+
+cart.on('tpl-ready', function() {
+	cart.scan_forms();
+})
+
 $(function() { cart.bootstrap() });
