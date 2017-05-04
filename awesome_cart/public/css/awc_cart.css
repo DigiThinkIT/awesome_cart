@@ -44,7 +44,7 @@
 }
 
 .awc-form .field {
-	font-size: 16px;
+	font-size: 1em;
 	position: relative;
 	border: 1px solid #bbb;
 	background: #fff;
@@ -52,7 +52,7 @@
 	margin: .1em;
 }
 .awc-form .field:not(.custom) {
-  padding: .6em .2em 0;
+  padding: 0 .2em 0;
 }
 
 .awc-form .field.hidden {
@@ -92,6 +92,7 @@
   display: block;
   position: absolute;
   top: 25%;
+	left: .8em;
   font-size: .6em;
   font-weight: bolder;
   opacity: 0;
@@ -102,7 +103,7 @@
 .awc-form .field.focus:not(.custom) label {
   opacity: 1;
   transition: all .5s;
-  top: .2em;
+  top: .1em;
 }
 
 .awc-form .field.focus:not(.custom) label {
@@ -147,6 +148,8 @@
 	outline: none;
 	width: 100%;
 	z-index: 1;
+	display: block;
+	padding: 1em .5em 0 .5em;
 }
 
 /* removes autofill forced background color */
