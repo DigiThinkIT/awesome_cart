@@ -463,7 +463,7 @@ def sync_awc_and_quotation(awc_session, quotation):
 						"item_code": awc_item.get("sku"),
 						"item_name": product.get("name"),
 						"description": product.get("name"),
-						"qty": awc_item.get("qty"),
+						"qty": cint(awc_item.get("qty")),
 						"warehouse": product.get("warehouse")
 					}
 
@@ -511,7 +511,7 @@ def sync_awc_and_quotation(awc_session, quotation):
 			awc_item = {
 				"id": item.name,
 				"sku": item.item_code,
-				"qty": item.qty,
+				"qty": cint(item.qty),
 				"warehouse": product.get("warehouse"),
 			}
 
@@ -607,7 +607,7 @@ def cart(data=None, action=None):
 					"item_code": item.get("sku"),
 					"item_name": product.get("name"),
 					"description": product.get("name"),
-					"qty": item.get("qty"),
+					"qty": cint(item.get("qty")),
 					"warehouse": product.get("warehouse")
 				}
 
