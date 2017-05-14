@@ -1,6 +1,9 @@
+awc.debug.level = awc.debug.LEVEL.DEBUG;
+
 awc.ErpnextAdapter = function() {
   awc.StoreAdapter.prototype.constructor.call(this)
   this._templates = {}
+	this.products = new awc.DataStore([], this._fetchProducts.bind(this))
 }
 
 awc.ErpnextAdapter.prototype = Object.create(awc.StoreAdapter.prototype)
@@ -14,8 +17,43 @@ awc.ErpnextAdapter.prototype.formatCurrency = function(currency, decimals) { ret
 awc.ErpnextAdapter.prototype.init = function() {
   var base = this;
   this.itemCache = {};
+  return base.fetchCartSession()
+}
+
+awc.ErpnextAdapter.prototype._fetchProducts = function(filter, start, limit) {
+	var tags = []
+	var terms = null
+
+	// accept an array as tags list
+	// or an object with tags field
+	if ( filter.contructor === Array ) {
+		tags = filter;
+	} else if ( typeof filter == "object" ) {
+		tags = 	filter.tags || []
+		terms = filter.terms;
+	} else {
+		tags = filter
+	}
+
+  var base = this;
+
   return new awc.Promise(function(resolve, reject) {
-    resolve(base.fetchCartSession())
+    frappe.call({
+      method: "awesome_cart.awc.fetch_products",
+      args: { tags: tags.join(','), terms: terms, start: start?start:0, limit: limit },
+      freeze: 1,
+      callback: function(result) {
+        if ( result.message.success ) {
+          if ( result.message.data.totals ) {
+            base._totals = result.message.data.totals;
+          }
+
+          resolve(result.message.data)
+        } else {
+          reject(result.message.data)
+        }
+      }
+    })
   })
 }
 
@@ -58,7 +96,7 @@ awc.ErpnextAdapter.prototype.sessionAction = function(action, data) {
             base._totals = result.message.totals;
           }
 
-          resolve(result.message.data)
+          resolve(result.message)
         } else {
           reject(result.message.data)
         }
@@ -70,32 +108,28 @@ awc.ErpnextAdapter.prototype.sessionAction = function(action, data) {
 
 awc.ErpnextAdapter.prototype.getProductBySKU = function(sku, detailed) {
   var base = this;
-  if ( base.itemCache[sku] !== undefined ) {
+	var skuHash = detailed+":"+sku;
+  if ( base.itemCache[skuHash] !== undefined ) {
     // return promise if curretly fetching
-    if ( base.itemCache[sku].constructor == awc.Promise ) {
-      return base.itemCache[sku];
-    } else if (base.itemCache[sku].detailed == detailed) {
+    if ( base.itemCache[skuHash].constructor == awc.Promise ) {
+      return base.itemCache[skuHash];
+    } else {
       // else return promise with cache data
       return new awc.Promise(function(resolve) {
-        resolve(base.itemCache[sku]);
+        resolve(base.itemCache[skuHash]);
       })
     }
   }
 
   // otherwise, fetch item from backend
-  return base.itemCache[sku] = new awc.Promise(function(resolve, reject) {
+  return base.itemCache[skuHash] = new awc.Promise(function(resolve, reject) {
     frappe.call({
       method: "awesome_cart.awc.get_product_by_sku",
       args: { sku: sku, detailed: detailed?1:0 },
       freeze: 1,
       callback: function(result) {
         if ( result.message.success ) {
-          // only cache detailed items
-          if ( detailed ) {
-            base.itemCache[sku] = { data: message.data, detailed: detailed };
-          }
-
-          resolve(result.message.data)
+          resolve(base.itemCache[skuHash] = result.message.data)
         } else {
           reject(result.message)
         }
@@ -106,28 +140,7 @@ awc.ErpnextAdapter.prototype.getProductBySKU = function(sku, detailed) {
 }
 
 awc.ErpnextAdapter.prototype.fetchProducts = function(tags, terms, start, limit) {
-  if ( !tags ) tags = []
-  var base = this;
-  return new awc.Promise(function(resolve, reject) {
-    frappe.call({
-      method: "awesome_cart.awc.fetch_products",
-      args: { tags: tags.join(','), terms: terms, start: start?start:0, limit: limit },
-      freeze: 1,
-      callback: function(result) {
-        //console.log("Fetch products");
-        //console.log(result);
-        if ( result.message.success ) {
-          if ( result.message.data.totals ) {
-            base._totals = result.message.data.totals;
-          }
-
-          resolve(result.message.data)
-        } else {
-          reject(result.message.data)
-        }
-      }
-    })
-  })
+  return this.products.query({ tags: tags, terms: terms }, start, limit)
 }
 
 awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_service) {
@@ -412,8 +425,6 @@ var AwcShippingProvider = Class.extend({
 var cart = new awc.AwesomeCart({
   storeAdapter: new awc.ErpnextAdapter()
 });
-
-awc.debug.level = 5;
 
 cart.scan_forms = function() {
 	console.log("Binding forms")
