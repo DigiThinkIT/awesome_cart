@@ -33,7 +33,7 @@ function updateProductDetails(sku) {
         return product;
       })
       .then(cart.applyTpl.bind(cart, '#product', productTemplate))
-      .then((result) => {
+      .then(function(result) {
         cart.updateUI();
       })
       .catch(console.error)

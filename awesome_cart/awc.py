@@ -558,6 +558,34 @@ def update_quotation_item_awc_fields(quotation_item, awc_item):
 			for field, value in awc_item['options']['custom'].items():
 				quotation_item[field] = value
 
+def remove_from_cart(items_to_remove, cart_items):
+	success = False
+	removed_ids = []
+
+	awc_items = cart_items[:]
+
+	for rm_item in items_to_remove:
+		item_id = rm_item.get("id")
+		item = next((x for x in awc_items if x.get("id") == item_id), None)
+		if item:
+			group_name = item.get("options", {}).get("group", None)
+
+			# remove item and related grouped items from cart
+			awc_items = [ itm for itm in awc_items \
+				if itm["id"] != item["id"] ]
+
+			if group_name:
+				log("Remove group: {0}", group_name)
+				awc_items = [ itm for itm in awc_items \
+					if itm.get("options", {}).get("group") != group_name ]
+
+			success = True
+
+	if success:
+		return True, [itm.get("id") for itm in cart_items if itm not in awc_items ], awc_items
+
+	return False, [], awc_items
+
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def cart(data=None, action=None):
 	if data and isinstance(data, basestring):
@@ -588,6 +616,57 @@ def cart(data=None, action=None):
 
 	if not action:
 		return { "data": awc, "success": True}
+
+	elif action == "updateItem":
+
+		# for now only qty field is updatable
+		# key is awc fields and values are erpnext fields for quotation item
+		valid_update_fields = {"qty": "qty"}
+		remove_items = []
+		removed_ids = []
+
+		for item in data:
+
+			awc_item = next((i for i in awc["items"] if i.get("id") == item.get("id")), None)
+
+			if awc_item:
+				quotation_item = next((q for q in quotation.get("items", []) if q.name == awc_item.get("id")), None)
+				for awc_key, erp_key in valid_update_fields.iteritems():
+					if awc_key in item:
+						awc_item[awc_key] = item.get(awc_key)
+
+						if quotation_item:
+							quotation_item.set(erp_key, item.get(awc_key))
+
+				if awc_item.get("qty") == 0:
+					remove_items.append(awc_item)
+
+		# remove all 0 qty items
+		if len(remove_items) > 0:
+			success, removed_ids, awc_items = remove_from_cart(remove_items, awc["items"])
+			if success:
+				awc["items"] = awc_items
+
+				if quotation:
+					# remove item and related grouped items from quote
+					quotation_items = [ itm for itm in quotation.get("items", []) \
+						if itm.name not in removed_ids ]
+
+					quotation.set("items", quotation_items)
+
+		if quotation:
+			apply_cart_settings(quotation=quotation)
+			quotation.flags.ignore_permissions = True
+			quotation.save()
+			frappe.db.commit()
+
+			collect_totals(quotation, awc)
+		else:
+			collect_totals(None, awc)
+
+		set_awc_session(awc_session)
+
+		return { "success": True, "data": awc["items"], "removed": removed_ids, "totals": awc.get("totals") }
 
 	elif action == "addToCart":
 
@@ -644,28 +723,9 @@ def cart(data=None, action=None):
 		if quotation:
 			quotation_items = quotation.get("items")[:]
 
-		awc_items = awc["items"][:]
-
-		for rm_item in data:
-			item_id = rm_item.get("id")
-			item = next((x for x in awc_items if x.get("id") == item_id), None)
-			if item:
-				group_name = item.get("options", {}).get("group", None)
-
-				# remove item and related grouped items from cart
-				awc_items = [ itm for itm in awc_items \
-					if itm["id"] != item["id"] ]
-
-				if group_name:
-					log("Remove group: {0}", group_name)
-					awc_items = [ itm for itm in awc_items \
-						if itm.get("options", {}).get("group") != group_name ]
-
-				success = True
+		success, remove_ids, awc_items = remove_from_cart(data, awc["items"])
 
 		if success:
-
-			removed_ids = [itm.get("id") for itm in awc["items"] if itm not in awc_items ]
 			awc["items"] = awc_items
 
 			if quotation:
