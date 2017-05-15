@@ -185,7 +185,8 @@ def get_product_by_sku(sku, detailed=0):
 	# get awc_item custom data as dictionary
 	custom_data = get_awc_item_custom_data(awc_item)
 
-	#log(pretty_json(_item))
+	log(pretty_json(_item))
+	log(pretty_json(item))
 	price = _item.get("price", {}).get("price_list_rate", item.get("standard_rate", "[[ERROR MISSING RATE]]"))
 
 	# format product for awcjs
@@ -312,7 +313,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 				productUrl="/p/%s" % item.awc_product_route,
 				description=item.awc_description_short,
 				imageUrl=item.awc_product_thumbnail,
-				price=_item.get("price.price_list_rate", item.get("standard_rate", "[[ ERROR MISSING RATE]]")),
+				price=_item.get("price", {}).get("price_list_rate", item.get("standard_rate", "[[ERROR MISSING RATE]]")),
 				listing_widget=item.awc_listing_widget,
 				product_widget=item.awc_product_widget,
 				product_template=item.awc_product_template,
