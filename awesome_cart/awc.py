@@ -564,7 +564,7 @@ def remove_from_cart(items_to_remove, cart_items):
 	success = False
 	removed_ids = []
 
-	awc_items = cart_items[:]
+	awc_items = list(cart_items)
 
 	for rm_item in items_to_remove:
 		item_id = rm_item.get("id")
@@ -577,16 +577,16 @@ def remove_from_cart(items_to_remove, cart_items):
 				if itm["id"] != item["id"] ]
 
 			if group_name:
-				log("Remove group: {0}", group_name)
 				awc_items = [ itm for itm in awc_items \
 					if itm.get("options", {}).get("group") != group_name ]
 
 			success = True
 
 	if success:
-		return True, [itm.get("id") for itm in cart_items if itm not in awc_items ], awc_items
+		awc_items_id_list = [x.get("id") for x in awc_items]
+		removed_ids = [itm.get("id") for itm in cart_items if itm.get("id") not in awc_items_id_list ]
 
-	return False, [], awc_items
+	return success, removed_ids, awc_items
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def cart(data=None, action=None):
@@ -723,19 +723,16 @@ def cart(data=None, action=None):
 
 		success = False
 		removed_ids = []
-		quotation_item = []
 
-		if quotation:
-			quotation_items = quotation.get("items")[:]
-
-		success, remove_ids, awc_items = remove_from_cart(data, awc["items"])
+		success, removed_ids, awc_items = remove_from_cart(data, awc["items"])
 
 		if success:
+
 			awc["items"] = awc_items
 
 			if quotation:
 				# remove item and related grouped items from quote
-				quotation_items = [ itm for itm in quotation_items \
+				quotation_items = [ itm for itm in quotation.get("items", []) \
 					if itm.name not in removed_ids ]
 
 				quotation.set("items", quotation_items)
@@ -744,11 +741,13 @@ def cart(data=None, action=None):
 				quotation.flags.ignore_permissions = True
 				quotation.save()
 				frappe.db.commit()
+				collect_totals(quotation, awc)
+			else:
+				collect_totals(None, awc)
 
-			collect_totals(quotation, awc)
 			set_awc_session(awc_session)
 
-			return { "success": True, "totals": awc.get("totals"), "data": removed_ids }
+			return { "success": True, "totals": awc.get("totals"), "data": awc["items"], "removed": removed_ids }
 
 		return { "success": False, "message": "Item not found."}
 
