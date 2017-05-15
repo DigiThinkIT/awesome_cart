@@ -341,9 +341,11 @@ def collect_totals(quotation, awc):
 		for awc_item in awc["items"]:
 			product = get_product_by_sku(awc_item.get("sku"))
 			if product.get('success'):
+				product_total = product["data"].get("price") * cint(awc_item.get("qty"))
+				log("%s %s" % (awc_item.get("sku"), product_total))
 				awc["totals"]["sub_total"] = awc["totals"]["sub_total"] + product["data"].get("price") * cint(awc_item.get("qty"))
 
-		awc["totals"]["grand_total"] = awc["totals"]["sub_total"]
+		awc["totals"]["grand_total"] = awc["totals"]["sub_total"] + awc["totals"].get("shipping_total", 0)
 
 def get_awc_session():
 	# get session id from request
@@ -620,7 +622,7 @@ def cart(data=None, action=None):
 	elif action == "updateItem":
 
 		# for now only qty field is updatable
-		# key is awc fields and values are erpnext fields for quotation item
+		# key in awc fields and values are erpnext fields for quotation item
 		valid_update_fields = {"qty": "qty"}
 		remove_items = []
 		removed_ids = []
@@ -630,7 +632,10 @@ def cart(data=None, action=None):
 			awc_item = next((i for i in awc["items"] if i.get("id") == item.get("id")), None)
 
 			if awc_item:
-				quotation_item = next((q for q in quotation.get("items", []) if q.name == awc_item.get("id")), None)
+				quotation_item = None
+				if quotation:
+					quotation_item = next((q for q in quotation.get("items", []) if q.name == awc_item.get("id")), None)
+
 				for awc_key, erp_key in valid_update_fields.iteritems():
 					if awc_key in item:
 						awc_item[awc_key] = item.get(awc_key)
