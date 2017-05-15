@@ -163,6 +163,9 @@ def get_product_by_sku(sku, detailed=0):
 	item = item[0]
 	# get item price list information
 	_item = _dict(get_product_info(item.item_code))
+	if not _item:
+		_item = dict()
+
 	# get awc item name by its item link
 	awc_item = frappe.get_list("AWC Item", fields="*", filters = {"product_name": item.name}, ignore_permissions=1)
 
@@ -305,6 +308,9 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 		products = []
 		for item in result:
 			_item = _dict(get_product_info(item.item_code))
+			if not _item:
+				_item = dict()
+
 			product = dict(
 				sku=item.name,
 				name=item.name,
