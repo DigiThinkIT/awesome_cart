@@ -159,9 +159,10 @@
 	-webkit-box-shadow:0 0 0 9999px white inset; /* Change the color to your own background color */
 }
 
-/* Removes safari gloss */
+/* Removes safari, chrome and FF gloss */
 .awc-form .field:not(.custom) select {
 	-webkit-appearance: none;
+	-moz-appearance: none;
 }
 
 /* overrides bootstrap glyph positioning for select down arrow */
