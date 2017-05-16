@@ -78,7 +78,7 @@ def get_price(item_code, price_list, qty=1):
 
 			return {"currency": price[0].get("currency"), "rate": price[0].get("price_list_rate")}
 
-		return {
+	return {
 			"currency": "",
 			"rate": frappe.db.get_value("Item", item_code, "standard_rate")
 		}
