@@ -10,6 +10,7 @@ from erpnext.shopping_cart.product import get_product_info
 
 from compat.customer import get_current_customer
 from compat.shopping_cart import get_cart_quotation, apply_cart_settings
+from compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing_rule_for_item
 
 from .dbug import pretty_json, log
 
@@ -43,6 +44,44 @@ def is_logged_in():
 		return False
 
 	return True
+
+def get_price(item_code, price_list, qty=1):
+	if price_list:
+		cart_settings = get_shopping_cart_settings()
+		template_item_code = frappe.db.get_value("Item", item_code, "variant_of")
+
+		price = frappe.get_all("Item Price", fields=["price_list_rate", "currency"],
+			filters={"price_list": price_list, "item_code": item_code})
+
+		if not price and template_item_code:
+			price = frappe.get_all("Item Price", fields=["price_list_rate", "currency"],
+				filters={"price_list": price_list, "item_code": template_item_code})
+
+		if price:
+			pricing_rule = get_pricing_rule_for_item(frappe._dict({
+				"item_code": item_code,
+				"qty": qty,
+				"transaction_type": "selling",
+				"price_list": price_list,
+				"customer_group": cart_settings.default_customer_group,
+				"company": cart_settings.company,
+				"conversion_rate": 1,
+				"for_shopping_cart": True
+			}))
+
+			if pricing_rule:
+				if pricing_rule.pricing_rule_for == "Discount Percentage":
+					price[0].price_list_rate = flt(price[0].price_list_rate * (1.0 - (pricing_rule.discount_percentage / 100.0)))
+
+				if pricing_rule.pricing_rule_for == "Price":
+					price[0].price_list_rate = pricing_rule.price_list_rate
+
+			return {"currency": price[0].get("currency"), "rate": price[0].get("price_list_rate")}
+
+		return {
+			"currency": "",
+			"rate": frappe.db.get_value("Item", item_code, "standard_rate")
+		}
 
 def get_awc_item_by_route(route):
 	"""Retrieves awc item by its route"""
@@ -152,19 +191,26 @@ def get_content_sections(awc_item):
 
 	return sections
 
+def _get_cart_quotation():
+	cart_info = get_cart_quotation()
+	return cart_info.get('doc')
+
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def get_product_by_sku(sku, detailed=0):
 	"""Get's product in awcjs format by its sku and optionally detailed data."""
+
+	price_list = None
+	if is_logged_in():
+		quotation = _get_cart_quotation()
+		price_list = quotation.get("selling_price_list")
+
 	# fetch item by its sku/item_code
 	item = frappe.get_list("Item", fields="*", filters = {"item_code": sku}, ignore_permissions=1)
+
 	if not item or len(item) == 0:
 		return { "success": False, "data": None }
 
 	item = item[0]
-	# get item price list information
-	_item = _dict(get_product_info(item.item_code))
-	if not _item:
-		_item = dict()
 
 	# get awc item name by its item link
 	awc_item = frappe.get_list("AWC Item", fields="*", filters = {"product_name": item.name}, ignore_permissions=1)
@@ -188,13 +234,17 @@ def get_product_by_sku(sku, detailed=0):
 	# get awc_item custom data as dictionary
 	custom_data = get_awc_item_custom_data(awc_item)
 
-	log(pretty_json(_item))
-	log(pretty_json(item))
-	price = _item.get("price", {}).get("price_list_rate", item.get("standard_rate", "[[ERROR MISSING RATE]]"))
+	price = get_price(item.get("item_code"), price_list).get("rate")
+
+	variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name")})
+	for vitem in variants:
+		vprice = get_price(vitem.get("item_code"), price_list).get("rate")
+		if vprice < price:
+			price = vprice
 
 	# format product for awcjs
 	product = dict(
-		sku=item.name,
+		sku=item.item_code,
 		name=item.name,
 		custom=custom_data,
 		weight=item.get("net_weight", 0),
@@ -228,6 +278,11 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 		"success": False
 	}
 	try:
+		price_list = None
+		if is_logged_in():
+			quotation = _get_cart_quotation()
+			price_list = quotation.get("selling_price_list")
+
 		tags = tags.split(',')  # split tag string into list
 		# Convert order_by and order_dir values to acceptable values or defaults
 		order_by_clean = dict(weight="order_weight").get(order_by if order_by else "", "order_weight")
@@ -307,19 +362,23 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 
 		products = []
 		for item in result:
-			_item = _dict(get_product_info(item.item_code))
-			if not _item:
-				_item = dict()
+			price = get_price(item.get("item_code"), price_list).get("rate")
+
+			variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name")})
+			for vitem in variants:
+				vprice = get_price(vitem.get("item_code"), price_list).get("rate")
+				if vprice < price:
+					price = vprice
 
 			product = dict(
-				sku=item.name,
+				sku=item.item_code,
 				name=item.name,
 				weight=item.get("net_weight", 0),
 				custom=get_awc_item_custom_data(item.awc_item_name),
 				productUrl="/p/%s" % item.awc_product_route,
 				description=item.awc_description_short,
 				imageUrl=item.awc_product_thumbnail,
-				price=_item.get("price", {}).get("price_list_rate", item.get("standard_rate", "[[ERROR MISSING RATE]]")),
+				price=price,
 				listing_widget=item.awc_listing_widget,
 				product_widget=item.awc_product_widget,
 				product_template=item.awc_product_template,
@@ -332,6 +391,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 		payload["total_records"] = result_count
 		payload["data"] = products
 	except Exception as ex:
+		log("ERROR")
 		payload["success"] = False
 		payload["message"] = traceback.format_exc(ex)
 		log(payload["message"])
