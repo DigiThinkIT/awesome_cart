@@ -4,7 +4,7 @@ import json
 import traceback
 import frappe
 from frappe import _dict
-from frappe.utils import cint, cstr, random_string
+from frappe.utils import cint, cstr, random_string, flt
 from erpnext.stock.get_item_details import apply_price_list_on_item
 from erpnext.shopping_cart.product import get_product_info
 
