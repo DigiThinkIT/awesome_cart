@@ -45,7 +45,11 @@ def is_logged_in():
 
 	return True
 
-def get_price(item_code, price_list, qty=1):
+def get_price(item_code, price_list=None, qty=1, find_price_list=False):
+	if not price_list and find_price_list and is_logged_in():
+		quotation = _get_cart_quotation()
+		price_list = quotation.get("selling_price_list")
+
 	if price_list:
 		cart_settings = get_shopping_cart_settings()
 		template_item_code = frappe.db.get_value("Item", item_code, "variant_of")
@@ -79,7 +83,7 @@ def get_price(item_code, price_list, qty=1):
 			return {"currency": price[0].get("currency"), "rate": price[0].get("price_list_rate")}
 
 	return {
-			"currency": "",
+			"currency": "", #TODO: get default currency, don't remember from where atm
 			"rate": frappe.db.get_value("Item", item_code, "standard_rate")
 		}
 
@@ -409,7 +413,6 @@ def collect_totals(quotation, awc):
 			product = get_product_by_sku(awc_item.get("sku"))
 			if product.get('success'):
 				product_total = product["data"].get("price") * cint(awc_item.get("qty"))
-				log("%s %s" % (awc_item.get("sku"), product_total))
 				awc["totals"]["sub_total"] = awc["totals"]["sub_total"] + product["data"].get("price") * cint(awc_item.get("qty"))
 
 		awc["totals"]["grand_total"] = awc["totals"]["sub_total"] + awc["totals"].get("shipping_total", 0)
@@ -513,6 +516,10 @@ def sync_awc_and_quotation(awc_session, quotation):
 						item.awc_group_label = awc_item.get('options', {}).get('label')
 						quotation_is_dirty = True
 
+					if item.image and awc_item.get("options", {}).get("image") and item.image != awc_item.get("options", {}).get("image"):
+						item.image = awc_item["options"]["image"]
+						quotation_is_dirty = True
+
 					item.warehouse = product.get("warehouse")
 
 					awc_items_matched.append(awc_item.get("id"))
@@ -535,6 +542,9 @@ def sync_awc_and_quotation(awc_session, quotation):
 						"qty": cint(awc_item.get("qty")),
 						"warehouse": product.get("warehouse")
 					}
+
+					if awc_item.get("options", {}).get("image"):
+						item_data["image"] = awc_item["options"]["image"]
 
 					# if awc_item.get('options'):
 					# 	item_data['awc_group'] = awc_item['options'].get('group')
@@ -581,7 +591,7 @@ def sync_awc_and_quotation(awc_session, quotation):
 				"id": item.name,
 				"sku": item.item_code,
 				"qty": cint(item.qty),
-				"warehouse": product.get("warehouse"),
+				"warehouse": product.get("warehouse")
 			}
 
 			if item.awc_group:
@@ -589,6 +599,7 @@ def sync_awc_and_quotation(awc_session, quotation):
 					"group": item.awc_group,
 					"subgroup": item.awc_subgroup,
 					"label": item.awc_group_label,
+					"image": item.image
 				}
 
 			awc["items"].append(awc_item)
@@ -709,6 +720,15 @@ def cart(data=None, action=None):
 
 						if quotation_item:
 							quotation_item.set(erp_key, item.get(awc_key))
+
+				if awc_item.get('options', {}).get('group'):
+					# find all subgroup items and update qty accordingly
+					for sub_item in [i for i in awc["items"] if i.get('options', {}).get('group') == awc_item.get('options', {}).get('group')]:
+						sub_item["qty"] = awc_item["qty"]
+
+						sub_quotation_item = next((q for q in quotation.get("items", []) if q.name == sub_item.get("id")), None)
+						if sub_quotation_item:
+							sub_quotation_item.set("qty", sub_item.get("qty"))
 
 				if awc_item.get("qty") == 0:
 					remove_items.append(awc_item)
