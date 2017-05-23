@@ -860,27 +860,20 @@ def get_shipping_rate(address):
 
 	log(pretty_json(from_address.as_dict()))
 
-	packages=[]
+	package_items=[]
 
 	for item in awc["items"]:
 		if not item.get("options", {}).get("subgroup"):
-			product = get_product_by_sku(item.get("sku"))
-			if product.get("success"):
-				product = product.get("data")
-				for i in range(0, cint(item.get('qty', 1))):
-					weight = product.get("weight")
-					if weight == 0:
-						weight = 0.1
-					package = {
-						"weight_value": weight,
-						"weight_units": "LB"
-					}
-					packages.append(package)
+			package_item = {
+				"item_code": item.get("sku"),
+				"qty": item.get("qty")
+			}
+			package_items.append(package_item)
 
 	log(pretty_json(shipping_rate_api))
-	log(pretty_json(packages))
+	log(pretty_json(package_items))
 
-	rates = frappe.call(shipping_rate_api["module"], from_address=from_address, to_address=address, packages=packages)
+	rates = frappe.call(shipping_rate_api["module"], from_address=from_address, to_address=address, items=package_items)
 	# cache quoted rates to reference later on checkout
 	awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
 	set_awc_session(awc_session)
