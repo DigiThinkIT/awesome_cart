@@ -165,16 +165,24 @@
 	-moz-appearance: none;
 }
 
+/* first selector is to override authnet form version, TODO: find better place for this */
+.field:not(.custom) select::-ms-expand,
+.awc-form .field:not(.custom) select::-ms-expand {
+	display: none
+}
+
 /* overrides bootstrap glyph positioning for select down arrow */
 .awc-form .field .select-arrow {
   position: absolute;
 	right: 1em;
-	top: initial;
+	top: 50%;
+	transform: translateY(-50%);
 	bottom: .5em;
 	font-size: .8em;
 }
 
 .awc-form .field:not(.custom) input.minimal {
+	width: auto;
 	width: initial;
 }
 
