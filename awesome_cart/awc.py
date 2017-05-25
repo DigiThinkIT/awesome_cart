@@ -402,10 +402,19 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 
 	return payload
 
-def collect_totals(quotation, awc):
+def collect_totals(quotation, awc, awc_session):
 	if quotation:
 		awc["totals"]["sub_total"] = quotation.get("total")
 		awc["totals"]["grand_total"] = quotation.get("grand_total")
+
+		for tax in quotation.get("taxes"):
+			total_entry = next((x for x in awc["totals"]["other"] if x.get("name") == tax.get("description")), None)
+			if not total_entry:
+				total_entry = { "name": tax.get("description"), "label": tax.get("description"), "value": tax.get("tax_amount")}
+				awc["totals"]["other"].append(total_entry)
+
+			total_entry["value"] = tax.get("tax_amount")
+
 	else:
 		awc["totals"]["sub_total"] = 0
 		awc["totals"]["grand_total"] = 0
@@ -443,7 +452,7 @@ def get_awc_session():
 
 		awc_session = {
 			"session_ip": frappe.local.request_ip,
-			"cart": { "items": [], "totals": { "sub_total": 0, "grand_total": 0 } }
+			"cart": { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
 		}
 
 		frappe.cache().set_value(awc_sid, awc_session)
@@ -460,7 +469,7 @@ def set_awc_session(session):
 
 def clear_awc_session():
 	awc_session = get_awc_session()
-	awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0 } }
+	awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
 	return set_awc_session(awc_session)
 
 def sync_awc_and_quotation(awc_session, quotation):
@@ -521,6 +530,7 @@ def sync_awc_and_quotation(awc_session, quotation):
 						quotation_is_dirty = True
 
 					item.warehouse = product.get("warehouse")
+					update_quotation_item_awc_fields(item, awc_item)
 
 					awc_items_matched.append(awc_item.get("id"))
 				else:
@@ -560,6 +570,7 @@ def sync_awc_and_quotation(awc_session, quotation):
 					new_quotation_item.save()
 					awc_item["id"] = new_quotation_item.name
 					# make sure we won't add this new item again on step 2
+					update_quotation_item_awc_fields(new_quotation_item, awc_item)
 					awc_items_matched.append(awc_item.get("id"))
 
 					quotation_is_dirty = True 	# update quotation records
@@ -614,29 +625,56 @@ def sync_awc_and_quotation(awc_session, quotation):
 		del quotation.items[idx]
 		quotation_is_dirty = True
 
+
 	if quotation_is_dirty:
-		apply_cart_settings(quotation=quotation)
+		update_cart_settings(quotation, awc_session)
 		quotation.flags.ignore_permissions = True
 		quotation.save()
 		frappe.db.commit()
 
-	collect_totals(quotation, awc)
+	collect_totals(quotation, awc, awc_session)
 
 	if awc_is_dirty:
 		set_awc_session(awc_session)
 
+def update_shipping_quotation(quotation, awc_session):
+	"""NOTE: this method has to be called after calling apply_cart_settings()
+	due to tax rules dumping all existing taxes every time they update."""
+
+	# if we have shipping rates and a selected rate, update or create shipping tax
+	if awc_session.get("shipping_method"):
+		rate = awc_session.get("shipping_method")
+		if rate:
+			shipping_tax = {
+				"tax_amount": rate.get("fee"),
+				"description": "Shipping",
+				"charge_type": "Actual",
+				"account_head": frappe.get_value("Awc Settings", "Awc Settings", "shipping_account"),
+			}
+
+			quotation.append("taxes", shipping_tax)
+
+		return True
+
+	return False
+
+def set_field(obj, field, value):
+	if isinstance(obj, dict):
+		obj[field] = value
+	else:
+		obj.set(field, value)
 
 def update_quotation_item_awc_fields(quotation_item, awc_item):
 	if awc_item.get('options'):
-		quotation_item['awc_group'] = awc_item['options'].get('group')
-		quotation_item['awc_subgroup'] = awc_item['options'].get('subgroup')
-		quotation_item['awc_group_label'] = awc_item['options'].get('label')
+		set_field(quotation_item, 'awc_group', awc_item['options'].get('group'))
+		set_field(quotation_item, 'awc_subgroup', awc_item['options'].get('subgroup'))
+		set_field(quotation_item, 'awc_group_label', awc_item['options'].get('label'))
 		if awc_item['options'].get('description'):
-			quotation_item['description'] = awc_item['options'].get('description')
+			set_field(quotation_item, 'description', awc_item['options'].get('description'))
 
 		if awc_item['options'].get('custom'):
 			for field, value in awc_item['options']['custom'].items():
-				quotation_item[field] = value
+				set_field(quotation_item, field, value)
 
 def remove_from_cart(items_to_remove, cart_items):
 	success = False
@@ -666,6 +704,50 @@ def remove_from_cart(items_to_remove, cart_items):
 
 	return success, removed_ids, awc_items
 
+def update_cart_settings(quotation, awc_session):
+	apply_cart_settings(quotation=quotation)
+	update_shipping_quotation(quotation, awc_session)
+
+def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
+	awc = awc_session.get("cart")
+
+	if not rate_name and not address:
+		rate_name = awc_session.get("shipping_method", {}).get("name")
+		address = awc_session.get("shipping_address")
+
+	if address:
+		awc_session["shipping_rates_list"] = update_shipping_rate(address, awc_session)
+
+	rate = awc_session.get("shipping_rates", {}).get(rate_name)
+	if not rate and awc_session.get("shipping_method"):
+		rate = awc_session["shipping_method"]
+
+	if rate:
+		awc_session["shipping_method"] = rate
+
+	if quotation:
+		update_cart_settings(quotation, awc_session)
+		if save:
+			quotation.flags.ignore_permissions = True
+			quotation.save()
+			frappe.db.commit()
+
+		collect_totals(quotation, awc, awc_session)
+	else:
+		collect_totals(None, awc, awc_session)
+
+	if save:
+		log("Saving session:\n{0}", pretty_json(awc_session))
+		set_awc_session(awc_session)
+
+	return {
+		"success": True,
+		"data": awc["items"],
+		"removed": [],
+		"totals": awc.get("totals"),
+		"shipping_rates":  awc_session.get("shipping_rates_list",[])
+	}
+
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def cart(data=None, action=None):
 	if data and isinstance(data, basestring):
@@ -681,7 +763,6 @@ def cart(data=None, action=None):
 	if customer:
 		cart_info = get_cart_quotation()
 		quotation = cart_info.get('doc')
-		log(quotation)
 		quotation.flags.ignore_permissions=True
 		quotation.save()
 
@@ -696,6 +777,15 @@ def cart(data=None, action=None):
 
 	if not action:
 		return { "data": awc, "success": True}
+
+	elif action == "calculate_shipping":
+
+		log("Calculate Shipping:\n{0}", pretty_json(data))
+
+		rate_name = data[0].get("name")
+		address = data[0].get("address")
+
+		return calculate_shipping(rate_name, address, awc_session, quotation)
 
 	elif action == "updateItem":
 
@@ -715,6 +805,7 @@ def cart(data=None, action=None):
 					quotation_item = next((q for q in quotation.get("items", []) if q.name == awc_item.get("id")), None)
 
 				for awc_key, erp_key in valid_update_fields.iteritems():
+
 					if awc_key in item:
 						awc_item[awc_key] = item.get(awc_key)
 
@@ -746,19 +837,27 @@ def cart(data=None, action=None):
 
 					quotation.set("items", quotation_items)
 
+		shipping_info = calculate_shipping(None, None, awc_session, quotation, save=0)
+
 		if quotation:
-			apply_cart_settings(quotation=quotation)
+			update_cart_settings(quotation, awc_session)
 			quotation.flags.ignore_permissions = True
 			quotation.save()
 			frappe.db.commit()
 
-			collect_totals(quotation, awc)
+			collect_totals(quotation, awc, awc_session)
 		else:
-			collect_totals(None, awc)
+			collect_totals(None, awc, awc_session)
 
 		set_awc_session(awc_session)
 
-		return { "success": True, "data": awc["items"], "removed": removed_ids, "totals": awc.get("totals") }
+		return {
+			"success": True,
+			"data": awc["items"],
+			"removed": removed_ids,
+			"totals": awc.get("totals"),
+			"shipping_rates": shipping_info.get("shipping_rates")
+		}
 
 	elif action == "addToCart":
 
@@ -793,14 +892,14 @@ def cart(data=None, action=None):
 			awc["items"].append(item)
 
 		if quotation:
-			apply_cart_settings(quotation=quotation)
+			update_cart_settings(quotation, awc_session)
 			quotation.flags.ignore_permissions = True
 			quotation.save()
 			frappe.db.commit()
 
-			collect_totals(quotation, awc)
+			collect_totals(quotation, awc, awc_session)
 		else:
-			collect_totals(None, awc)
+			collect_totals(None, awc, awc_session)
 
 		set_awc_session(awc_session)
 
@@ -824,13 +923,13 @@ def cart(data=None, action=None):
 
 				quotation.set("items", quotation_items)
 
-				apply_cart_settings(quotation=quotation)
+				update_cart_settings(quotation, awc_session)
 				quotation.flags.ignore_permissions = True
 				quotation.save()
 				frappe.db.commit()
-				collect_totals(quotation, awc)
+				collect_totals(quotation, awc, awc_session)
 			else:
-				collect_totals(None, awc)
+				collect_totals(None, awc, awc_session)
 
 			set_awc_session(awc_session)
 
@@ -849,16 +948,19 @@ def get_shipping_rate(address):
 	except Exception as ex:
 		return []
 
-	log(pretty_json(address))
-
 	awc_session = get_awc_session()
+	result = update_shipping_rate(address, awc_session)
+
+	set_awc_session(awc_session)
+	return result
+
+def update_shipping_rate(address, awc_session):
+
 	awc = awc_session.get("cart")
 
 	shipping_rate_api = frappe.get_hooks("shipping_rate_api")[0]
 	address_link = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
 	from_address = frappe.get_doc("Address", address_link)
-
-	log(pretty_json(from_address.as_dict()))
 
 	package_items=[]
 
@@ -870,17 +972,13 @@ def get_shipping_rate(address):
 			}
 			package_items.append(package_item)
 
-	log(pretty_json(shipping_rate_api))
-	log(pretty_json(package_items))
-
 	rates = frappe.call(shipping_rate_api["module"], from_address=from_address, to_address=address, items=package_items)
 	# cache quoted rates to reference later on checkout
+	awc_session["shipping_address"] = address
 	awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
-	set_awc_session(awc_session)
+	awc_session["shipping_rates_list"] = rates
 
 	log("Updated shipping rates cache?")
-	log(pretty_json(awc_session))
-
 	log(pretty_json(rates))
 
 	return rates
@@ -946,6 +1044,13 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 
 	transaction.flags.ignore_permissions = 1
 	transaction.save()
+
+	awc_session["shipping_method"] = None
+	awc_session["shipping_rates"] = None
+	awc_session["shipping_rates_list"] = None
+	awc_session["shipping_address"] = None
+	set_awc_session(awc_session)
+
 	frappe.db.commit()
 
 	# check AWCTransaction.on_payment_authorized implementation which is

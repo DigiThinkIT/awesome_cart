@@ -249,6 +249,8 @@ var AwcShippingProvider = Class.extend({
 		$form.find('input[name="state"]').change(on_update);
 		$form.find('input[name="pincode"]').change(on_update);
 		$form.find('select[name="country"]').change(on_update);
+
+		cart.on("shipping_rates", this.update_shipping_rates.bind(this));
 	},
 	_on_cart_update: function () {
 		var base = this;
@@ -261,7 +263,71 @@ var AwcShippingProvider = Class.extend({
 	form: function (data) {
 		this.data = data;
 	},
+
+	update_shipping_rates: function(rates) {
+		var base = this;
+		var $form = $('#awc-shipping-form');
+		var $method_form = $('#awc-shipping-method');
+		$method_form.empty();
+
+		if ( rates && rates.constructor == Array && rates.length > 0 ) {
+			base._shipping_methods = rates;
+
+			$.each(rates, function(i, method) {
+				var checked="";
+				var is_default = false;
+				if ( base.data.ship_method && base.data.ship_method == method.name ) {
+					is_default = true;		// auto select last ship method selection if available
+				} else if ( !base.data.ship_method ) {
+					is_default = i == 0;	// select first item by default
+				}
+
+				if ( is_default ) {
+					checked="checked='checked'";
+					base.data.ship_method = method.name;
+					base.method_valid = true;
+					$("#bc-shipping-method").addClass("valid");
+				}
+				var $method = $(
+					'<li>'+
+						'<label>'+
+							'<input type="radio" name="awc_shipping_method" value="' + method.name + '"' + checked + '>' +
+							'<span class="label">' + method.label + " + $" + method.fee + '</span>' +
+						'</label>' +
+					'</li>');
+				$method_form.append($method);
+				$method.find('input').data('fee', method.fee);
+				$method.find('input').change(function() {
+					if ( $(this).is(":checked") ) {
+						base.data.ship_method = $(this).val();
+						base.method_valid = true;
+						//console.log("Ship Method", base.data.ship_method);
+						// force cart ui validation so ui updates with new data on click
+						awc_checkout.validate();
+					}
+				})
+			});
+
+			if ( !base.data.ship_method ) {
+				// if there was nothing selected by default, go back and select
+				// first item. This can occur if address method was removed due
+				// to a change of address from a previous selection
+				$method_form.find('index[type="radio"]:first').click();
+
+			}
+
+			// finally trigger validation once more to update ui with default selections
+			awc_checkout.validate();
+		} else {
+			base.method_valid = false;
+			$("#bc-shipping-method").removeClass("valid");
+			$method_form.empty();
+			$method_form.append('<li class="error">Invalid Shipping Address. Edit your shipping information to get shipping quote.</li>');
+		}
+	},
+
 	validate: function () {
+
 		var base = this;
 		var $form = $('#awc-shipping-form');
 		var $method_form = $('#awc-shipping-method');
@@ -301,9 +367,8 @@ var AwcShippingProvider = Class.extend({
 				var method = this._shipping_methods[i];
 				if (this.data.ship_method == method.name) {
 					base.fee = method.fee;
-					cart.totals["shipping"] = method.fee;
-					cart._emitUpdated();
 					base.label = method.label;
+					cart.calculate_shipping(this.data.ship_method);
 					break;
 				}
 			}
@@ -315,7 +380,7 @@ var AwcShippingProvider = Class.extend({
 		if (result.valid) {
 			$("#bc-shipping").addClass("valid");
 
-			// build values hash to avoid sending
+			// build values hash to avoid resending
 			var last_values = this.data.address_1 +
 				this.data.address_2 + this.data.city +
 				this.data.state + this.data.pincode +
@@ -325,69 +390,8 @@ var AwcShippingProvider = Class.extend({
 				this._last_values = last_values;
 				$method_form.empty();
 
-				frappe.call({
-					method: "awesome_cart.awc.get_shipping_rate",
-					args: {
-						address: this.data,
-					},
-					callback: function (response) {
-						var result = response.message;
-						if (result && result.constructor == Array && result.length > 0) {
-							base._shipping_methods = result;
+				cart.calculate_shipping(this.data.ship_method, this.data);
 
-							$.each(result, function (i, method) {
-								var checked = "";
-								var is_default = false;
-								if (base.data.ship_method && base.data.ship_method == method.name) {
-									is_default = true; // auto select last ship method selection if available
-								} else if (!base.data.ship_method) {
-									is_default = i == 0; // select first item by default
-								}
-
-								if (is_default) {
-									checked = "checked='checked'";
-									base.data.ship_method = method.name;
-									base.method_valid = true;
-									$("#bc-shipping-method").addClass("valid");
-								}
-								var $method = $(
-									'<li>' +
-									'<label>' +
-									'<input type="radio" name="awc_shipping_method" value="' + method.name + '"' + checked + '>' +
-									'<span class="label">' + method.label + " + $" + method.fee + '</span>' +
-									'</label>' +
-									'</li>');
-								$method_form.append($method);
-								$method.find('input').data('fee', method.fee);
-								$method.find('input').change(function () {
-									if ($(this).is(":checked")) {
-										base.data.ship_method = $(this).val();
-										base.method_valid = true;
-										//console.log("Ship Method", base.data.ship_method);
-										// force cart ui validation so ui updates with new data on click
-										awc_checkout.validate();
-									}
-								})
-							});
-
-							if (!base.data.ship_method) {
-								// if there was nothing selected by default, go back and select
-								// first item. This can occur if address method was removed due
-								// to a change of address from a previous selection
-								$method_form.find('index[type="radio"]:first').click();
-
-							}
-
-							// finally trigger validation once more to update ui with default selections
-							awc_checkout.validate();
-						} else {
-							base.method_valid = false;
-							$("#bc-shipping-method").removeClass("valid");
-							$method_form.empty();
-							$method_form.append('<li class="error">Invalid Shipping Address. Edit your shipping information to get shipping quote.</li>');
-						}
-					}
-				})
 			}
 		} else {
 			$("#bc-shipping").removeClass("valid");
