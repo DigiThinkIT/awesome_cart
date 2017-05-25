@@ -1044,6 +1044,13 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 
 	transaction.flags.ignore_permissions = 1
 	transaction.save()
+
+	awc_session["shipping_method"] = None
+	awc_session["shipping_rates"] = None
+	awc_session["shipping_rates_list"] = None
+	awc_session["shippign_address"] = None
+	set_awc_session(awc_session)
+	
 	frappe.db.commit()
 
 	# check AWCTransaction.on_payment_authorized implementation which is
