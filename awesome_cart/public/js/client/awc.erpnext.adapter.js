@@ -201,10 +201,11 @@ awc.ErpnextAdapter.prototype.validate = function (gateway_request, gateway_servi
 							callback: function (result) {
 								window.dataLayer = window.dataLayer || []
 								dataLayer.push(result.message)
+								awc_checkout.showPage('#checkout-success');
+								window.location.href = data.redirect_to;
 							},
 						});
-						awc_checkout.showPage('#checkout-success');
-						window.location.href = data.redirect_to;
+
 					}
 				});
 			} else {
