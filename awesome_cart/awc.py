@@ -713,7 +713,7 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 
 	if not rate_name and not address:
 		rate_name = awc_session.get("shipping_method", {}).get("name")
-		address = awc_session["shipping_address"]
+		address = awc_session.get("shipping_address")
 
 	if address:
 		awc_session["shipping_rates_list"] = update_shipping_rate(address, awc_session)
@@ -1048,9 +1048,9 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 	awc_session["shipping_method"] = None
 	awc_session["shipping_rates"] = None
 	awc_session["shipping_rates_list"] = None
-	awc_session["shippign_address"] = None
+	awc_session["shipping_address"] = None
 	set_awc_session(awc_session)
-	
+
 	frappe.db.commit()
 
 	# check AWCTransaction.on_payment_authorized implementation which is
