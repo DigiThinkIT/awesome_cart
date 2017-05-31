@@ -60,10 +60,12 @@
 			<div class="col-xs-9"><span class="pull-right">Sub Total:</span></div>
       <div class="col-xs-3"><span class="pull-right">{{ currency $cart.totals.sub_total }}</span></div>
 		</div>
+		{{#each $cart.totals.other}}
 		<div class="row">
-			<div class="col-xs-9"><span class="pull-right">Estimated Shipping:</span></div>
-			<div class="col-xs-3"><span class="pull-right">{{ currency $cart.totals.shipping }}</span </div>
+			<div class="col-xs-9"><span class="pull-right">{{label}}</span></div>
+			<div class="col-xs-3"><span class="pull-right">{{ currency value }}</span </div>
 		</div>
+		{{/each}}
 	</div>
 	<div class="row">
 		<div class="col-xs-12 line"></div>

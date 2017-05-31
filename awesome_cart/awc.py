@@ -406,6 +406,8 @@ def collect_totals(quotation, awc, awc_session):
 	if quotation:
 		awc["totals"]["sub_total"] = quotation.get("total")
 		awc["totals"]["grand_total"] = quotation.get("grand_total")
+		if "other" not in awc["totals"]:
+			awc["totals"]["other"] = []
 
 		for tax in quotation.get("taxes"):
 			total_entry = next((x for x in awc["totals"]["other"] if x.get("name") == tax.get("description")), None)
