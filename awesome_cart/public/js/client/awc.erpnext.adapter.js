@@ -265,6 +265,7 @@ var AwcShippingProvider = Class.extend({
 	},
 
 	update_shipping_rates: function(rates) {
+		console.log("Shipping rates updated", rates);
 		var base = this;
 		var $form = $('#awc-shipping-form');
 		var $method_form = $('#awc-shipping-method');
@@ -368,7 +369,7 @@ var AwcShippingProvider = Class.extend({
 				if (this.data.ship_method == method.name) {
 					base.fee = method.fee;
 					base.label = method.label;
-					cart.calculate_shipping(this.data.ship_method);
+					cart.calculate_shipping(base.data.ship_method);
 					break;
 				}
 			}
