@@ -889,7 +889,6 @@ def cart(data=None, action=None):
 
 			if quotation:
 				product = get_product_by_sku(item.get("sku")).get("data")
-
 				item_data = {
 					"doctype": "Quotation Item",
 					"item_code": item.get("sku"),
