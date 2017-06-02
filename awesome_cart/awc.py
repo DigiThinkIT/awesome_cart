@@ -335,6 +335,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 		sql = """SELECT
 			i.name,
 			i.item_code,
+			i.item_name,
 			i.has_variants,
 			i.standard_rate,
 			i.net_weight,
@@ -376,7 +377,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 
 			product = dict(
 				sku=item.item_code,
-				name=item.name,
+				name=item.item_name,
 				weight=item.get("net_weight", 0),
 				custom=get_awc_item_custom_data(item.awc_item_name),
 				productUrl="/p/%s" % item.awc_product_route,
