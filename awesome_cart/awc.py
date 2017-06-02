@@ -550,7 +550,6 @@ def sync_awc_and_quotation(awc_session, quotation):
 					item_data = {
 						"doctype": "Quotation Item",
 						"item_code": awc_item.get("sku"),
-						"item_name": product.get("name"),
 						"description": product.get("name"),
 						"qty": cint(awc_item.get("qty")),
 						"warehouse": product.get("warehouse")
@@ -878,7 +877,6 @@ def cart(data=None, action=None):
 				item_data = {
 					"doctype": "Quotation Item",
 					"item_code": item.get("sku"),
-					"item_name": product.get("name"),
 					"description": product.get("name"),
 					"qty": cint(item.get("qty")),
 					"warehouse": product.get("warehouse")
