@@ -250,6 +250,7 @@ def get_product_by_sku(sku, detailed=0):
 	product = dict(
 		sku=item.item_code,
 		name=item.name,
+		item_name=item.item_name,
 		custom=custom_data,
 		weight=item.get("net_weight", 0),
 		warehouse=item.get("default_warehouse"),
@@ -550,6 +551,7 @@ def sync_awc_and_quotation(awc_session, quotation):
 					item_data = {
 						"doctype": "Quotation Item",
 						"item_code": awc_item.get("sku"),
+						"item_name": product.get("item_name"),
 						"description": product.get("name"),
 						"qty": cint(awc_item.get("qty")),
 						"warehouse": product.get("warehouse")
@@ -873,10 +875,10 @@ def cart(data=None, action=None):
 
 			if quotation:
 				product = get_product_by_sku(item.get("sku")).get("data")
-
 				item_data = {
 					"doctype": "Quotation Item",
 					"item_code": item.get("sku"),
+					"item_name": product.get("item_name"),
 					"description": product.get("name"),
 					"qty": cint(item.get("qty")),
 					"warehouse": product.get("warehouse")
