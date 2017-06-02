@@ -216,6 +216,9 @@ def get_product_by_sku(sku, detailed=0):
 
 	item = item[0]
 
+	if item.disabled:
+		return { "success": False, "data": None }
+
 	# get awc item name by its item link
 	awc_item = frappe.get_list("AWC Item", fields="*", filters = {"product_name": item.name}, ignore_permissions=1)
 
@@ -350,7 +353,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 			a.tags as awc_tags
 			FROM `tabAWC Item` a, `tabItem` i
 			WHERE i.name = a.product_name
-			AND a.catalog_visible=1
+			AND a.catalog_visible = 1 and i.disabled != 1
 			{}
 			ORDER BY {} {}
 			{}""".format(
@@ -458,6 +461,16 @@ def get_awc_session():
 		}
 
 		frappe.cache().set_value(awc_sid, awc_session)
+	else:
+		# update old session structures
+		if not awc_session.get("cart"):
+			awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
+
+		if not awc_session["cart"].get("totals"):
+			awc_session["cart"]["totals"] = { "sub_total": 0, "grand_total": 0, "other": [] }
+
+		if not awc_session["cart"]["totals"].get("other"):
+			awc_session["cart"]["totals"]["other"] = []
 
 	frappe.local.session["awc_sid"] = sid
 	frappe.local.cookie_manager.set_cookie("awc_sid", frappe.local.session["awc_sid"] )
@@ -471,6 +484,8 @@ def set_awc_session(session):
 
 def clear_awc_session():
 	awc_session = get_awc_session()
+	del awc_session["shipping_method"]
+	del awc_session["shipping_rates"]
 	awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
 	return set_awc_session(awc_session)
 
@@ -1047,10 +1062,6 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 	transaction.flags.ignore_permissions = 1
 	transaction.save()
 
-	awc_session["shipping_method"] = None
-	awc_session["shipping_rates"] = None
-	awc_session["shipping_rates_list"] = None
-	awc_session["shipping_address"] = None
 	set_awc_session(awc_session)
 
 	frappe.db.commit()

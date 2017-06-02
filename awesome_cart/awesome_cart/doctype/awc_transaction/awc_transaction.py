@@ -111,6 +111,16 @@ class AWCTransaction(Document):
 					self.log_action(msg, "Info")
 				frappe.local.message_log = []
 
+			# don't kill processing if saving cleaning session address info breaks
+			try:
+				awc_session = awc.get_awc_session()
+				del awc_session["shipping_rates"]
+				awc.set_awc_session(awc_session)
+			except Exception as awc_ex:
+				log(frappe.get_traceback())
+				self.log_action(frappe.get_traceback(), "Error")
+				pass
+
 			return result
 		except Exception as ex:
 			log(frappe.get_traceback())
@@ -133,4 +143,5 @@ class AWCTransaction(Document):
 				"level": level,
 				"timestamp": datetime.now().strftime("%Y-%d-%m %H:%M:%S")
 			})
+			self.flags.ignore_permissions=1
 			self.save()

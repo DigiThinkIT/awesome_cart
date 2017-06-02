@@ -24,6 +24,16 @@ awc_checkout = {
 			var shipping_validation_response = awc_checkout.shipping_provider.validate();
 			var shipping_summary = awc_checkout.shipping_provider.getSummary();
 			$('#checkout-confirm-shipping .content').empty().append(shipping_summary);
+			var totals = cart.totals;
+			shipping_total = {}
+
+			// find shipping total
+			$.each(totals.other, function(i, t) {
+				if ( t.name == "Shipping" ) {
+					shipping_total = t;
+				}
+			})
+
 
 			if ( shipping_validation_response.valid == false ) {
 				checkout_enabled = false;
@@ -31,8 +41,8 @@ awc_checkout = {
 				$('#checkout-confirm-totals .shipping-total .method').empty().append('<span class="error">(missing)</span>');
 			} else {
 				if ( awc_checkout.shipping_provider.fee ) {
-					$('#checkout-confirm-totals .shipping-total .value').empty().text(cart.storeAdapter.formatCurrency(awc_checkout.shipping_provider.fee));
-					$('#checkout-confirm-totals .shipping-total .method').empty().text("(" + awc_checkout.shipping_provider.label + ")");
+					$('#checkout-confirm-totals .shipping-total .value').empty().text(cart.storeAdapter.formatCurrency(shipping_total.total));
+					$('#checkout-confirm-totals .shipping-total .method').empty().text("(" + shipping_total.label + ")");
 				}
 			}
 
