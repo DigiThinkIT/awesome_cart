@@ -46,6 +46,10 @@ awc_checkout = {
 				}
 			}
 
+			$('#checkout-confirm-totals .sub-total .value').text(cart.storeAdapter.formatCurrency(totals.sub_total));
+			$('#checkout-confirm-totals .grand-total .value').text(cart.storeAdapter.formatCurrency(totals.grand_total));
+
+
 			awc_checkout.shipping_address = shipping_validation_response.address;
 		}
 
