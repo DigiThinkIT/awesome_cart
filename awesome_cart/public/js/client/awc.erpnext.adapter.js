@@ -189,11 +189,9 @@ awc.ErpnextAdapter.prototype.validate = function (gateway_request, gateway_servi
 					gateway_request[k] = result.data[k];
 				}
 
-				console.log("Preparing for checkout!", gateway_request);
 				awc_checkout.gateway_provider.process(gateway_request, function (err, data) {
 					if (err) {
 						$('#checkout-error .msg').text(err.error);
-						console.error(err);
 						awc_checkout.showPage('#checkout-error');
 					} else {
 						frappe.call({
@@ -265,7 +263,6 @@ var AwcShippingProvider = Class.extend({
 	},
 
 	update_shipping_rates: function(rates) {
-		console.log("Shipping rates updated", rates);
 		var base = this;
 		var $form = $('#awc-shipping-form');
 		var $method_form = $('#awc-shipping-method');
@@ -302,7 +299,6 @@ var AwcShippingProvider = Class.extend({
 					if ( $(this).is(":checked") ) {
 						base.data.ship_method = $(this).val();
 						base.method_valid = true;
-						//console.log("Ship Method", base.data.ship_method);
 						// force cart ui validation so ui updates with new data on click
 						awc_checkout.validate();
 					}
@@ -461,7 +457,6 @@ var cart = new awc.AwesomeCart({
 });
 
 cart.scan_forms = function () {
-	console.log("Binding forms")
 	// handle smart placeholder labels
 	$('.awc-form .field').not('.awc-form-bound').each(function () {
 		var $field = $(this);
