@@ -36,6 +36,7 @@ function updateProductDetails(sku) {
       .then(cart.applyTpl.bind(cart, '#product', productTemplate))
       .then(function(result) {
         cart.updateUI();
+				return result;
       })
       .catch(console.error)
   }
