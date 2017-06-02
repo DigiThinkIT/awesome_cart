@@ -25,7 +25,7 @@ awc_checkout = {
 			var shipping_summary = awc_checkout.shipping_provider.getSummary();
 			$('#checkout-confirm-shipping .content').empty().append(shipping_summary);
 			var totals = cart.totals;
-			shipping_total = {}
+			shipping_total = null;
 
 			// find shipping total
 			$.each(totals.other, function(i, t) {
@@ -40,8 +40,8 @@ awc_checkout = {
 				$('#checkout-confirm-totals .shipping-total .value').empty().append('<span class="error">-</span>');
 				$('#checkout-confirm-totals .shipping-total .method').empty().append('<span class="error">(missing)</span>');
 			} else {
-				if ( awc_checkout.shipping_provider.fee ) {
-					$('#checkout-confirm-totals .shipping-total .value').empty().text(cart.storeAdapter.formatCurrency(shipping_total.total));
+				if ( shipping_total ) {
+					$('#checkout-confirm-totals .shipping-total .value').empty().text(cart.storeAdapter.formatCurrency(shipping_total.value));
 					$('#checkout-confirm-totals .shipping-total .method').empty().text("(" + shipping_total.label + ")");
 				}
 			}
