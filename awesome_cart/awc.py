@@ -487,6 +487,7 @@ def clear_awc_session():
 	awc_session = get_awc_session()
 	del awc_session["shipping_method"]
 	del awc_session["shipping_rates"]
+	del awc_session["shipping_rates_list"]
 	awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
 	return set_awc_session(awc_session)
 
@@ -835,9 +836,10 @@ def cart(data=None, action=None):
 					for sub_item in [i for i in awc["items"] if i.get('options', {}).get('group') == awc_item.get('options', {}).get('group')]:
 						sub_item["qty"] = awc_item["qty"]
 
-						sub_quotation_item = next((q for q in quotation.get("items", []) if q.name == sub_item.get("id")), None)
-						if sub_quotation_item:
-							sub_quotation_item.set("qty", sub_item.get("qty"))
+						if quotation:
+							sub_quotation_item = next((q for q in quotation.get("items", []) if q.name == sub_item.get("id")), None)
+							if sub_quotation_item:
+								sub_quotation_item.set("qty", sub_item.get("qty"))
 
 				if awc_item.get("qty") == 0:
 					remove_items.append(awc_item)
