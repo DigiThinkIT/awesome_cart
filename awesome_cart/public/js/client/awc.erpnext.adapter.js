@@ -371,7 +371,7 @@ var AwcShippingProvider = Class.extend({
 				if (this.data.ship_method == method.name) {
 					base.fee = method.fee;
 					base.label = method.label;
-					cart.calculate_shipping(base.data.ship_method);
+					cart.calculateShipping(base.data.ship_method);
 					break;
 				}
 			}
@@ -393,7 +393,7 @@ var AwcShippingProvider = Class.extend({
 				this._last_values = last_values;
 				$method_form.empty();
 
-				cart.calculate_shipping(this.data.ship_method, this.data);
+				cart.calculateShipping(this.data.ship_method, this.data);
 
 			}
 		} else {

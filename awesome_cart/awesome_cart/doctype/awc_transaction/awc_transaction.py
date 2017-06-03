@@ -24,8 +24,6 @@ LOG_LEVELS = {
 
 class AWCTransaction(Document):
 	def on_payment_authorized(self, payment_status):
-		# clears awc session data
-		awc.clear_awc_session()
 
 		try:
 			quotation = frappe.get_doc("Quotation", self.order_id)
@@ -113,9 +111,8 @@ class AWCTransaction(Document):
 
 			# don't kill processing if saving cleaning session address info breaks
 			try:
-				awc_session = awc.get_awc_session()
-				del awc_session["shipping_rates"]
-				awc.set_awc_session(awc_session)
+				# clears awc session data
+				awc.clear_awc_session()
 			except Exception as awc_ex:
 				log(frappe.get_traceback())
 				self.log_action(frappe.get_traceback(), "Error")
