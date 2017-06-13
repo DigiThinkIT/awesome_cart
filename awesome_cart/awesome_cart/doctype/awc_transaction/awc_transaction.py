@@ -24,7 +24,6 @@ LOG_LEVELS = {
 
 class AWCTransaction(Document):
 	def on_payment_authorized(self, payment_status):
-
 		try:
 			quotation = frappe.get_doc("Quotation", self.order_id)
 
@@ -98,6 +97,10 @@ class AWCTransaction(Document):
 			# invoice, payment entry docs should be created here
 			result = preq.run_method("on_payment_authorized", payment_status)
 
+			#update shipping method in Sales Order
+			if self.get("shipping_method"):
+				frappe.db.set_value("Sales Order", self.order_id, "fedex_shipping_method", self.get("shipping_method"))
+			
 			# override redirection to orders page
 			if result:
 				result = '/orders'
