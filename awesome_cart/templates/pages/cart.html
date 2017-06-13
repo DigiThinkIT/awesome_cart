@@ -93,13 +93,13 @@
 							<h4>Your Totals:</h4>
 							<div class="content">
 								<div class="sub-total">Subtotal: <span class="value"></span></div>
-								<div class="shipping-total">Shipping<span class="method"></span>: <span class="value"></span></div>
+								<div class="shipping-total">Shipping <span class="method"></span>: <span class="value"></span></div>
 								<div class="grand-total">Total: <span class="value"></span></div>
 							</div>
 						</div>
 
 						<div class="dti-form" id="confirm-form">
-							<label><input name="accept_terms" type="checkbox" value="1"/><span>I agree with the Terms and Conditions</span></label>
+							<label><input name="accept_terms" type="checkbox" value="1"/><span>I agree with the <a href="policies" rel="nofollow" target="_blank">Terms and Conditions</a></span></label>
 							{% if gateway_provider %}
 								{{ gateway_provider.submit }}
 							{% else %}
