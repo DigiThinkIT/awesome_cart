@@ -3,7 +3,7 @@ import frappe
 from erpnext.utilities.doctype.address.address import get_address_display
 
 def create_address(parent_dt, parent,
-	address_1, address_2, city, state, pincode, country, address_type="Other", return_name=0, flags={}):
+	address_1, address_2, city, state, pincode, country, email, address_type="Other", return_name=0, flags={}):
 
 	data = {
 		"doctype": "Address",
@@ -13,7 +13,8 @@ def create_address(parent_dt, parent,
 		"city": city,
 		"state": state,
 		"pincode": pincode,
-		"country": country
+		"country": country,
+		"email_id": email
 	}
 
 	if parent_dt == "Customer":

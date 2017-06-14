@@ -1004,7 +1004,7 @@ def update_shipping_rate(address, awc_session):
 
 @frappe.whitelist()
 def create_transaction(gateway_service, billing_address, shipping_address):
-
+	
 	if isinstance(billing_address, basestring):
 		billing_address = json.loads(billing_address)
 
@@ -1039,7 +1039,8 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 		"currency": quotation.currency,
 		"session": json.dumps(awc),
 		"order_id": quotation.name,
-		"gateway_service": gateway_service
+		"gateway_service": gateway_service,
+		"shipping_address": shipping_address.get("shipping_address")
 	}
 
 	log("Shipping address data. Is method data available?")
@@ -1054,6 +1055,7 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 
 	data.update({ "billing_%s" % key: value for key, value in billing_address.iteritems() })
 	data.update({ "shipping_%s" % key: value for key, value in shipping_address.iteritems() })
+	
 
 	log("Building Transaction.")
 	log(pretty_json(data))
