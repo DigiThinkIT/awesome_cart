@@ -91,7 +91,13 @@ awc_checkout = {
 
 		$('#checkout-confirm-shipping .btn-primary')
 			.click(function (e) {
-				awc_checkout.showPage('#checkout-shipping-address');
+				if($('#checkout-shipping').attr('data-select') == "true") {
+					e.preventDefault();
+					awc_checkout.showPage('#checkout-shipping');
+				} else {
+					e.preventDefault();
+					awc_checkout.showPage('#checkout-shipping-address');
+				}
 			})
 
 		$('#checkout-confirm-billing .btn-primary')
@@ -111,8 +117,13 @@ awc_checkout = {
 
 		// map breadcrumb clicks ---------------------------------------
 		$('#bc-shipping').click(function (e) {
-			e.preventDefault();
-			awc_checkout.showPage('#checkout-shipping-address');
+			if($('#checkout-shipping').attr('data-select') == "true") {
+				e.preventDefault();
+				awc_checkout.showPage('#checkout-shipping');
+			} else {
+				e.preventDefault();
+				awc_checkout.showPage('#checkout-shipping-address');
+			}
 		});
 		$('#bc-billing').click(function (e) {
 			e.preventDefault();
@@ -161,18 +172,10 @@ awc_checkout = {
 			awc_checkout.showPage('#checkout-billing');
 		})
 
-		$('.btn-addr-del').click(function () {
-			var nm = $(this).parent().siblings('div').attr("data-name");
-			frappe.call({
-				method: "frappe.client.delete",
-				args: {
-					doctype: "Address",
-					name: nm
-				},
-				callback: function() {
-
-				}
-			})
+		$("#awc-shipping-form .btn-back").click(function (e) {
+			e.preventDefault();
+			$('#checkout-shipping').attr('data-select', 'false');
+			awc_checkout.showPage('#checkout-shipping-address');
 		})
 
 		cart.on('init', onCartChanges);
