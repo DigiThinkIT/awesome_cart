@@ -1,0 +1,27 @@
+<div id="shipping-addrs">
+    <h2>Shipping Information</h2>
+    <h4>Select Shipping Address</h4>
+    <div class="row">
+        {% if not addresses %}
+            <p>No address registered, add a new one.</p>
+        {% else %}
+        {% for address in addresses%}
+        <div class="col-md-12 col-sm-12" style="padding:0">
+            <div class="well">
+                <div data-name="{{ address.name }}" class="addr" style="cursor: pointer">
+                    <p>
+                        <span id="line1">{{ address.address_line1 }}</span>, 
+                        <span id="line2">{{ address.address_line2 }}</span>, 
+                        <span id="city">{{ address.city }}</span>, 
+                        <span id="state">{{ address.state }}</span>, 
+                        <span id="country">{{ address.country }}</span>, 
+                        <span id="postal_code">{{ address.pincode }}</span> 
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        <button class="btn-primary">Add a New Shipping Address</button>
+    </div>
+</div>

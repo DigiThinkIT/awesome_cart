@@ -27,12 +27,13 @@ def get_context(context):
 	default_country = frappe.get_value("System Settings", "System Settings", "country")
 	default_country_doc = next((x for x in context["countries"] if x.name == default_country), None)
 
+	context["addresses"] = frappe.get_all("Address", filters={"email_id" : frappe.session.user, "address_type": "Shipping"}, fields="*")
+
 	country_idx = context["countries"].index(default_country_doc)
 	context["countries"].pop(country_idx)
 	context["countries"] = [default_country_doc] + context["countries"]
 
 	context["shipping_rate_api"] = frappe.get_hooks("shipping_rate_api")[0]
-	print(context["shipping_rate_api"])
 
 	# remove? shipping is essential here anyways
 	context.shipping_enabled = 1 if settings.awc_shipping_enabled else 0

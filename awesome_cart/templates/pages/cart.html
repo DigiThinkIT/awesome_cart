@@ -50,10 +50,12 @@
 								<a href="" id="bc-checkout" class="breadcrumb">Checkout</a>
 						</ul>
 					</div>
-
+					<div id="checkout-shipping-address" data-bc="#bc-shipping-addr" class="panel">
+							{% include "templates/includes/shipping/shipping_address.html" with context %}
+					</div>
 					<div id="checkout-shipping" data-bc="#bc-shipping" class="panel">
 							{% include "templates/includes/shipping/shipping_form.html" with context %}
-						<button class="btn btn-default btn-primary btn-next">Next</button>
+						
 					</div>
 
 					<div id="checkout-billing" data-bc="#bc-billing" class="panel">
@@ -93,13 +95,13 @@
 							<h4>Your Totals:</h4>
 							<div class="content">
 								<div class="sub-total">Subtotal: <span class="value"></span></div>
-								<div class="shipping-total">Shipping<span class="method"></span>: <span class="value"></span></div>
+								<div class="shipping-total">Shipping <span class="method"></span>: <span class="value"></span></div>
 								<div class="grand-total">Total: <span class="value"></span></div>
 							</div>
 						</div>
 
 						<div class="dti-form" id="confirm-form">
-							<label><input name="accept_terms" type="checkbox" value="1"/><span>I agree with the Terms and Conditions</span></label>
+							<label><input name="accept_terms" type="checkbox" value="1"/><span> I agree with the <a href="policies" rel="nofollow" target="_blank">Terms and Conditions</a></span></label>
 							{% if gateway_provider %}
 								{{ gateway_provider.submit }}
 							{% else %}
