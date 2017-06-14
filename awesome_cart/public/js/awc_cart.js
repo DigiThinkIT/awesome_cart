@@ -169,6 +169,12 @@ awc_checkout = {
 		$('#checkout-shipping-address .addr').click(function (e) {
 			e.stopPropagation();
 			$(this).addClass('selected');
+			$('#awc_ship__line1').val($('div.selected span#line1').text());
+			$('#awc_ship__line2').val($('div.selected span#line2').text());
+			$('#awc_ship__city').val($('div.selected span#city').text());
+			$('#awc_ship__state').val($('div.selected span#state').text());
+			$('#awc_ship__zip').val($('div.selected span#postal_code').text());
+			$('#awc_ship__country').val($('div.selected span#country').text());
 			awc_checkout.showPage('#checkout-billing');
 		})
 
