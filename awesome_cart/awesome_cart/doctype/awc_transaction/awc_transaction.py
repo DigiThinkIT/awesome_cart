@@ -41,9 +41,9 @@ class AWCTransaction(Document):
 					state=self.get("billing_state"),
 					pincode=self.get("billing_pincode"),
 					country=self.get("billing_country"),
-					email=self.get("payer_email")
+					email=self.get("payer_email"),
 					return_name=1,
-					flags={"ignore_permissions": 1},
+					flags={"ignore_permissions": 1}
 				)
 
 			# check if we have a shipping address linked
@@ -59,10 +59,10 @@ class AWCTransaction(Document):
 					city=self.get("shipping_city"),
 					state=self.get("shipping_state"),
 					pincode=self.get("shipping_pincode"),
-					email=self.get("payer_email")
+					email=self.get("payer_email"),
 					country=self.get("shipping_country"),
 					return_name=1,
-					flags={"ignore_permissions": 1},
+					flags={"ignore_permissions": 1}
 				)
 
 			#if self.get("shipping_method"):
