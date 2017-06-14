@@ -266,42 +266,42 @@ var AwcShippingProvider = Class.extend({
 		this.data = data;
 	},
 
-	update_shipping_rates: function(rates) {
+	update_shipping_rates: function (rates) {
 		awc.debug.log("Shipping rates updated", rates);
 		var base = this;
 		var $form = $('#awc-shipping-form');
 		var $method_form = $('#awc-shipping-method');
 		$method_form.empty();
 
-		if ( rates && rates.constructor == Array && rates.length > 0 ) {
+		if (rates && rates.constructor == Array && rates.length > 0) {
 			base._shipping_methods = rates;
 
-			$.each(rates, function(i, method) {
-				var checked="";
+			$.each(rates, function (i, method) {
+				var checked = "";
 				var is_default = false;
-				if ( base.data.ship_method && base.data.ship_method == method.name ) {
-					is_default = true;		// auto select last ship method selection if available
-				} else if ( !base.data.ship_method ) {
-					is_default = i == 0;	// select first item by default
+				if (base.data.ship_method && base.data.ship_method == method.name) {
+					is_default = true; // auto select last ship method selection if available
+				} else if (!base.data.ship_method) {
+					is_default = i == 0; // select first item by default
 				}
 
-				if ( is_default ) {
-					checked="checked='checked'";
+				if (is_default) {
+					checked = "checked='checked'";
 					base.data.ship_method = method.name;
 					base.method_valid = true;
 					$("#bc-shipping-method").addClass("valid");
 				}
 				var $method = $(
-					'<li>'+
-						'<label>'+
-							'<input type="radio" name="awc_shipping_method" value="' + method.name + '"' + checked + '>' +
-							'<span class="label">' + method.label + " + $" + method.fee + '</span>' +
-						'</label>' +
+					'<li>' +
+					'<label>' +
+					'<input type="radio" name="awc_shipping_method" value="' + method.name + '"' + checked + '>' +
+					'<span class="label">' + method.label + " + $" + method.fee + '</span>' +
+					'</label>' +
 					'</li>');
 				$method_form.append($method);
 				$method.find('input').data('fee', method.fee);
-				$method.find('input').change(function() {
-					if ( $(this).is(":checked") ) {
+				$method.find('input').change(function () {
+					if ($(this).is(":checked")) {
 						base.data.ship_method = $(this).val();
 						base.method_valid = true;
 						//awc.debug.log("Ship Method", base.data.ship_method);
@@ -311,7 +311,7 @@ var AwcShippingProvider = Class.extend({
 				})
 			});
 
-			if ( !base.data.ship_method ) {
+			if (!base.data.ship_method) {
 				// if there was nothing selected by default, go back and select
 				// first item. This can occur if address method was removed due
 				// to a change of address from a previous selection
@@ -330,17 +330,27 @@ var AwcShippingProvider = Class.extend({
 	},
 
 	validate: function () {
-
+		
 		var base = this;
 		var $form = $('#awc-shipping-form');
 		var $method_form = $('#awc-shipping-method');
 
-		this.data.address_1 = $form.find('input[name="address_1"]').val();
-		this.data.address_2 = $form.find('input[name="address_2"]').val();
-		this.data.city = $form.find('input[name="city"]').val();
-		this.data.state = $form.find('input[name="state"]').val();
-		this.data.pincode = $form.find('input[name="pincode"]').val();
-		this.data.country = $form.find('select[name="country"] option:checked').attr('value');
+		if ($("#checkout-shipping").attr('data-select') == 'true') {
+			this.data.address_1 = $form.find('input[name="address_1"]').val();
+			this.data.address_2 = $form.find('input[name="address_2"]').val();
+			this.data.city = $form.find('input[name="city"]').val();
+			this.data.state = $form.find('input[name="state"]').val();
+			this.data.pincode = $form.find('input[name="pincode"]').val();
+			this.data.country = $form.find('select[name="country"] option:checked').attr('value');
+		} else {
+			this.data.shipping_address = $('div.selected').attr('data-name');
+			this.data.address_1 = $('.selected span#line1').text();
+			this.data.address_2 = $('.selected span#line2').text();
+			this.data.city = $('.selected span#city').text();
+			this.data.state = $('.selected span#state').text();
+			this.data.pincode = $('.selected span#postal_code').text();
+			this.data.country = $('.selected span#country').text();
+		}
 
 		$form.trigger('address_change', this.data);
 

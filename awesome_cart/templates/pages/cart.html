@@ -50,7 +50,9 @@
 								<a href="" id="bc-checkout" class="breadcrumb">Checkout</a>
 						</ul>
 					</div>
-
+					<div id="checkout-shipping-address" data-bc="#bc-shipping-addr" class="panel">
+							{% include "templates/includes/shipping/shipping_address.html" with context %}
+					</div>
 					<div id="checkout-shipping" data-bc="#bc-shipping" class="panel">
 							{% include "templates/includes/shipping/shipping_form.html" with context %}
 						<button class="btn btn-default btn-primary btn-next">Next</button>
