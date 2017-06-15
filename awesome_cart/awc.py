@@ -9,7 +9,7 @@ from erpnext.stock.get_item_details import apply_price_list_on_item
 from erpnext.shopping_cart.product import get_product_info
 
 from compat.customer import get_current_customer
-from compat.shopping_cart import get_cart_quotation, apply_cart_settings
+from compat.shopping_cart import get_cart_quotation, apply_cart_settings, set_taxes
 from compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing_rule_for_item
 
 from .dbug import pretty_json, log
@@ -547,14 +547,14 @@ def sync_awc_and_quotation(awc_session, quotation):
 						item.awc_group_label = awc_item.get('options', {}).get('label')
 						quotation_is_dirty = True
 
-					if item.image and awc_item.get("options", {}).get("image") and item.image != awc_item.get("options", {}).get("image"):
+					if not item.image and awc_item.get("options", {}).get("image") and item.image != awc_item.get("options", {}).get("image"):
 						item.image = awc_item["options"]["image"]
 						quotation_is_dirty = True
 
 					item.warehouse = product.get("warehouse")
 					update_quotation_item_awc_fields(item, awc_item)
 
-					if awc_item.get("options", {}).get("custom", {}).get("rate"):
+					if awc_item.get("options", {}).get("custom", {}).get("rate", None) != None:
 						set_quotation_item_rate(item, awc_item["options"]["custom"]["rate"], product)
 					else:
 						set_quotation_item_rate(item, product.get("price"), product)
@@ -595,7 +595,7 @@ def sync_awc_and_quotation(awc_session, quotation):
 
 					new_quotation_item = quotation.append("items", item_data)
 
-					if awc_item.get("options", {}).get("custom", {}).get("rate"):
+					if awc_item.get("options", {}).get("custom", {}).get("rate", None) != None:
 						set_quotation_item_rate(new_quotation_item, awc_item["options"]["custom"]["rate"], product)
 					else:
 						set_quotation_item_rate(new_quotation_item, product.get("price"), product)
@@ -755,7 +755,8 @@ def remove_from_cart(items_to_remove, cart_items):
 
 def update_cart_settings(quotation, awc_session):
 	#apply_cart_settings(quotation=quotation)
-	quotation.run_method("calculate_taxes_and_totals")
+	set_taxes(quotation, get_shopping_cart_settings())
+	#quotation.run_method("calculate_taxes_and_totals")
 	update_shipping_quotation(quotation, awc_session)
 
 def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
@@ -768,7 +769,7 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 	if address:
 		awc_session["shipping_rates_list"] = update_shipping_rate(address, awc_session)
 
-	rate = awc_session.get("shipping_rates", {}).get(rate_name)
+	rate = awc_session.get("shipping_rates", {}).get(rate_name, None)
 	if not rate and awc_session.get("shipping_method"):
 		rate = awc_session["shipping_method"]
 
@@ -926,7 +927,7 @@ def cart(data=None, action=None):
 
 			product = get_product_by_sku(item.get("sku")).get("data")
 
-			if item.get("options", {}).get("custom", {}).get("rate"):
+			if item.get("options", {}).get("custom", {}).get("rate", None) != None:
 				item["total"] = flt(item["options"]["custom"]["rate"]) * item.get("qty")
 				item["unit"] = flt(item["options"]["custom"]["rate"])
 			else:
@@ -950,7 +951,7 @@ def cart(data=None, action=None):
 
 				# TODO: ( >_<) shitty way of setting rate due to rate reset
 				#       Please fix when not utterly pissed off
-				if item.get("options", {}).get("custom", {}).get("rate"):
+				if item.get("options", {}).get("custom", {}).get("rate", None) != None:
 					set_quotation_item_rate(quotation_item, item["options"]["custom"]["rate"], product)
 					item_data['total'] = item["options"]["custom"]["rate"] * cint(item.get("qty"))
 				else:

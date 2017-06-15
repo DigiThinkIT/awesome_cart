@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import throw, _
 
-from awesome_cart.compat.erpnext.shopping_cart import get_cart_quotation, apply_cart_settings
+from awesome_cart.compat.erpnext.shopping_cart import get_cart_quotation, apply_cart_settings, set_taxes
 
 def convert_quotation_to_sales_order(quotation):
     quotation.company = frappe.db.get_value("Shopping Cart Settings", None, "company")
