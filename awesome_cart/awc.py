@@ -408,6 +408,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 
 def collect_totals(quotation, awc, awc_session):
 	if quotation:
+		quotation.run_method("calculate_taxes_and_totals")
 		awc["totals"]["sub_total"] = quotation.get("total")
 		awc["totals"]["grand_total"] = quotation.get("grand_total")
 		if "other" not in awc["totals"]:
@@ -428,7 +429,9 @@ def collect_totals(quotation, awc, awc_session):
 			product = get_product_by_sku(awc_item.get("sku"))
 			if product.get('success'):
 				product_total = product["data"].get("price") * cint(awc_item.get("qty"))
-				awc["totals"]["sub_total"] = awc["totals"]["sub_total"] + product["data"].get("price") * cint(awc_item.get("qty"))
+				if awc_item.get("options", {}).get("custom", {}).get("rate"):
+					product_total = flt(awc_item["options"]["custom"]["rate"]) * cint(awc_item.get("qty"))
+				awc["totals"]["sub_total"] = awc["totals"]["sub_total"] + product_total
 
 		awc["totals"]["grand_total"] = awc["totals"]["sub_total"] + awc["totals"].get("shipping_total", 0)
 
@@ -551,6 +554,11 @@ def sync_awc_and_quotation(awc_session, quotation):
 					item.warehouse = product.get("warehouse")
 					update_quotation_item_awc_fields(item, awc_item)
 
+					if awc_item.get("options", {}).get("custom", {}).get("rate"):
+						set_quotation_item_rate(item, awc_item["options"]["custom"]["rate"], product)
+					else:
+						set_quotation_item_rate(item, product.get("price"), product)
+
 					awc_items_matched.append(awc_item.get("id"))
 				else:
 					# sku is invalid. Flag item to be removed from awc session
@@ -562,6 +570,7 @@ def sync_awc_and_quotation(awc_session, quotation):
 			else:
 				if product.get("success"):
 					product = product.get("data")
+
 					# no quotation item matched, so lets create one
 					item_data = {
 						"doctype": "Quotation Item",
@@ -585,8 +594,18 @@ def sync_awc_and_quotation(awc_session, quotation):
 					update_quotation_item_awc_fields(item_data, awc_item)
 
 					new_quotation_item = quotation.append("items", item_data)
+
+					if awc_item.get("options", {}).get("custom", {}).get("rate"):
+						set_quotation_item_rate(new_quotation_item, awc_item["options"]["custom"]["rate"], product)
+					else:
+						set_quotation_item_rate(new_quotation_item, product.get("price"), product)
+
+					awc_item["unit"] = new_quotation_item.rate
+					awc_item["total"] = new_quotation_item.amount
+
 					# BUGFIX: makes sure this item gets a name during login
 					new_quotation_item.save()
+
 					awc_item["id"] = new_quotation_item.name
 					# make sure we won't add this new item again on step 2
 					update_quotation_item_awc_fields(new_quotation_item, awc_item)
@@ -621,7 +640,10 @@ def sync_awc_and_quotation(awc_session, quotation):
 				"id": item.name,
 				"sku": item.item_code,
 				"qty": cint(item.qty),
-				"warehouse": product.get("warehouse")
+				"warehouse": product.get("warehouse"),
+				"unit": item.rate,
+				"total": item.amount,
+				"image": item.image
 			}
 
 			if item.awc_group:
@@ -683,6 +705,14 @@ def set_field(obj, field, value):
 	else:
 		obj.set(field, value)
 
+def set_quotation_item_rate(quotation_item, rate, product):
+	quotation_item.discount_percentage = 100 - flt(rate * 100) / flt(product.get("price"))
+	quotation_item.rate = flt(rate)
+	quotation_item.price_list_rate = flt(product.get("price"))
+	quotation_item.amount = flt(rate) * quotation_item.qty
+	quotation_item.base_price_list_rate = flt(product.get("price"))
+	quotation_item.base_rate = flt(product.get("price"))
+
 def update_quotation_item_awc_fields(quotation_item, awc_item):
 	if awc_item.get('options'):
 		set_field(quotation_item, 'awc_group', awc_item['options'].get('group'))
@@ -724,7 +754,8 @@ def remove_from_cart(items_to_remove, cart_items):
 	return success, removed_ids, awc_items
 
 def update_cart_settings(quotation, awc_session):
-	apply_cart_settings(quotation=quotation)
+	#apply_cart_settings(quotation=quotation)
+	quotation.run_method("calculate_taxes_and_totals")
 	update_shipping_quotation(quotation, awc_session)
 
 def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
@@ -782,6 +813,8 @@ def cart(data=None, action=None):
 	if customer:
 		cart_info = get_cart_quotation()
 		quotation = cart_info.get('doc')
+		if len(quotation.items) == 0:
+			apply_cart_settings(quotation=quotation)
 		quotation.flags.ignore_permissions=True
 		quotation.save()
 
@@ -793,6 +826,8 @@ def cart(data=None, action=None):
 
 	if quotation:
 		sync_awc_and_quotation(awc_session, quotation)
+
+	log(pretty_json(awc))
 
 	if not action:
 		return { "data": awc, "success": True}
@@ -889,8 +924,17 @@ def cart(data=None, action=None):
 			if not item.get("qty"):
 				return { "success": False, "message": "Invalid Data" }
 
+			product = get_product_by_sku(item.get("sku")).get("data")
+
+			if item.get("options", {}).get("custom", {}).get("rate"):
+				item["total"] = flt(item["options"]["custom"]["rate"]) * item.get("qty")
+				item["unit"] = flt(item["options"]["custom"]["rate"])
+			else:
+				item["total"] = flt(product.get("price") * item.get("qty"))
+				item["unit"] = flt(product.get("price"))
+
 			if quotation:
-				product = get_product_by_sku(item.get("sku")).get("data")
+
 				item_data = {
 					"doctype": "Quotation Item",
 					"item_code": item.get("sku"),
@@ -903,6 +947,23 @@ def cart(data=None, action=None):
 				update_quotation_item_awc_fields(item_data, item)
 
 				quotation_item = quotation.append("items", item_data)
+
+				# TODO: ( >_<) shitty way of setting rate due to rate reset
+				#       Please fix when not utterly pissed off
+				if item.get("options", {}).get("custom", {}).get("rate"):
+					set_quotation_item_rate(quotation_item, item["options"]["custom"]["rate"], product)
+					item_data['total'] = item["options"]["custom"]["rate"] * cint(item.get("qty"))
+				else:
+					set_quotation_item_rate(quotation_item, product.get("price"), product)
+					item_data['total'] = product.get("price") * cint(item.get("qty"))
+
+					#quotation_item.discount_percentage = 100 - flt(item["options"]["custom"]["rate"] * 100) / flt(product.get("price"))
+					#quotation_item.rate = flt(item["options"]["custom"]["rate"])
+					#quotation_item.price_list_rate = flt(product.get("price"))
+					#quotation_item.amount = flt(item["options"]["custom"]["rate"])
+					#quotation_item.base_price_list_rate = flt(product.get("price"))
+					#quotation_item.base_rate = flt(product.get("price"))
+
 				quotation_item.save()
 
 				item["old_id"] = item["id"]
@@ -914,6 +975,7 @@ def cart(data=None, action=None):
 			update_cart_settings(quotation, awc_session)
 			quotation.flags.ignore_permissions = True
 			quotation.save()
+
 			frappe.db.commit()
 
 			collect_totals(quotation, awc, awc_session)
@@ -991,20 +1053,24 @@ def update_shipping_rate(address, awc_session):
 			}
 			package_items.append(package_item)
 
-	rates = frappe.call(shipping_rate_api["module"], from_address=from_address, to_address=address, items=package_items)
-	# cache quoted rates to reference later on checkout
-	awc_session["shipping_address"] = address
-	awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
-	awc_session["shipping_rates_list"] = rates
+	try:
+		rates = frappe.call(shipping_rate_api["module"], from_address=from_address, to_address=address, items=package_items)
+		# cache quoted rates to reference later on checkout
+		awc_session["shipping_address"] = address
+		awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
+		awc_session["shipping_rates_list"] = rates
 
-	log("Updated shipping rates cache?")
-	log(pretty_json(rates))
+		log("Updated shipping rates cache?")
+		log(pretty_json(rates))
+	except Exception as ex:
+		log(ex)
+		return []
 
 	return rates
 
 @frappe.whitelist()
 def create_transaction(gateway_service, billing_address, shipping_address):
-	
+
 	if isinstance(billing_address, basestring):
 		billing_address = json.loads(billing_address)
 
@@ -1055,7 +1121,7 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 
 	data.update({ "billing_%s" % key: value for key, value in billing_address.iteritems() })
 	data.update({ "shipping_%s" % key: value for key, value in shipping_address.iteritems() })
-	
+
 
 	log("Building Transaction.")
 	log(pretty_json(data))
