@@ -1061,8 +1061,6 @@ def update_shipping_rate(address, awc_session):
 		awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
 		awc_session["shipping_rates_list"] = rates
 
-		log("Updated shipping rates cache?")
-		log(pretty_json(rates))
 	except Exception as ex:
 		log(ex)
 		return []
@@ -1110,9 +1108,6 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 		"shipping_address": shipping_address.get("shipping_address")
 	}
 
-	log("Shipping address data. Is method data available?")
-	log(pretty_json(shipping_address))
-
 	if shipping_address.get("ship_method"):
 		# retrieve quoted charges
 		rates = awc_session.get("shipping_rates")
@@ -1122,11 +1117,6 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 
 	data.update({ "billing_%s" % key: value for key, value in billing_address.iteritems() })
 	data.update({ "shipping_%s" % key: value for key, value in shipping_address.iteritems() })
-
-
-	log("Building Transaction.")
-	log(pretty_json(data))
-	log(pretty_json(awc_session))
 
 	transaction = frappe.get_doc(data)
 
