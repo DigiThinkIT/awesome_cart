@@ -62,6 +62,8 @@ class AWCTransaction(Document):
 					email=self.get("payer_email"),
 					country=self.get("shipping_country"),
 					address_type="Shipping",
+					phone=self.get("shipping_phone"),
+					title=self.get("shipping_title"),
 					return_name=1,
 					flags={"ignore_permissions": 1}
 				)

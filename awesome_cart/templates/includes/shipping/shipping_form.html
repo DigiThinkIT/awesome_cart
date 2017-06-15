@@ -1,60 +1,75 @@
 <div class="awc-form">
-	<h4>Add a New Shipping Address</h4>
-	<div id="awc-shipping-form" class="awc-form">
-	  <div class="row no-gutter">
-	    <div class="col-sm-12">
-	      <div class="field required">
-	        <label for="awc_ship__line1">Address</label>
-	        <input id="awc_ship__line1" name="address_1" placeholder="Address 1" data-type="address_1"/>
-	      </div>
-	    </div>
-	  </div>
-	  <div class="row no-gutter">
-	    <div class="col-sm-12">
-	      <div class="field">
-	        <label for="awc_ship__line2">Address 2</label>
-	        <input id="awc_ship__line2" name="address_2" placeholder="Address 2" data-type="address_2"/>
-	      </div>
-	    </div>
-	  </div>
-	  <div class="row no-gutter">
-	    <div class="col-xs-6 nopad-right">
-	      <div class="field required">
-	        <label for="awc_ship__city">City</label>
-	        <input id="awc_ship__city" name="city" placeholder="City" data-type="city"/>
-	      </div>
-	    </div>
-	    <div class="col-xs-3 nopad-right">
-	      <div class="field">
-	        <label for="awc_ship__state">State</label>
-	        <input id="awc_ship__state" name="state" placeholder="State" data-type="state"/>
-	      </div>
-	    </div>
-	    <div class="col-xs-3 nopad-left">
-	      <div class="field required">
-	        <label for="awc_ship__zip">Postal Code</label>
-	        <input id="awc_ship__zip" name="pincode" placeholder="Postal Code" data-type="pincode"/>
-	      </div>
-	    </div>
-	  </div>
-	  <div class="row no-gutter">
-	    <div class="col-sm-12">
-	      <div class="field required">
-	        <label for="awc_ship__country">Country</label>
-	        <select id="awc_ship__country" name="country" data-type="country">
+    <h4>Add a New Shipping Address</h4>
+    <div id="awc-shipping-form" class="awc-form">
+        <div class="row no-gutter">
+            <div class="col-sm-6">
+                <div class="field required">
+                    <label for="awc_ship__title">Title</label>
+                    <input id="awc_ship__title" name="title" placeholder="Title" data-type="title" />
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="field required">
+                    <label for="awc_ship__phone">Phone</label>
+                    <input id="awc_ship__phone" name="phone" placeholder="Contact Number" data-type="phone" />
+                </div>
+            </div>
+
+        </div>
+        <div class="row no-gutter">
+            <div class="col-sm-12">
+                <div class="field required">
+                    <label for="awc_ship__line1">Address</label>
+                    <input id="awc_ship__line1" name="address_1" placeholder="Address 1" data-type="address_1" />
+                </div>
+            </div>
+        </div>
+        <div class="row no-gutter">
+            <div class="col-sm-12">
+                <div class="field">
+                    <label for="awc_ship__line2">Address 2</label>
+                    <input id="awc_ship__line2" name="address_2" placeholder="Address 2" data-type="address_2" />
+                </div>
+            </div>
+        </div>
+        <div class="row no-gutter">
+            <div class="col-xs-6 nopad-right">
+                <div class="field required">
+                    <label for="awc_ship__city">City</label>
+                    <input id="awc_ship__city" name="city" placeholder="City" data-type="city" />
+                </div>
+            </div>
+            <div class="col-xs-3 nopad-right">
+                <div class="field">
+                    <label for="awc_ship__state">State</label>
+                    <input id="awc_ship__state" name="state" placeholder="State" data-type="state" />
+                </div>
+            </div>
+            <div class="col-xs-3 nopad-left">
+                <div class="field required">
+                    <label for="awc_ship__zip">Postal Code</label>
+                    <input id="awc_ship__zip" name="pincode" placeholder="Postal Code" data-type="pincode" />
+                </div>
+            </div>
+        </div>
+        <div class="row no-gutter">
+            <div class="col-sm-12">
+                <div class="field required">
+                    <label for="awc_ship__country">Country</label>
+                    <select id="awc_ship__country" name="country" data-type="country">
 	          <option selected>- Select Country -</option>
 	          {% for country in countries %}
 	          <option value="{{country.name}}">{{country.country_name}}</option>
 	          {% endfor %}
 	        </select>
-	        <span class="select-arrow glyphicon glyphicon-triangle-bottom"></span>
-	      </div>
-	    </div>
-	  </div>
-		<div     style="text-align: center;">
-		<button style="display: inline; margin-right: 10px;" class="btn btn-default btn-primary btn-back">Back</button>
-		<button style="display: inline;" class="btn btn-default btn-primary btn-next">Next</button>
-		</div>
-	</div>
-	<p>For IEM Orders, typical turnaround within 2 weeks of impressions received.</p>
+                    <span class="select-arrow glyphicon glyphicon-triangle-bottom"></span>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: center;">
+            <button style="display: inline; margin-right: 10px;" class="btn btn-default btn-primary btn-back">Back</button>
+            <button style="display: inline;" class="btn btn-default btn-primary btn-next">Next</button>
+        </div>
+  	<p>For IEM Orders, typical turnaround within 2 weeks of impressions received.</p>
+    </div>
 </div>
