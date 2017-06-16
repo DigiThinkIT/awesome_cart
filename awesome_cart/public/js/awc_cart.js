@@ -76,11 +76,13 @@ awc_checkout = {
 
 	nextPage: function () {
 		var $page = $('.panel:visible');
+		console.log($page);
+		console.log($page.next());
 		awc_checkout.showPage($page.next());
 	},
 
 	setupPage: function () {
-		$('.panel .btn-next').click(awc_checkout.nextPage);
+		$('.panel .btn-next').click(awc_checkout.nextPage); //click for all next btn on all pages
 
 		$('#checkout-shipping-address .btn-next')
 			.click(function (e) {
@@ -101,9 +103,19 @@ awc_checkout = {
 			})
 
 		$('#checkout-confirm-billing .btn-primary')
-			.click(function () {
+			.click(function (e) {
+				if($('#form-bill-addr').attr('data-select') == 'true') {
+				e.preventDefault();
 				awc_checkout.showPage('#checkout-billing');
-			})
+				$('#select-bill-addr').css('display', 'none');
+				$('#form-bill-addr').css('display', 'block');
+			} else {
+				e.preventDefault();
+				awc_checkout.showPage('#checkout-billing');
+				$('#form-bill-addr').css('display', 'none');
+				$('#select-bill-addr').css('display', 'block');
+			}
+		})
 
 		$('#checkout-error .btn-primary')
 			.click(function () {
@@ -125,14 +137,26 @@ awc_checkout = {
 				awc_checkout.showPage('#checkout-shipping-address');
 			}
 		});
+
 		$('#bc-billing').click(function (e) {
-			e.preventDefault();
-			awc_checkout.showPage('#checkout-billing');
+			if($('#form-bill-addr').attr('data-select') == 'true') {
+				e.preventDefault();
+				awc_checkout.showPage('#checkout-billing');
+				$('#select-bill-addr').css('display', 'none');
+				$('#form-bill-addr').css('display', 'block');
+			} else {
+				e.preventDefault();
+				awc_checkout.showPage('#checkout-billing');
+				$('#form-bill-addr').css('display', 'none');
+				$('#select-bill-addr').css('display', 'block');
+			}
 		});
+		
 		$('#bc-checkout').click(function (e) {
 			e.preventDefault();
 			awc_checkout.showPage('#checkout-confirmation');
 		});
+		
 		$('#bc-shipping-method').click(function (e) {
 			e.preventDefault();
 			awc_checkout.showPage('#checkout-shipping-method');
@@ -166,22 +190,37 @@ awc_checkout = {
 			awc_checkout.showPage('#checkout-shipping');
 		})
 
+		$('#select-bill-addr .btn-add-bill-addr').click(function (e) {
+			$('#form-bill-addr').attr('data-select', 'true');
+			$('#select-bill-addr').css('display', 'none');
+			$('#form-bill-addr').css('display', 'block');
+		})
+		//clicking ship addr
 		$('#checkout-shipping-address .addr').click(function (e) {
 			e.stopPropagation();
 			$(this).addClass('selected');
-			$('#awc_ship__line1').val($('div.selected span#line1').text());
-			$('#awc_ship__line2').val($('div.selected span#line2').text());
-			$('#awc_ship__city').val($('div.selected span#city').text());
-			$('#awc_ship__state').val($('div.selected span#state').text());
-			$('#awc_ship__zip').val($('div.selected span#postal_code').text());
-			$('#awc_ship__country').val($('div.selected span#country').text());
 			awc_checkout.showPage('#checkout-billing');
+		})
+		//clicking bill addr
+		$('#billing-addrs .addr').click(function (e) {
+			e.stopPropagation();
+			$(this).addClass('selected');
+			awc_checkout.showPage('#checkout-shipping-method');
 		})
 
 		$("#awc-shipping-form .btn-back").click(function (e) {
 			e.preventDefault();
 			$('#checkout-shipping').attr('data-select', 'false');
+			$('#checkout-shipping-address .addr').removeClass('selected');
 			awc_checkout.showPage('#checkout-shipping-address');
+		})
+
+		$("#form-bill-addr .btn-back").click(function (e) {
+			e.preventDefault();
+			$('#form-bill-addr').attr('data-select', 'false');
+			$('#select-bill-addr .addr').removeClass('selected');
+			$('#select-bill-addr').css('display', 'block');
+			$('#form-bill-addr').css('display', 'none');
 		})
 
 		cart.on('init', onCartChanges);
