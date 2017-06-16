@@ -345,16 +345,18 @@ var AwcShippingProvider = Class.extend({
             this.data.pincode = $form.find('input[name="pincode"]').val();
             this.data.country = $form.find('select[name="country"] option:checked').attr('value');
         } else {
-            this.data.shipping_address = $('div.selected').attr('data-name');
-            this.data.title = $('.selected span#title strong').text();
-            this.data.phone = $('.selected span#phone').text();
-            this.data.address_1 = $('.selected span#line1').text();
-            this.data.address_2 = $('.selected span#line2').text();
-            this.data.city = $('.selected span#city').text();
-            this.data.state = $('.selected span#state').text();
-            this.data.pincode = $('.selected span#postal_code').text();
-            this.data.country = $('.selected span#country').text();
+            this.data.shipping_address = $('#shipping-addrs div.selected').attr('data-name');
+            this.data.title = $('#shipping-addrs .selected span#title strong').text();
+            this.data.phone = $('#shipping-addrs .selected span#phone').text();
+            this.data.address_1 = $('#shipping-addrs .selected span#line1').text();
+            this.data.address_2 = $('#shipping-addrs .selected span#line2').text();
+            this.data.city = $('#shipping-addrs .selected span#city').text();
+            this.data.state = $('#shipping-addrs .selected span#state').text();
+            this.data.pincode = $('#shipping-addrs .selected span#postal_code').text();
+            this.data.country = $('#shipping-addrs .selected span#country').text();
         }
+
+				console.log(this.data);
 
         $form.trigger('address_change', this.data);
 
