@@ -67,7 +67,6 @@
 								<div class="alert">No Gateway Provider Found!</div>
 							{% endif %}
 
-						<button class="btn btn-default btn-primary btn-next">Next</button>
 					</div>
 
 					<div id="checkout-shipping-method" data-bc="#bc-shipping-method" class="panel">
@@ -101,7 +100,7 @@
 						</div>
 
 						<div class="dti-form" id="confirm-form">
-							<label><input name="accept_terms" type="checkbox" value="1"/><span> I agree with the <a href="policies" rel="nofollow" target="_blank">Terms and Conditions</a></span></label>
+							<label style="cursor: pointer"><input name="accept_terms" type="checkbox" value="1"/><span> I agree with the <a href="policies" rel="nofollow" target="_blank">Terms and Conditions</a></span></label>
 							{% if gateway_provider %}
 								{{ gateway_provider.submit }}
 							{% else %}
