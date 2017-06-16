@@ -345,16 +345,18 @@ var AwcShippingProvider = Class.extend({
             this.data.pincode = $form.find('input[name="pincode"]').val();
             this.data.country = $form.find('select[name="country"] option:checked').attr('value');
         } else {
-            this.data.shipping_address = $('div.selected').attr('data-name');
-            this.data.title = $('.selected span#title strong').text();
-            this.data.phone = $('.selected span#phone').text();
-            this.data.address_1 = $('.selected span#line1').text();
-            this.data.address_2 = $('.selected span#line2').text();
-            this.data.city = $('.selected span#city').text();
-            this.data.state = $('.selected span#state').text();
-            this.data.pincode = $('.selected span#postal_code').text();
-            this.data.country = $('.selected span#country').text();
+            this.data.shipping_address = $('#shipping-addrs div.selected').attr('data-name');
+            this.data.title = $('#shipping-addrs .selected span#title strong').text();
+            this.data.phone = $('#shipping-addrs .selected span#phone').text();
+            this.data.address_1 = $('#shipping-addrs .selected span#line1').text();
+            this.data.address_2 = $('#shipping-addrs .selected span#line2').text();
+            this.data.city = $('#shipping-addrs .selected span#city').text();
+            this.data.state = $('#shipping-addrs .selected span#state').text();
+            this.data.pincode = $('#shipping-addrs .selected span#postal_code').text();
+            this.data.country = $('#shipping-addrs .selected span#country').text();
         }
+
+				console.log(this.data);
 
         $form.trigger('address_change', this.data);
 
@@ -381,7 +383,7 @@ var AwcShippingProvider = Class.extend({
             result.valid = false;
         }
 
-				var update_shipping_method = false;
+        var update_shipping_method = false;
         if (!this.data.ship_method) {
             result.method_valid = false;
             base.fee = 0;
@@ -392,7 +394,7 @@ var AwcShippingProvider = Class.extend({
                 if (this.data.ship_method == method.name) {
                     base.fee = method.fee;
                     base.label = method.label;
-										update_shipping_method = true;
+                    update_shipping_method = true;
                     //cart.calculateShipping(base.data.ship_method);
                     break;
                 }
@@ -413,7 +415,7 @@ var AwcShippingProvider = Class.extend({
                 this._last_values = last_values;
                 $method_form.empty();
 
-								update_shipping_method = false; // flag any shipping method update as completed if we got here.
+                update_shipping_method = false; // flag any shipping method update as completed if we got here.
                 cart.calculateShipping(this.data.ship_method, this.data);
 
             }
@@ -423,9 +425,9 @@ var AwcShippingProvider = Class.extend({
             $method_form.append('<li class="error">Invalid Shipping Address. Edit your shipping information to get shipping quote.</li>');
         }
 
-				if ( update_shipping_method ) {
-					cart.calculateShipping(base.data.ship_method);
-				}
+        if ( update_shipping_method ) {
+          cart.calculateShipping(base.data.ship_method);
+        }
 
         // only validate if both address and shipping method validated
         result.valid = result.valid && base.method_valid
@@ -474,7 +476,7 @@ var AwcShippingProvider = Class.extend({
                 '</address>' +
                 '</div>';
             /*+
-            			ship_method;*/
+                  ship_method;*/
         } else {
             return '<p class="error">Shipping address incomplete. Please go back and review.</p>';
         }
