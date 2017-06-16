@@ -380,6 +380,8 @@ var AwcShippingProvider = Class.extend({
         if (!this.data.phone) {
             result.valid = false;
         }
+
+				var update_shipping_method = false;
         if (!this.data.ship_method) {
             result.method_valid = false;
             base.fee = 0;
@@ -390,13 +392,12 @@ var AwcShippingProvider = Class.extend({
                 if (this.data.ship_method == method.name) {
                     base.fee = method.fee;
                     base.label = method.label;
-                    cart.calculateShipping(base.data.ship_method);
+										update_shipping_method = true;
+                    //cart.calculateShipping(base.data.ship_method);
                     break;
                 }
             }
         }
-
-
 
         this.valid = result.valid;
         if (result.valid) {
@@ -412,6 +413,7 @@ var AwcShippingProvider = Class.extend({
                 this._last_values = last_values;
                 $method_form.empty();
 
+								update_shipping_method = false; // flag any shipping method update as completed if we got here.
                 cart.calculateShipping(this.data.ship_method, this.data);
 
             }
@@ -420,6 +422,10 @@ var AwcShippingProvider = Class.extend({
             $method_form.empty();
             $method_form.append('<li class="error">Invalid Shipping Address. Edit your shipping information to get shipping quote.</li>');
         }
+
+				if ( update_shipping_method ) {
+					cart.calculateShipping(base.data.ship_method);
+				}
 
         // only validate if both address and shipping method validated
         result.valid = result.valid && base.method_valid
