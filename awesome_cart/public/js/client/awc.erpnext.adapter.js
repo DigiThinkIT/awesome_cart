@@ -527,6 +527,18 @@ cart.on('tpl-ready', function() {
     cart.scan_forms();
 })
 
+
 $(function() {
-    cart.bootstrap()
+	var $popup = $('<div id="add-to-cart-popup"><h2>Product Added to Cart</h2><a class="btn btn-default btn-cancel">Continue Shopping</a><a href="/cart" class="btn btn-default btn-success">Checkout</a></div>');
+	$('body').append($popup);
+	$popup.hide();
+	$popup.find('.btn-cancel').click(function() {
+		$popup.fadeOut('fast');
+	})
+	console.log($popup);
+
+	cart.on('add-to-cart-completed', function() {
+		$popup.fadeIn('fast');
+	})
+  cart.bootstrap()
 });
