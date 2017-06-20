@@ -1105,7 +1105,8 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 		"session": json.dumps(awc),
 		"order_id": quotation.name,
 		"gateway_service": gateway_service,
-		"shipping_address": shipping_address.get("shipping_address")
+		"shipping_address": shipping_address.get("shipping_address"),
+		"billing_address": billing_address.get("billing_address")
 	}
 
 	if shipping_address.get("ship_method"):

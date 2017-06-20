@@ -42,6 +42,7 @@ class AWCTransaction(Document):
 					pincode=self.get("billing_pincode"),
 					country=self.get("billing_country"),
 					email=self.get("payer_email"),
+					address_type="Billing",
 					return_name=1,
 					flags={"ignore_permissions": 1}
 				)

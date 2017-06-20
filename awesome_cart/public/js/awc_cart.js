@@ -198,12 +198,14 @@ awc_checkout = {
 		//clicking ship addr
 		$('#checkout-shipping-address .addr').click(function (e) {
 			e.stopPropagation();
+			$('#shipping-addrs .selected').removeClass('selected');
 			$(this).addClass('selected');
 			awc_checkout.showPage('#checkout-billing');
 		})
 		//clicking bill addr
 		$('#billing-addrs .addr').click(function (e) {
 			e.stopPropagation();
+			$('#billing-addrs .selected').removeClass('selected');
 			$(this).addClass('selected');
 			awc_checkout.showPage('#checkout-shipping-method');
 		})
