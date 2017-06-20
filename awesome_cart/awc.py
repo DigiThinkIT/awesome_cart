@@ -834,11 +834,11 @@ def cart(data=None, action=None):
 		return { "data": awc, "success": True}
 
 	elif action == "calculate_shipping":
-
-		log("Calculate Shipping:\n{0}", pretty_json(data))
-
 		rate_name = data[0].get("name")
 		address = data[0].get("address")
+		if address:
+			quotation.shipping_address_name = address.get("shipping_address")
+			quotation.save()
 
 		return calculate_shipping(rate_name, address, awc_session, quotation)
 
