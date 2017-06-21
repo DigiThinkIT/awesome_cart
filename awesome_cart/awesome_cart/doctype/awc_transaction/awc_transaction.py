@@ -90,7 +90,26 @@ class AWCTransaction(Document):
 
 			# then immediately create payment request
 			# no emails should be sent as this is intended for immediate fullfilment
+
+			req_type = frappe.local.response.get("type", None)
+			req_location = frappe.local.response.get("location", None)
+
 			preq = payment_request.make_payment_request(dt="Sales Order", dn=so.name, submit_doc=1, return_doc=1, mute_email=1)
+
+			#############################################################
+			# DIRTY FIX: payment request codebase redirects
+			# shopping cart payment requests. Here we are undoing that.
+			if req_type:
+				frappe.local.response["type"] = req_type
+			elif frappe.local.response.get("type"):
+				frappe.local.response.pop("type")
+
+			if req_location:
+				frappe.local.response["location"] = req_location
+			elif frappe.local.response.get("location"):
+				frappe.local.response.pop("location")
+			#############################################################
+
 			preq.flags.ignore_permissions=1
 			preq.insert()
 
@@ -108,7 +127,7 @@ class AWCTransaction(Document):
 			#update shipping method in Sales Order
 			if self.get("shipping_method"):
 				frappe.db.set_value("Sales Order", self.order_id, "fedex_shipping_method", self.get("shipping_method"))
-			
+
 			# override redirection to orders page
 			if result:
 				result = '/orders'
