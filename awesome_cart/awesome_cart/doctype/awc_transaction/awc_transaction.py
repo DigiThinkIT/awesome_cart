@@ -43,6 +43,8 @@ class AWCTransaction(Document):
 					country=self.get("billing_country"),
 					email=self.get("payer_email"),
 					address_type="Billing",
+					phone=self.get("billing_phone"),
+					title=self.get("billing_title"),
 					return_name=1,
 					flags={"ignore_permissions": 1}
 				)

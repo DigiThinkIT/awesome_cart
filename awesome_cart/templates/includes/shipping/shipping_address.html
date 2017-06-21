@@ -1,5 +1,4 @@
 <div id="shipping-addrs">
-    <h2>Shipping Information</h2>
     <h4>Select Shipping Address</h4>
     <div class="row">
         {% if not addresses %}
@@ -11,12 +10,14 @@
                     <span id="title"><strong id="title"> {{ address.address_title }} </strong></strong><br>
                     <p>
                         <span id="line1">{{ address.address_line1 }}</span>,
-                    <span id="line2">{{ address.address_line2 }}</span>,
-                    <span id="city">{{ address.city }}</span>,
-                    <span id="state">{{ address.state }}</span>,
-                    <span id="country">{{ address.country }}</span>,
-                    <span id="postal_code">{{ address.pincode }}</span>.
-                    <span id="phone">{{ address.phone }}</span>
+                        {% if address.address_line2 %}
+                            <span id="line2">{{ address.address_line2 }}</span>,
+                        {% endif %}
+                        <span id="city">{{ address.city }}</span>,
+                        <span id="state">{{ address.state }}</span>,
+                        <span id="country">{{ address.country }}</span>,
+                        <span id="postal_code">{{ address.pincode }}</span>.
+                        <span id="phone">{{ address.phone }}</span>
                     </p>
                 </div>
             </div>
