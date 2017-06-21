@@ -11,14 +11,12 @@ from erpnext.shopping_cart.product import get_product_info
 from compat.customer import get_current_customer
 from compat.shopping_cart import get_cart_quotation, apply_cart_settings, set_taxes
 from compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing_rule_for_item
-
 from .dbug import pretty_json, log
 
 def find_index(arr, fn):
 	for i, item in enumerate(arr):
 		if fn(item):
 			return i
-
 	return -1
 
 def find_indexes(arr, fn):
@@ -835,10 +833,25 @@ def cart(data=None, action=None):
 
 	elif action == "calculate_shipping":
 		rate_name = data[0].get("name")
-		address = data[0].get("address")
-		if address:
-			quotation.shipping_address_name = address.get("shipping_address")
-			quotation.save()
+		address = data[0].get("address").get("shipping_address")
+		if not address:
+			new_address = frappe.new_doc("Address")
+			new_address.update({
+				"title": data[0].get("address").get("city"),
+				"address_type": "Shipping",
+				"customer": quotation.customer,
+				"address_line1": data[0].get("address").get("address_1"),
+				"address_line2": data[0].get("address").get("address_2"),
+				"city": data[0].get("address").get("city"),
+				"state": data[0].get("address").get("state"),
+				"country": data[0].get("address").get("country"),
+				"phone": data[0].get("address").get("phone")
+			})
+			new_address.flags.ignore_permissions= True
+			new_address.save()
+			address = new_address.name
+		quotation.shipping_address_name = address
+		quotation.save()
 
 		return calculate_shipping(rate_name, address, awc_session, quotation)
 
