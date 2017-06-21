@@ -833,25 +833,27 @@ def cart(data=None, action=None):
 
 	elif action == "calculate_shipping":
 		rate_name = data[0].get("name")
-		address = data[0].get("address").get("shipping_address")
-		if not address:
-			new_address = frappe.new_doc("Address")
-			new_address.update({
-				"title": data[0].get("address").get("city"),
-				"address_type": "Shipping",
-				"customer": quotation.customer,
-				"address_line1": data[0].get("address").get("address_1"),
-				"address_line2": data[0].get("address").get("address_2"),
-				"city": data[0].get("address").get("city"),
-				"state": data[0].get("address").get("state"),
-				"country": data[0].get("address").get("country"),
-				"phone": data[0].get("address").get("phone")
-			})
-			new_address.flags.ignore_permissions= True
-			new_address.save()
-			address = new_address.name
-		quotation.shipping_address_name = address
-		quotation.save()
+		address = data[0].get("address")
+		if address:
+			address_name = address.get("shipping_address")
+			if not address_name:
+				new_address = frappe.new_doc("Address")
+				new_address.update({
+					"title": data[0].get("address").get("city"),
+					"address_type": "Shipping",
+					"customer": quotation.customer,
+					"address_line1": data[0].get("address").get("address_1"),
+					"address_line2": data[0].get("address").get("address_2"),
+					"city": data[0].get("address").get("city"),
+					"state": data[0].get("address").get("state"),
+					"country": data[0].get("address").get("country"),
+					"phone": data[0].get("address").get("phone")
+				})
+				new_address.flags.ignore_permissions= True
+				new_address.save()
+				address_name = new_address.name
+			quotation.shipping_address_name = address_name
+			quotation.save()
 
 		return calculate_shipping(rate_name, address, awc_session, quotation)
 
