@@ -76,8 +76,6 @@ awc_checkout = {
 
 	nextPage: function () {
 		var $page = $('.panel:visible');
-		console.log($page);
-		console.log($page.next());
 		awc_checkout.showPage($page.next());
 	},
 
@@ -93,7 +91,7 @@ awc_checkout = {
 
 		$('#checkout-confirm-shipping .btn-primary')
 			.click(function (e) {
-				if($('#checkout-shipping').attr('data-select') == "true") {
+				if ($('#checkout-shipping').attr('data-select') == "true") {
 					e.preventDefault();
 					awc_checkout.showPage('#checkout-shipping');
 				} else {
@@ -104,18 +102,18 @@ awc_checkout = {
 
 		$('#checkout-confirm-billing .btn-primary')
 			.click(function (e) {
-				if($('#form-bill-addr').attr('data-select') == 'true') {
-				e.preventDefault();
-				awc_checkout.showPage('#checkout-billing');
-				$('#select-bill-addr').css('display', 'none');
-				$('#form-bill-addr').css('display', 'block');
-			} else {
-				e.preventDefault();
-				awc_checkout.showPage('#checkout-billing');
-				$('#form-bill-addr').css('display', 'none');
-				$('#select-bill-addr').css('display', 'block');
-			}
-		})
+				if ($('#form-bill-addr').attr('data-select') == 'true') {
+					e.preventDefault();
+					awc_checkout.showPage('#checkout-billing');
+					$('#select-bill-addr').css('display', 'none');
+					$('#form-bill-addr').css('display', 'block');
+				} else {
+					e.preventDefault();
+					awc_checkout.showPage('#checkout-billing');
+					$('#form-bill-addr').css('display', 'none');
+					$('#select-bill-addr').css('display', 'block');
+				}
+			})
 
 		$('#checkout-error .btn-primary')
 			.click(function () {
@@ -129,7 +127,7 @@ awc_checkout = {
 
 		// map breadcrumb clicks ---------------------------------------
 		$('#bc-shipping').click(function (e) {
-			if($('#checkout-shipping').attr('data-select') == "true") {
+			if ($('#checkout-shipping').attr('data-select') == "true") {
 				e.preventDefault();
 				awc_checkout.showPage('#checkout-shipping');
 			} else {
@@ -139,7 +137,7 @@ awc_checkout = {
 		});
 
 		$('#bc-billing').click(function (e) {
-			if($('#form-bill-addr').attr('data-select') == 'true') {
+			if ($('#form-bill-addr').attr('data-select') == 'true') {
 				e.preventDefault();
 				awc_checkout.showPage('#checkout-billing');
 				$('#select-bill-addr').css('display', 'none');
@@ -151,12 +149,12 @@ awc_checkout = {
 				$('#select-bill-addr').css('display', 'block');
 			}
 		});
-		
+
 		$('#bc-checkout').click(function (e) {
 			e.preventDefault();
 			awc_checkout.showPage('#checkout-confirmation');
 		});
-		
+
 		$('#bc-shipping-method').click(function (e) {
 			e.preventDefault();
 			awc_checkout.showPage('#checkout-shipping-method');
@@ -224,6 +222,177 @@ awc_checkout = {
 			$('#select-bill-addr').css('display', 'block');
 			$('#form-bill-addr').css('display', 'none');
 		})
+		//valiadation for shipping addr form fields
+		jQuery.fn.extend({
+			disable: function (state) {
+				return this.each(function () {
+					this.disabled = state;
+				});
+			}
+		});
+		var shipform = {
+			"title": false,
+			"phone": false,
+			"line1": false,
+			"city": false,
+			"state": false,
+			"zip": false,
+			"country": false,
+		};
+
+
+		$('#awc_ship__title').parent().keyup(function () {
+			if ($('#awc_ship__title').val()) {
+				$('#awc_ship__title').parent().removeAttr('style');
+				shipform.title = true;
+			} else {
+				$('#awc_ship__title').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				shipform.title = false;
+			}
+		})
+		$('#awc_ship__phone').parent().keyup(function () {
+			if ($('#awc_ship__phone').val()) {
+				$('#awc_ship__phone').parent().removeAttr('style');
+				shipform.phone = true;
+			} else {
+				$('#awc_ship__phone').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				shipform.phone = false;
+			}
+		})
+		$('#awc_ship__line1').parent().keyup(function () {
+			if ($('#awc_ship__line1').val()) {
+				$('#awc_ship__line1').parent().removeAttr('style');
+				shipform.line1 = true;
+			} else {
+				$('#awc_ship__line1').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				shipform.line1 = false;
+			}
+		})
+		$('#awc_ship__city').parent().keyup(function () {
+			if ($('#awc_ship__city').val()) {
+				$('#awc_ship__city').parent().removeAttr('style');
+				shipform.city = true;
+			} else {
+				$('#awc_ship__city').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				shipform.city = false;
+			}
+		})
+		$('#awc_ship__state').parent().keyup(function () {
+			if ($('#awc_ship__state').val()) {
+				$('#awc_ship__state').parent().removeAttr('style');
+				shipform.state = true;
+			} else {
+				$('#awc_ship__state').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				shipform.state = false;
+			}
+		})
+		$('#awc_ship__zip').parent().keyup(function () {
+			if ($('#awc_ship__zip').val()) {
+				$('#awc_ship__zip').parent().removeAttr('style');
+				shipform.zip = true;
+			} else {
+				$('#awc_ship__zip').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				shipform.zip = false;
+			}
+		})
+		$('#awc_ship__country').parent().change(function () {
+			if ($('#awc_ship__country').val() != "- Select Country -") {
+				$('#awc_ship__country').parent().removeAttr('style');
+				shipform.country = true;
+			} else {
+				$('#awc_ship__country').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				shipform.country = false;
+			}
+		})
+
+		//validation for billing address form fields
+		var billform = {
+			"title": false,
+			"phone": false,
+			"line1": false,
+			"city": false,
+			"state": false,
+			"zip": false,
+			"country": false,
+		};
+
+
+		$('#billing_title').parent().keyup(function () {
+			if ($('#billing_title').val()) {
+				$('#billing_title').parent().removeAttr('style');
+				billform.title = true;
+			} else {
+				$('#billing_title').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				billform.title = false;
+			}
+		})
+		$('#billing_phone').parent().keyup(function () {
+			if ($('#billing_phone').val()) {
+				$('#billing_phone').parent().removeAttr('style');
+				billform.phone = true;
+			} else {
+				$('#billing_phone').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				billform.phone = false;
+			}
+		})
+		$('#billing_line1').parent().keyup(function () {
+			if ($('#billing_line1').val()) {
+				$('#billing_line1').parent().removeAttr('style');
+				billform.line1 = true;
+			} else {
+				$('#billing_line1').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				billform.line1 = false;
+			}
+		})
+		$('#billing_city').parent().keyup(function () {
+			if ($('#billing_city').val()) {
+				$('#billing_city').parent().removeAttr('style');
+				billform.city = true;
+			} else {
+				$('#billing_city').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				billform.city = false;
+			}
+		})
+		$('#billing_state').parent().keyup(function () {
+			if ($('#billing_state').val()) {
+				$('#billing_state').parent().removeAttr('style');
+				billform.state = true;
+			} else {
+				$('#billing_state').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				billform.state = false;
+			}
+		})
+		$('#billing_pincode').parent().keyup(function () {
+			if ($('#billing_pincode').val()) {
+				$('#billing_pincode').parent().removeAttr('style');
+				billform.zip = true;
+			} else {
+				$('#billing_pincode').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				billform.zip = false;
+			}
+		})
+		$('#billing_country').parent().change(function () {
+			if ($('#billing_country').val() != "- Select Country -") {
+				$('#billing_country').parent().removeAttr('style');
+				billform.country = true;
+			} else {
+				$('#billing_country').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
+				billform.country = false;
+			}
+		})
+
+		$('#form-bill-addr .btn-nextbtn').click(function () {
+			if (billform.title == true && billform.phone == true && billform.line1 == true && billform.city == true && billform.state == true && billform.zip == true && billform.country == true) {
+				awc_checkout.showPage('#checkout-shipping-method');
+				$('#ship-form-err-msg').remove();
+			} else {
+				$('#ship-form-err-msg').remove();
+				$(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
+			}
+		})
+
+
+
 
 		cart.on('init', onCartChanges);
 		cart.on('update', onCartChanges);
