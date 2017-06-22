@@ -391,6 +391,16 @@ awc_checkout = {
 			}
 		})
 
+		$('#awc-shipping-form .btn-nextbtn').click(function () {
+			if (shipform.title == true && shipform.phone == true && shipform.line1 == true && shipform.city == true && shipform.state == true && shipform.zip == true && shipform.country == true) {
+				awc_checkout.showPage('#checkout-billing');
+				$('#ship-form-err-msg').remove();
+			} else {
+				$('#ship-form-err-msg').remove();
+				$(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
+			}
+		})
+
 
 
 
