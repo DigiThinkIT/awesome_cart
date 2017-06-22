@@ -794,7 +794,8 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 		"data": awc["items"],
 		"removed": [],
 		"totals": awc.get("totals"),
-		"shipping_rates":  awc_session.get("shipping_rates_list",[])
+		"shipping_rates":  awc_session.get("shipping_rates_list",[]),
+		"shipping_address_name": quotation.get("shipping_address_name")
 	}
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
