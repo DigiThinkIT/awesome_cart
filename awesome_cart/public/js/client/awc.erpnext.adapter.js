@@ -102,6 +102,7 @@ awc.ErpnextAdapter.prototype.sessionAction = function(action, data) {
                 data: data
             },
             callback: function(result) {
+                dispalyAddr(result.message.shipping_address_name);
                 if (result.message.success) {
                     if (result.message.totals) {
                         base._totals = result.message.totals;
@@ -115,6 +116,11 @@ awc.ErpnextAdapter.prototype.sessionAction = function(action, data) {
         })
     })
 
+}
+
+function dispalyAddr (shipaddr) {
+    $('#same-as-ship-addr').attr('data-name', shipaddr);
+    $('#awc-shipping-form').attr('data-name', shipaddr);
 }
 
 awc.ErpnextAdapter.prototype.getProductBySKU = function(sku, detailed) {
@@ -336,6 +342,7 @@ var AwcShippingProvider = Class.extend({
         var $method_form = $('#awc-shipping-method');
 
         if ($("#checkout-shipping").attr('data-select') == 'true') {
+            this.data.shipping_address = $('#awc-shipping-form').attr('data-name');
             this.data.phone = $form.find('input[name="phone"]').val();
             this.data.title = $form.find('input[name="title"]').val();
             this.data.address_1 = $form.find('input[name="address_1"]').val();
@@ -356,8 +363,7 @@ var AwcShippingProvider = Class.extend({
             this.data.country = $('#shipping-addrs .selected span#country').text();
         }
 
-				console.log(this.data);
-
+	
         $form.trigger('address_change', this.data);
 
         var result = {
@@ -535,8 +541,7 @@ $(function() {
 	$popup.find('.btn-cancel').click(function() {
 		$popup.fadeOut('fast');
 	})
-	console.log($popup);
-
+	
 	cart.on('add-to-cart-completed', function() {
 		$popup.fadeIn('fast');
 	})

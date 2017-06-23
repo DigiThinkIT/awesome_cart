@@ -840,7 +840,7 @@ def cart(data=None, action=None):
 			if not address_name:
 				new_address = frappe.new_doc("Address")
 				new_address.update({
-					"title": data[0].get("address").get("city"),
+					"address_title": data[0].get("address").get("title"),
 					"address_type": "Shipping",
 					"customer": quotation.customer,
 					"address_line1": data[0].get("address").get("address_1"),
@@ -848,7 +848,9 @@ def cart(data=None, action=None):
 					"city": data[0].get("address").get("city"),
 					"state": data[0].get("address").get("state"),
 					"country": data[0].get("address").get("country"),
-					"phone": data[0].get("address").get("phone")
+					"phone": data[0].get("address").get("phone"),
+					"email_id": data[0].get("address").get("email"),
+					"pincode": data[0].get("address").get("pincode")
 				})
 				new_address.flags.ignore_permissions= True
 				new_address.save()
