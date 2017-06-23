@@ -849,9 +849,10 @@ def cart(data=None, action=None):
 					"state": data[0].get("address").get("state"),
 					"country": data[0].get("address").get("country"),
 					"phone": data[0].get("address").get("phone"),
-					"email_id": data[0].get("address").get("email"),
+					"email_id": frappe.session.user,
 					"pincode": data[0].get("address").get("pincode")
 				})
+				print "SUSHANT", data[0]
 				new_address.flags.ignore_permissions= True
 				new_address.save()
 				address_name = new_address.name

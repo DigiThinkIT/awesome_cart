@@ -16,13 +16,14 @@
                         <span id="city">{{ address.city }}</span>,
                         <span id="state">{{ address.state }}</span>,
                         <span id="country">{{ address.country }}</span>,
-                        <span id="postal_code">{{ address.pincode }}</span>.
+                        <span id="postal_code">{{ address.pincode }}</span>.<br>
                         <span id="phone">{{ address.phone }}</span>
                     </p>
                 </div>
             </div>
         </div>
-        {% endfor %} {% endif %}
+        {% endfor %} 
+        {% endif %}
         <button class="btn-primary">Add a New Shipping Address</button>
     </div>
 </div>

@@ -235,7 +235,6 @@ awc_checkout = {
 			"phone": false,
 			"line1": false,
 			"city": false,
-			"state": false,
 			"zip": false,
 			"country": false,
 		};
@@ -277,15 +276,6 @@ awc_checkout = {
 				shipform.city = false;
 			}
 		})
-		$('#awc_ship__state').parent().keyup(function () {
-			if ($('#awc_ship__state').val()) {
-				$('#awc_ship__state').parent().removeAttr('style');
-				shipform.state = true;
-			} else {
-				$('#awc_ship__state').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				shipform.state = false;
-			}
-		})
 		$('#awc_ship__zip').parent().keyup(function () {
 			if ($('#awc_ship__zip').val()) {
 				$('#awc_ship__zip').parent().removeAttr('style');
@@ -311,7 +301,6 @@ awc_checkout = {
 			"phone": false,
 			"line1": false,
 			"city": false,
-			"state": false,
 			"zip": false,
 			"country": false,
 		};
@@ -353,15 +342,6 @@ awc_checkout = {
 				billform.city = false;
 			}
 		})
-		$('#billing_state').parent().keyup(function () {
-			if ($('#billing_state').val()) {
-				$('#billing_state').parent().removeAttr('style');
-				billform.state = true;
-			} else {
-				$('#billing_state').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				billform.state = false;
-			}
-		})
 		$('#billing_pincode').parent().keyup(function () {
 			if ($('#billing_pincode').val()) {
 				$('#billing_pincode').parent().removeAttr('style');
@@ -382,7 +362,7 @@ awc_checkout = {
 		})
 
 		$('#form-bill-addr .btn-nextbtn').click(function () {
-			if (billform.title == true && billform.phone == true && billform.line1 == true && billform.city == true && billform.state == true && billform.zip == true && billform.country == true) {
+			if (billform.title == true && billform.phone == true && billform.line1 == true && billform.city == true && billform.zip == true && billform.country == true) {
 				awc_checkout.showPage('#checkout-shipping-method');
 				$('#ship-form-err-msg').remove();
 			} else {
@@ -392,16 +372,21 @@ awc_checkout = {
 		})
 
 		$('#awc-shipping-form .btn-nextbtn').click(function () {
-			if (shipform.title == true && shipform.phone == true && shipform.line1 == true && shipform.city == true && shipform.state == true && shipform.zip == true && shipform.country == true) {
+			if (shipform.title == true && shipform.phone == true && shipform.line1 == true && shipform.city == true && shipform.zip == true && shipform.country == true) {
 				//adding newly entered shipping address on billing address tab in awc
 				var div = document.createElement('div');
 				div.setAttribute('class', 'col-md-12 col-sm-12');
 				div.setAttribute('style', 'padding:0');
-				var line2str;
+				var line2str, statestr;
 				if ($('#awc_ship__line2').val()) {
 					line2str = "<span id='line2'>" + $('#awc_ship__line2').val() + "</span>,";
 				} else {
 					line2str = "";
+				}
+				if ($('#awc_ship__state').val()) {
+					statestr = "<span id='stste'>" + $('#awc_ship__state').val() + "</span>,";
+				} else {
+					statestr = "";
 				}
 				str = "<div class='well'>\
                 			<div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
@@ -410,7 +395,7 @@ awc_checkout = {
                         			<span id='line1'>" + $('#awc_ship__line1').val() + "</span>,\
 									" + line2str + "\
 			                        <span id='city'>" + $('#awc_ship__city').val() + "</span>,\
-                        			<span id='state'>" + $('#awc_ship__state').val() + "</span>,\
+                        			" + statestr + "\
 		        	                <span id='country'>" + $('#awc_ship__country').val() + "</span>,\
         		    	            <span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>\
     			                    <span id='phone'>" + $('#awc_ship__phone').val() + "</span>\
