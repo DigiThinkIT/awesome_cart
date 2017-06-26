@@ -789,8 +789,11 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 	if rate:
 		awc_session["shipping_method"] = rate
 
+	shipping_address_name = None
+
 	if quotation:
 		update_cart_settings(quotation, awc_session)
+		shipping_address_name = quotation.get("shipping_address_name")
 		if save:
 			quotation.flags.ignore_permissions = True
 			quotation.save()
@@ -810,7 +813,7 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 		"removed": [],
 		"totals": awc.get("totals"),
 		"shipping_rates":  awc_session.get("shipping_rates_list",[]),
-		"shipping_address_name": quotation.get("shipping_address_name")
+		"shipping_address_name": shipping_address_name
 	}
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
