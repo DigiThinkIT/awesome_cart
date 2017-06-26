@@ -44,6 +44,9 @@ def is_logged_in():
 	return True
 
 def get_price(item_code, price_list=None, qty=1, find_price_list=False):
+
+	customer = get_current_customer()
+
 	if not price_list and find_price_list and is_logged_in():
 		quotation = _get_cart_quotation()
 		price_list = quotation.get("selling_price_list")
@@ -60,16 +63,20 @@ def get_price(item_code, price_list=None, qty=1, find_price_list=False):
 				filters={"price_list": price_list, "item_code": template_item_code})
 
 		if price:
-			pricing_rule = get_pricing_rule_for_item(frappe._dict({
+
+			rule_query = {
 				"item_code": item_code,
 				"qty": qty,
 				"transaction_type": "selling",
 				"price_list": price_list,
-				"customer_group": cart_settings.default_customer_group,
+				"customer_group": customer.customer_group,
 				"company": cart_settings.company,
 				"conversion_rate": 1,
 				"for_shopping_cart": True
-			}))
+			}
+
+			pricing_rule = get_pricing_rule_for_item(frappe._dict(rule_query))
+			price_list_rate = price[0].price_list_rate
 
 			if pricing_rule:
 				if pricing_rule.pricing_rule_for == "Discount Percentage":
@@ -78,9 +85,13 @@ def get_price(item_code, price_list=None, qty=1, find_price_list=False):
 				if pricing_rule.pricing_rule_for == "Price":
 					price[0].price_list_rate = pricing_rule.price_list_rate
 
-			return {"currency": price[0].get("currency"), "rate": price[0].get("price_list_rate")}
+			return {
+				"base_price_rate": price_list_rate,
+				"currency": price[0].get("currency"),
+				"rate": price[0].get("price_list_rate")}
 
 	return {
+			"base_price_rate": frappe.db.get_value("Item", item_code, "standard_rate"),
 			"currency": "", #TODO: get default currency, don't remember from where atm
 			"rate": frappe.db.get_value("Item", item_code, "standard_rate")
 		}
@@ -239,7 +250,8 @@ def get_product_by_sku(sku, detailed=0):
 	# get awc_item custom data as dictionary
 	custom_data = get_awc_item_custom_data(awc_item)
 
-	price = get_price(item.get("item_code"), price_list).get("rate")
+	price_info = get_price(item.get("item_code"), price_list)
+	price = price_info.get("rate")
 
 	variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name")})
 	for vitem in variants:
@@ -257,6 +269,7 @@ def get_product_by_sku(sku, detailed=0):
 		description=awc_item.description_short,
 		imageUrl=awc_item.product_thumbnail,
 		productUrl="/p/%s" % awc_item.product_route,
+		base_price=price_info.get("base_price_rate"),
 		price=price,
 		listing_widget=awc_item.listing_widget,
 		product_widget=awc_item.product_widget,
@@ -368,7 +381,8 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 
 		products = []
 		for item in result:
-			price = get_price(item.get("item_code"), price_list).get("rate")
+			price_info = get_price(item.get("item_code"), price_list)
+			price = price_info.get("rate")
 
 			variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name")})
 			for vitem in variants:
@@ -384,6 +398,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 				productUrl="/p/%s" % item.awc_product_route,
 				description=item.awc_description_short,
 				imageUrl=item.awc_product_thumbnail,
+				base_price=price_info.get("base_price_rate") ,
 				price=price,
 				listing_widget=item.awc_listing_widget,
 				product_widget=item.awc_product_widget,
@@ -704,12 +719,12 @@ def set_field(obj, field, value):
 		obj.set(field, value)
 
 def set_quotation_item_rate(quotation_item, rate, product):
-	quotation_item.discount_percentage = 100 - flt(rate * 100) / flt(product.get("price"))
+	quotation_item.discount_percentage = 100 - flt(rate * 100) / flt(product.get("base_price"))
 	quotation_item.rate = flt(rate)
-	quotation_item.price_list_rate = flt(product.get("price"))
+	quotation_item.price_list_rate = flt(product.get("base_price"))
 	quotation_item.amount = flt(rate) * quotation_item.qty
-	quotation_item.base_price_list_rate = flt(product.get("price"))
-	quotation_item.base_rate = flt(product.get("price"))
+	quotation_item.base_price_list_rate = flt(product.get("base_price"))
+	quotation_item.base_rate = flt(product.get("base_price"))
 
 def update_quotation_item_awc_fields(quotation_item, awc_item):
 	if awc_item.get('options'):
@@ -879,8 +894,14 @@ def cart(data=None, action=None):
 					if awc_key in item:
 						awc_item[awc_key] = item.get(awc_key)
 
+						if awc_key == "qty":
+							awc_item["total"] = awc_item["unit"] * awc_item["qty"]
+
 						if quotation_item:
 							quotation_item.set(erp_key, item.get(awc_key))
+
+							#if erp_key == "qty":
+								#quotation_item.amount = flt(quotation_item.rate) * quotation_item.qty
 
 				if awc_item.get('options', {}).get('group'):
 					# find all subgroup items and update qty accordingly
@@ -891,6 +912,9 @@ def cart(data=None, action=None):
 							sub_quotation_item = next((q for q in quotation.get("items", []) if q.name == sub_item.get("id")), None)
 							if sub_quotation_item:
 								sub_quotation_item.set("qty", sub_item.get("qty"))
+								#sub_quotation_item.amount = flt(sub_quotation_item.rate) * sub_quotation_item.qty
+
+						sub_item["total"] = sub_item["unit"] * sub_item["qty"]
 
 				if awc_item.get("qty") == 0:
 					remove_items.append(awc_item)
