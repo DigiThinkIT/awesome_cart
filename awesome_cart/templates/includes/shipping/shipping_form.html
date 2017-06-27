@@ -3,13 +3,13 @@
     <div id="awc-shipping-form" class="awc-form">
         <div class="row no-gutter">
             <div class="col-sm-6">
-                <div class="field required" style="border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);">
+                <div class="field required">
                     <label for="awc_ship__title">Address Label</label>
                     <input id="awc_ship__title" name="title" placeholder="Address Label" data-type="title" />
                 </div>
             </div>
             <div class="col-sm-6">
-                <div class="field required" style="border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);">
+                <div class="field required">
                     <label for="awc_ship__phone">Phone</label>
                     <input id="awc_ship__phone" name="phone" placeholder="Contact Number" data-type="phone" />
                 </div>
@@ -17,7 +17,7 @@
         </div>
         <div class="row no-gutter">
             <div class="col-sm-12">
-                <div class="field required" style="border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);">
+                <div class="field required">
                     <label for="awc_ship__line1">Address</label>
                     <input id="awc_ship__line1" name="address_1" placeholder="Address 1" data-type="address_1" />
                 </div>
@@ -33,7 +33,7 @@
         </div>
         <div class="row no-gutter">
             <div class="col-xs-6 nopad-right">
-                <div class="field required" style="border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);">
+                <div class="field required">
                     <label for="awc_ship__city">City</label>
                     <input id="awc_ship__city" name="city" placeholder="City" data-type="city" />
                 </div>
@@ -45,7 +45,7 @@
                 </div>
             </div>
             <div class="col-xs-3 nopad-left">
-                <div class="field required" style="border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);">
+                <div class="field required">
                     <label for="awc_ship__zip">Postal Code</label>
                     <input id="awc_ship__zip" name="pincode" placeholder="Postal Code" data-type="pincode" />
                 </div>
@@ -53,14 +53,14 @@
         </div>
         <div class="row no-gutter">
             <div class="col-sm-12">
-                <div class="field" style="border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);">
+                <div class="field required">
                     <label for="awc_ship__country">Country</label>
                     <select id="awc_ship__country" name="country" data-type="country">
-	          <option selected>- Select Country -</option>
-	          {% for country in countries %}
-	          <option value="{{country.name}}">{{country.country_name}}</option>
-	          {% endfor %}
-	        </select>
+                        <option selected>- Select Country -</option>
+	                      {% for country in countries %}
+	                      <option value="{{country.name}}">{{country.country_name}}</option>
+	                      {% endfor %}
+	                  </select>
                     <span class="select-arrow glyphicon glyphicon-triangle-bottom"></span>
                 </div>
             </div>

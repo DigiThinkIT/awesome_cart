@@ -84,7 +84,7 @@ awc_checkout = {
 
 		$('#checkout-shipping-address .btn-next')
 			.click(function (e) {
-				awc_checkout.showPage('#checkout-billing')
+				awc_checkout.showPage('#checkout-shipping-method')
 			})
 
 		// map address "edit" Button clicks ----------------------------
@@ -179,7 +179,6 @@ awc_checkout = {
 				$('#checkout-panels').fadeIn('fast')
 			} else {
 				$('#checkout-panels').hide()
-
 			}
 		}
 
@@ -198,14 +197,14 @@ awc_checkout = {
 			e.stopPropagation();
 			$('#shipping-addrs .selected').removeClass('selected');
 			$(this).addClass('selected');
-			awc_checkout.showPage('#checkout-billing');
+			awc_checkout.showPage('#checkout-shipping-method');
 		})
 		//clicking bill addr
 		$('#billing-addrs .addr').click(function (e) {
 			e.stopPropagation();
 			$('#billing-addrs .selected').removeClass('selected');
 			$(this).addClass('selected');
-			awc_checkout.showPage('#checkout-shipping-method');
+			awc_checkout.showPage('#checkout-confirmation');
 		})
 
 		$("#awc-shipping-form .btn-back").click(function (e) {
@@ -230,140 +229,45 @@ awc_checkout = {
 				});
 			}
 		});
+
 		var shipform = {
 			"title": false,
 			"phone": false,
-			"line1": false,
+			"address_1": false,
 			"city": false,
-			"zip": false,
+			"pincode": false,
 			"country": false,
 		};
-
-
-		$('#awc_ship__title').parent().keyup(function () {
-			if ($('#awc_ship__title').val()) {
-				$('#awc_ship__title').parent().removeAttr('style');
-				shipform.title = true;
-			} else {
-				$('#awc_ship__title').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				shipform.title = false;
-			}
-		})
-		$('#awc_ship__phone').parent().keyup(function () {
-			if ($('#awc_ship__phone').val()) {
-				$('#awc_ship__phone').parent().removeAttr('style');
-				shipform.phone = true;
-			} else {
-				$('#awc_ship__phone').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				shipform.phone = false;
-			}
-		})
-		$('#awc_ship__line1').parent().keyup(function () {
-			if ($('#awc_ship__line1').val()) {
-				$('#awc_ship__line1').parent().removeAttr('style');
-				shipform.line1 = true;
-			} else {
-				$('#awc_ship__line1').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				shipform.line1 = false;
-			}
-		})
-		$('#awc_ship__city').parent().keyup(function () {
-			if ($('#awc_ship__city').val()) {
-				$('#awc_ship__city').parent().removeAttr('style');
-				shipform.city = true;
-			} else {
-				$('#awc_ship__city').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				shipform.city = false;
-			}
-		})
-		$('#awc_ship__zip').parent().keyup(function () {
-			if ($('#awc_ship__zip').val()) {
-				$('#awc_ship__zip').parent().removeAttr('style');
-				shipform.zip = true;
-			} else {
-				$('#awc_ship__zip').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				shipform.zip = false;
-			}
-		})
-		$('#awc_ship__country').parent().change(function () {
-			if ($('#awc_ship__country').val() != "- Select Country -") {
-				$('#awc_ship__country').parent().removeAttr('style');
-				shipform.country = true;
-			} else {
-				$('#awc_ship__country').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				shipform.country = false;
-			}
-		})
 
 		//validation for billing address form fields
 		var billform = {
 			"title": false,
 			"phone": false,
-			"line1": false,
+			"address_1": false,
 			"city": false,
-			"zip": false,
+			"pincode": false,
 			"country": false,
 		};
 
-
-		$('#billing_title').parent().keyup(function () {
-			if ($('#billing_title').val()) {
-				$('#billing_title').parent().removeAttr('style');
-				billform.title = true;
-			} else {
-				$('#billing_title').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				billform.title = false;
-			}
-		})
-		$('#billing_phone').parent().keyup(function () {
-			if ($('#billing_phone').val()) {
-				$('#billing_phone').parent().removeAttr('style');
-				billform.phone = true;
-			} else {
-				$('#billing_phone').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				billform.phone = false;
-			}
-		})
-		$('#billing_line1').parent().keyup(function () {
-			if ($('#billing_line1').val()) {
-				$('#billing_line1').parent().removeAttr('style');
-				billform.line1 = true;
-			} else {
-				$('#billing_line1').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				billform.line1 = false;
-			}
-		})
-		$('#billing_city').parent().keyup(function () {
-			if ($('#billing_city').val()) {
-				$('#billing_city').parent().removeAttr('style');
-				billform.city = true;
-			} else {
-				$('#billing_city').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				billform.city = false;
-			}
-		})
-		$('#billing_pincode').parent().keyup(function () {
-			if ($('#billing_pincode').val()) {
-				$('#billing_pincode').parent().removeAttr('style');
-				billform.zip = true;
-			} else {
-				$('#billing_pincode').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				billform.zip = false;
-			}
-		})
-		$('#billing_country').parent().change(function () {
-			if ($('#billing_country').val() != "- Select Country -") {
-				$('#billing_country').parent().removeAttr('style');
-				billform.country = true;
-			} else {
-				$('#billing_country').parent().attr('style', 'border-color: #f00; box-shadow: 0px 0px 5px 1px rgba(255, 0, 0, 0.37);');
-				billform.country = false;
-			}
-		})
+		// handles change event and key up event properly plus auto complete support from browser
+		$('input[id^=awc_ship__], select[id^=awc_ship__], input[id^=billing_], select[id^=billing_]')
+			.bind('keyup change', function() {
+				// determine field name by the last word in the id attribute
+				var field_name = $(this).attr('data-type')
+				// determine if we are handling a select element
+				var is_select = $(this).is('select');
+				// get element value differently if a select element vs an input
+				var value = is_select?$(this).find(':selected').attr('value'):$(this).val();
+				// determine if we are handling a shipping field or billing field
+				var is_ship = $(this).attr('id').indexOf('ship') >= 0;
+				// get a reference to the shipform or billform depending on what is_ship value
+				var data = is_ship?shipform:billform;
+				data[field_name] = value?true:false;
+			})
 
 		$('#form-bill-addr .btn-nextbtn').click(function () {
-			if (billform.title == true && billform.phone == true && billform.line1 == true && billform.city == true && billform.zip == true && billform.country == true) {
-				awc_checkout.showPage('#checkout-shipping-method');
+			if (billform.title == true && billform.phone == true && billform.address_1 == true && billform.city == true && billform.pincode == true && billform.country == true) {
+				awc_checkout.showPage('#checkout-confirmation');
 				$('#ship-form-err-msg').remove();
 			} else {
 				$('#ship-form-err-msg').remove();
@@ -372,7 +276,7 @@ awc_checkout = {
 		})
 
 		$('#awc-shipping-form .btn-nextbtn').click(function () {
-			if (shipform.title == true && shipform.phone == true && shipform.line1 == true && shipform.city == true && shipform.zip == true && shipform.country == true) {
+			if (shipform.title == true && shipform.phone == true && shipform.address_1 == true && shipform.city == true && shipform.pincode == true && shipform.country == true) {
 				//adding newly entered shipping address on billing address tab in awc
 				var div = document.createElement('div');
 				div.setAttribute('class', 'col-md-12 col-sm-12');
@@ -411,7 +315,7 @@ awc_checkout = {
 					awc_checkout.showPage('#checkout-shipping-method');
 				})
 
-				awc_checkout.showPage('#checkout-billing');
+				awc_checkout.showPage('#checkout-shipping-method');
 				$('#ship-form-err-msg').remove();
 
 			} else {
