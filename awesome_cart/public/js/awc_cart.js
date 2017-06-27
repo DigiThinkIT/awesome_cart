@@ -29,7 +29,7 @@ awc_checkout = {
 
 			// find shipping total
 			$.each(totals.other, function (i, t) {
-				if (t.name == "Shipping") {
+				if (t.name.indexOf("Shipping") == 0) {
 					shipping_total = t;
 				}
 			})
@@ -42,7 +42,7 @@ awc_checkout = {
 			} else {
 				if (shipping_total) {
 					$('#checkout-confirm-totals .shipping-total .value').empty().text(cart.storeAdapter.formatCurrency(shipping_total.value));
-					$('#checkout-confirm-totals .shipping-total .method').empty().text("(" + shipping_total.label + ")");
+					$('#checkout-confirm-totals .shipping-total .method').empty().text(shipping_total.label + ":");
 				}
 			}
 
