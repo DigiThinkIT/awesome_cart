@@ -242,6 +242,7 @@ var AwcShippingProvider = Class.extend({
         this.fee = 0;
         this.label = "";
         this.data = {};
+				this.is_dirty = true;
 
         var $form = $('#awc-shipping-form');
         var on_update = function() {
@@ -308,6 +309,8 @@ var AwcShippingProvider = Class.extend({
                   checked = "checked='checked'";
                   base.data.ship_method = method.name;
                   base.method_valid = true;
+									base.fee = method.fee;
+									base.label = method.label;
                   $("#bc-shipping-method").addClass("valid");
               }
               var $method = $(
@@ -327,6 +330,7 @@ var AwcShippingProvider = Class.extend({
                     base.fee = method.fee;
                     base.label = method.label;
                     cart.calculateShipping(base.data.ship_method);
+										base.validate();
                   }
               })
           });
@@ -336,8 +340,7 @@ var AwcShippingProvider = Class.extend({
               // first item. This can occur if address method was removed due
               // to a change of address from a previous selection
               $method_form.find('input[type="radio"]:first').click();
-
-          }
+					}
 
           // finally trigger validation once more to update ui with default selections
           awc_checkout.validate();
@@ -391,7 +394,9 @@ var AwcShippingProvider = Class.extend({
       }
 
       if ( awc._.isEqual(current_address_data, address_data) && this.result ) {
-          return this.result;
+					$form.trigger('address_change', this.data);
+          this.result.valid = this.address_valid && base.method_valid
+ 					return this.result;
       }
 
       $.each(address_data, function(k, v) {
@@ -399,6 +404,8 @@ var AwcShippingProvider = Class.extend({
       });
 
       $form.trigger('address_change', this.data);
+
+			this.is_dirty = false;
 
       var result = {
           valid: true,
@@ -433,7 +440,6 @@ var AwcShippingProvider = Class.extend({
       this.valid = result.valid;
       if (result.valid) {
           $("#bc-shipping").addClass("valid");
-          update_shipping_method = false; // flag any shipping method update as completed if we got here.
           cart.calculateShipping(this.data.ship_method, this.data);
       } else {
           $("#bc-shipping").removeClass("valid");
@@ -442,8 +448,9 @@ var AwcShippingProvider = Class.extend({
       }
 
       // only validate if both address and shipping method validated
-      this.result = result;
+			this.address_valid = result.valid;
       result.valid = result.valid && base.method_valid
+			this.result = result;
 
       return result;
     },
