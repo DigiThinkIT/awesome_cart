@@ -241,6 +241,7 @@ var AwcShippingProvider = Class.extend({
         this.method_valid = false;
         this.fee = 0;
         this.label = "";
+        this.data = {};
 
         var $form = $('#awc-shipping-form');
         var on_update = function() {
@@ -269,7 +270,7 @@ var AwcShippingProvider = Class.extend({
             });
     },
     form: function(data) {
-        this.data = data;
+        this.data = data || {};
     },
 
     update_shipping_rates: function(rates) {
@@ -277,56 +278,69 @@ var AwcShippingProvider = Class.extend({
         var base = this;
         var $form = $('#awc-shipping-form');
         var $method_form = $('#awc-shipping-method');
+        var update = true;
+        if ( base._shipping_methods ) {
+          if ( awc._.isEqual(base._shipping_methods, rates) ) {
+            return;
+          }
+        }
+        base._shipping_methods = rates;
         $method_form.empty();
 
-        if (rates && rates.constructor == Array && rates.length > 0) {
-            base._shipping_methods = rates;
+        if (rates.length > 0) {
+          var last_selected_method = base.data.ship_method;
+          base.data.ship_method = null;
 
-            $.each(rates, function(i, method) {
-                var checked = "";
-                var is_default = false;
-                if (base.data.ship_method && base.data.ship_method == method.name) {
-                    is_default = true; // auto select last ship method selection if available
-                } else if (!base.data.ship_method) {
-                    is_default = i == 0; // select first item by default
-                }
-
-                if (is_default) {
-                    checked = "checked='checked'";
+          $.each(rates, function(i, method) {
+              var checked = "";
+              var is_default = false;
+              if (last_selected_method && last_selected_method == method.name) {
+                  is_default = true; // auto select last ship method selection if available
+                  base.data.ship_method = method.name;
+              } else if (!last_selected_method) {
+                  is_default = i == 0; // select first item by default
+                  if ( is_default ) {
                     base.data.ship_method = method.name;
+                  }
+              }
+
+              if (is_default) {
+                  checked = "checked='checked'";
+                  base.data.ship_method = method.name;
+                  base.method_valid = true;
+                  $("#bc-shipping-method").addClass("valid");
+              }
+              var $method = $(
+                  '<li>' +
+                  '<label>' +
+                  '<input type="radio" name="awc_shipping_method" value="' + method.name + '"' + checked + '>' +
+                  '<span class="label">' + method.label + " + $" + method.fee + '</span>' +
+                  '</label>' +
+                  '</li>');
+              $method_form.append($method);
+              $method.find('input').data('method', method);
+              $method.find('input').change(function() {
+                  if ($(this).is(":checked")) {
+                    var method = $(this).data('method');
                     base.method_valid = true;
-                    $("#bc-shipping-method").addClass("valid");
-                }
-                var $method = $(
-                    '<li>' +
-                    '<label>' +
-                    '<input type="radio" name="awc_shipping_method" value="' + method.name + '"' + checked + '>' +
-                    '<span class="label">' + method.label + " + $" + method.fee + '</span>' +
-                    '</label>' +
-                    '</li>');
-                $method_form.append($method);
-                $method.find('input').data('fee', method.fee);
-                $method.find('input').change(function() {
-                    if ($(this).is(":checked")) {
-                        base.data.ship_method = $(this).val();
-                        base.method_valid = true;
-                        //awc.debug.log("Ship Method", base.data.ship_method);
-                        // force cart ui validation so ui updates with new data on click
-                        awc_checkout.validate();
-                    }
-                })
-            });
+                    base.data.ship_method = method.name;
+                    base.fee = method.fee;
+                    base.label = method.label;
+                    cart.calculateShipping(base.data.ship_method);
+                  }
+              })
+          });
 
-            if (!base.data.ship_method) {
-                // if there was nothing selected by default, go back and select
-                // first item. This can occur if address method was removed due
-                // to a change of address from a previous selection
-                $method_form.find('index[type="radio"]:first').click();
+          if ( !$method_form.find('input[type="radio"]').is(':checked') ) {
+              // if there was nothing selected by default, go back and select
+              // first item. This can occur if address method was removed due
+              // to a change of address from a previous selection
+              $method_form.find('input[type="radio"]:first').click();
 
-            }
+          }
 
-            // finally trigger validation once more to update ui with default selections
-            awc_checkout.validate();
+          // finally trigger validation once more to update ui with default selections
+          awc_checkout.validate();
         } else {
             base.method_valid = false;
             $("#bc-shipping-method").removeClass("valid");
@@ -337,108 +351,101 @@ var AwcShippingProvider = Class.extend({
 
     validate: function() {
 
-        var base = this;
-        var $form = $('#awc-shipping-form');
-        var $method_form = $('#awc-shipping-method');
+      var base = this;
+      var $form = $('#awc-shipping-form');
+      var $method_form = $('#awc-shipping-method');
+      var address_data = {};
 
-        if ($("#checkout-shipping").attr('data-select') == 'true') {
-            this.data.shipping_address = $('#awc-shipping-form').attr('data-name');
-            this.data.phone = $form.find('input[name="phone"]').val();
-            this.data.title = $form.find('input[name="title"]').val();
-            this.data.address_1 = $form.find('input[name="address_1"]').val();
-            this.data.address_2 = $form.find('input[name="address_2"]').val();
-            this.data.city = $form.find('input[name="city"]').val();
-            this.data.state = $form.find('input[name="state"]').val();
-            this.data.pincode = $form.find('input[name="pincode"]').val();
-            this.data.country = $form.find('select[name="country"] option:checked').attr('value');
-        } else {
-            this.data.shipping_address = $('#shipping-addrs div.selected').attr('data-name');
-            this.data.title = $('#shipping-addrs .selected span#title strong').text();
-            this.data.phone = $('#shipping-addrs .selected span#phone').text();
-            this.data.address_1 = $('#shipping-addrs .selected span#line1').text();
-            this.data.address_2 = $('#shipping-addrs .selected span#line2').text();
-            this.data.city = $('#shipping-addrs .selected span#city').text();
-            this.data.state = $('#shipping-addrs .selected span#state').text();
-            this.data.pincode = $('#shipping-addrs .selected span#postal_code').text();
-            this.data.country = $('#shipping-addrs .selected span#country').text();
-        }
+      if ($("#checkout-shipping").attr('data-select') == 'true') {
+          address_data.shipping_address = $('#awc-shipping-form').attr('data-name');
+          address_data.phone = $form.find('input[name="phone"]').val();
+          address_data.title = $form.find('input[name="title"]').val();
+          address_data.address_1 = $form.find('input[name="address_1"]').val();
+          address_data.address_2 = $form.find('input[name="address_2"]').val();
+          address_data.city = $form.find('input[name="city"]').val();
+          address_data.state = $form.find('input[name="state"]').val();
+          address_data.pincode = $form.find('input[name="pincode"]').val();
+          address_data.country = $form.find('select[name="country"] option:checked').attr('value');
+      } else {
+          address_data.shipping_address = $('#shipping-addrs div.selected').attr('data-name');
+          address_data.title = $('#shipping-addrs .selected span#title strong').text();
+          address_data.phone = $('#shipping-addrs .selected span#phone').text();
+          address_data.address_1 = $('#shipping-addrs .selected span#line1').text();
+          address_data.address_2 = $('#shipping-addrs .selected span#line2').text();
+          address_data.city = $('#shipping-addrs .selected span#city').text();
+          address_data.state = $('#shipping-addrs .selected span#state').text();
+          address_data.pincode = $('#shipping-addrs .selected span#postal_code').text();
+          address_data.country = $('#shipping-addrs .selected span#country').text();
+      }
 
-	
-        $form.trigger('address_change', this.data);
+      current_address_data = {
+          shipping_address: this.data.shipping_address,
+          phone: this.data.phone,
+          title: this.data.title,
+          address_1: this.data.address_1,
+          address_2: this.data.address_2,
+          city: this.data.city,
+          state: this.data.state,
+          pincode: this.data.pincode,
+          country: this.data.country
+      }
 
-        var result = {
-            valid: true,
-            address: this.data
-        }
-        if (!this.data.title) {
-            result.valid = false;
-        }
-        if (!this.data.address_1) {
-            result.valid = false;
-        }
-        if (!this.data.city) {
-            result.valid = false;
-        }
-        if (!this.data.pincode) {
-            result.valid = false;
-        }
-        if (!this.data.country) {
-            result.valid = false;
-        }
-        if (!this.data.phone) {
-            result.valid = false;
-        }
+      if ( awc._.isEqual(current_address_data, address_data) && this.result ) {
+          return this.result;
+      }
 
-        var update_shipping_method = false;
-        if (!this.data.ship_method) {
-            result.method_valid = false;
-            base.fee = 0;
-            base.label = "";
-        } else {
-            for (var i in this._shipping_methods) {
-                var method = this._shipping_methods[i];
-                if (this.data.ship_method == method.name) {
-                    base.fee = method.fee;
-                    base.label = method.label;
-                    update_shipping_method = true;
-                    //cart.calculateShipping(base.data.ship_method);
-                    break;
-                }
-            }
-        }
+      $.each(address_data, function(k, v) {
+          base.data[k] = v;
+      });
 
-        this.valid = result.valid;
-        if (result.valid) {
-            $("#bc-shipping").addClass("valid");
+      $form.trigger('address_change', this.data);
 
-            // build values hash to avoid resending
-            var last_values = this.data.address_1 +
-                this.data.address_2 + this.data.city +
-                this.data.state + this.data.pincode +
-                this.data.country;
+      var result = {
+          valid: true,
+          address: this.data
+      }
+      if (!this.data.title) {
+          result.valid = false;
+      }
+      if (!this.data.address_1) {
+          result.valid = false;
+      }
+      if (!this.data.city) {
+          result.valid = false;
+      }
+      if (!this.data.pincode) {
+          result.valid = false;
+      }
+      if (!this.data.country) {
+          result.valid = false;
+      }
+      if (!this.data.phone) {
+          result.valid = false;
+      }
 
-            if (last_values != this._last_values) {
-                this._last_values = last_values;
-                $method_form.empty();
+      var update_shipping_method = false;
+      if (!this.data.ship_method) {
+          result.method_valid = false;
+          base.fee = 0;
+          base.label = "";
+      }
 
-                update_shipping_method = false; // flag any shipping method update as completed if we got here.
-                cart.calculateShipping(this.data.ship_method, this.data);
+      this.valid = result.valid;
+      if (result.valid) {
+          $("#bc-shipping").addClass("valid");
+          update_shipping_method = false; // flag any shipping method update as completed if we got here.
+          cart.calculateShipping(this.data.ship_method, this.data);
+      } else {
+          $("#bc-shipping").removeClass("valid");
+          $method_form.empty();
+          $method_form.append('<li class="error">Invalid Shipping Address. Edit your shipping information to get shipping quote.</li>');
+      }
 
-            }
-        } else {
-            $("#bc-shipping").removeClass("valid");
-            $method_form.empty();
-            $method_form.append('<li class="error">Invalid Shipping Address. Edit your shipping information to get shipping quote.</li>');
-        }
+      // only validate if both address and shipping method validated
+      this.result = result;
+      result.valid = result.valid && base.method_valid
 
-        if ( update_shipping_method ) {
-          cart.calculateShipping(base.data.ship_method);
-        }
-
-        // only validate if both address and shipping method validated
-        result.valid = result.valid && base.method_valid
-
-        return result;
+      return result;
     },
     getSummary: function() {
         var base = this;
@@ -504,7 +511,10 @@ cart.scan_forms = function() {
 
         $input
             .change(function() {
-                if ($(this).val()) {
+                var is_select = $(this).is('select');
+								var value = is_select?$(this).find(':selected').attr('value'):$(this).val();
+
+                if (value) {
                     $field.addClass('hasvalue');
                 } else {
                     $field.removeClass('hasvalue');
@@ -535,15 +545,15 @@ cart.on('tpl-ready', function() {
 
 
 $(function() {
-	var $popup = $('<div id="add-to-cart-popup"><h2>Product Added to Cart</h2><a class="btn btn-default btn-cancel">Continue Shopping</a><a href="/cart" class="btn btn-default btn-success">Checkout</a></div>');
-	$('body').append($popup);
-	$popup.hide();
-	$popup.find('.btn-cancel').click(function() {
-		$popup.fadeOut('fast');
-	})
-	
-	cart.on('add-to-cart-completed', function() {
-		$popup.fadeIn('fast');
-	})
+  var $popup = $('<div id="add-to-cart-popup"><h2>Product Added to Cart</h2><a class="btn btn-default btn-cancel">Continue Shopping</a><a href="/cart" class="btn btn-default btn-success">Checkout</a></div>');
+  $('body').append($popup);
+  $popup.hide();
+  $popup.find('.btn-cancel').click(function() {
+    $popup.fadeOut('fast');
+  })
+
+  cart.on('add-to-cart-completed', function() {
+    $popup.fadeIn('fast');
+  })
   cart.bootstrap()
 });

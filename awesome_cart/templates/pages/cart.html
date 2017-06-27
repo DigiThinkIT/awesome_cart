@@ -45,34 +45,33 @@
 						<div class="title">Checkout</div>
 						<ul id="checkout-breadcrumb">
 								<a href="" id="bc-shipping" class="breadcrumb active">Shipping</a>
-								<a href="" id="bc-billing" class="breadcrumb">Billing</a>
 								<a href="" id="bc-shipping-method" class="breadcrumb">Shipping Method</a>
+								<a href="" id="bc-billing" class="breadcrumb">Billing</a>
 								<a href="" id="bc-checkout" class="breadcrumb">Checkout</a>
 						</ul>
 					</div>
+
 					<div id="checkout-shipping-address" data-bc="#bc-shipping-addr" class="panel">
 							{% include "templates/includes/shipping/shipping_address.html" with context %}
 					</div>
+
 					<div id="checkout-shipping" data-bc="#bc-shipping" class="panel">
 							{% include "templates/includes/shipping/shipping_form.html" with context %}
-						
-					</div>
-
-					<div id="checkout-billing" data-bc="#bc-billing" class="panel">
-
-							{# embeds gateway provider form #}
-							{% if gateway_provider %}
-								{{ gateway_provider.form }}
-							{% else %}
-								<div class="alert">No Gateway Provider Found!</div>
-							{% endif %}
-
 					</div>
 
 					<div id="checkout-shipping-method" data-bc="#bc-shipping-method" class="panel">
 						<h2>Shipping Method</h2>
 						<ul class="content list-unstyled" id="awc-shipping-method"></ul>
 						<button class="btn btn-default btn-primary btn-next">Next</button>
+					</div>
+
+					<div id="checkout-billing" data-bc="#bc-billing" class="panel">
+							{# embeds gateway provider form #}
+							{% if gateway_provider %}
+								{{ gateway_provider.form }}
+							{% else %}
+								<div class="alert">No Gateway Provider Found!</div>
+							{% endif %}
 					</div>
 
 					<div id="checkout-confirmation" data-bc="#bc-checkout" class="panel">
@@ -108,15 +107,18 @@
 							{% endif %}
 						</div>
 					</div>
+
 					<div id="checkout-processing" class="panel">
 						<p>Processing, please wait...</p>
 						<div class="spinner"></div>
 					</div>
+
 					<div id="checkout-error" class="panel">
 						<p>There was an error while processing your order:</p>
 						<div class="msg error"></div>
 						<button class="btn btn-default btn-primary">Back</button>
 					</div>
+
 					<div id="checkout-success" class="panel">
 						<p>Success!</p>
 						<p>Now redirecting. Please wait...</p>
