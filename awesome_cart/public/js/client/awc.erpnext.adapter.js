@@ -242,7 +242,6 @@ var AwcShippingProvider = Class.extend({
         this.fee = 0;
         this.label = "";
         this.data = {};
-				this.is_dirty = true;
 
         var $form = $('#awc-shipping-form');
         var on_update = function() {
@@ -275,7 +274,6 @@ var AwcShippingProvider = Class.extend({
     },
 
     update_shipping_rates: function(rates) {
-        awc.debug.log("Shipping rates updated", rates);
         var base = this;
         var $form = $('#awc-shipping-form');
         var $method_form = $('#awc-shipping-method');
@@ -368,7 +366,8 @@ var AwcShippingProvider = Class.extend({
           address_data.city = $form.find('input[name="city"]').val();
           address_data.state = $form.find('input[name="state"]').val();
           address_data.pincode = $form.find('input[name="pincode"]').val();
-          address_data.country = $form.find('select[name="country"] option:checked').attr('value');
+					address_data.country = $form.find('select[name="country"] option:checked').attr('value');
+					address_data.address_type = $form.find('select[name="is_residential"] option:checked').attr('value')==1?"Residential":"Shipping";
       } else {
           address_data.shipping_address = $('#shipping-addrs div.selected').attr('data-name');
           address_data.title = $('#shipping-addrs .selected span#title strong').text();
@@ -379,6 +378,7 @@ var AwcShippingProvider = Class.extend({
           address_data.state = $('#shipping-addrs .selected span#state').text();
           address_data.pincode = $('#shipping-addrs .selected span#postal_code').text();
           address_data.country = $('#shipping-addrs .selected span#country').text();
+					address_data.address_type = $('#shipping-addrs div.selected').attr('data-address-type');
       }
 
       current_address_data = {
@@ -390,7 +390,8 @@ var AwcShippingProvider = Class.extend({
           city: this.data.city,
           state: this.data.state,
           pincode: this.data.pincode,
-          country: this.data.country
+					country: this.data.country,
+					address_type: this.data.address_type
       }
 
       if ( awc._.isEqual(current_address_data, address_data) && this.result ) {
@@ -404,8 +405,6 @@ var AwcShippingProvider = Class.extend({
       });
 
       $form.trigger('address_change', this.data);
-
-			this.is_dirty = false;
 
       var result = {
           valid: true,

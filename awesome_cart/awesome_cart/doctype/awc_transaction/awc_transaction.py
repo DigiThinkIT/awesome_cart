@@ -64,7 +64,7 @@ class AWCTransaction(Document):
 					pincode=self.get("shipping_pincode"),
 					email=self.get("payer_email"),
 					country=self.get("shipping_country"),
-					address_type="Shipping",
+					address_type=self.get("shipping_type", "Shipping"),
 					phone=self.get("shipping_phone"),
 					title=self.get("shipping_title"),
 					return_name=1,

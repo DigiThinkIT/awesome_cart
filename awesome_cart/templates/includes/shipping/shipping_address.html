@@ -6,7 +6,7 @@
         {% else %} {% for address in addresses%}
         <div class="col-md-12 col-sm-12" style="padding:0">
             <div class="well">
-                <div data-name="{{ address.name }}" class="addr" style="cursor: pointer">
+                <div data-name="{{ address.name }}" class="addr" style="cursor: pointer" data-address-type="{{ address.address_type }}">
                     <span id="title"><strong id="title"> {{ address.address_title }} </strong></strong><br>
                     <p>
                         <span id="line1">{{ address.address_line1 }}</span>,
@@ -22,7 +22,7 @@
                 </div>
             </div>
         </div>
-        {% endfor %} 
+        {% endfor %}
         {% endif %}
         <button class="btn-primary">Add a New Shipping Address</button>
     </div>
