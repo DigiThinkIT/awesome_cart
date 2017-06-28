@@ -786,8 +786,12 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 	if not rate and awc_session.get("shipping_method"):
 		rate = awc_session["shipping_method"]
 
+	if not rate and len(awc_session["shipping_rates_list"]) > 0:
+		rate = awc_session["shipping_rates_list"][0]
+
 	if rate:
 		awc_session["shipping_method"] = rate
+
 
 	shipping_address_name = None
 
@@ -859,7 +863,7 @@ def cart(data=None, action=None):
 				new_address = frappe.new_doc("Address")
 				new_address.update({
 					"address_title": data[0].get("address").get("title"),
-					"address_type": "Shipping",
+					"address_type": data[0].get("address").get("address_type", "Shipping"),
 					"customer": quotation.customer,
 					"address_line1": data[0].get("address").get("address_1"),
 					"address_line2": data[0].get("address").get("address_2"),
