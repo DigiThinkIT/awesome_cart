@@ -4,9 +4,9 @@
         {% if not addresses %}
         <p>No address registered, add a new one.</p>
         {% else %}
-        <div style="height:50vh; overflow-y:auto;">
+        <div class="addresses-container">
 	        {% for address in addresses%}
-	        <div class="col-md-12 col-sm-12" style="padding:0">
+	        <div class="col-md-12 col-sm-12 address-item">
 	            <div class="well">
 	                <div data-name="{{ address.name }}" class="addr" style="cursor: pointer" data-address-type="{{ address.address_type }}">
 	                    <span id="title"><strong id="title"> {{ address.address_title }} </strong></strong><br>
