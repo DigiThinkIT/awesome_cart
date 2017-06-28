@@ -3,7 +3,9 @@
     <div class="row">
         {% if not addresses %}
         <p>No address registered, add a new one.</p>
-        {% else %} {% for address in addresses%}
+        {% else %} 
+        <div style="height:50vh; overflow-y:auto;">
+        {% for address in addresses%}
         <div class="col-md-12 col-sm-12" style="padding:0">
             <div class="well">
                 <div data-name="{{ address.name }}" class="addr" style="cursor: pointer">
@@ -23,6 +25,7 @@
             </div>
         </div>
         {% endfor %} 
+        </div>
         {% endif %}
         <button class="btn-primary">Add a New Shipping Address</button>
     </div>
