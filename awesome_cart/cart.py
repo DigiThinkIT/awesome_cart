@@ -195,7 +195,7 @@ def checkout(form):
 					result["so_name"] = so_name
 
 					# lets now create a payment request and fullfill it immediately
-					preq = payment_request.make_payment_request(dt="Sales Order", dn=so_name, submiti_doc=1, return_doc=1)
+					preq = payment_request.make_payment_request(dt="Sales Order", dn=so_name, submit_doc=1, return_doc=1)
 
 					if preq:
 						gdoc = gateway.get_gateway()

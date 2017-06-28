@@ -130,7 +130,7 @@ class AWCTransaction(Document):
 
 			# override redirection to orders page
 			if result:
-				result = '/orders'
+				result = '/iems#filter=custom'
 
 			# this is here to remove duplication warning messages.
 			# TODO: Consider bring this to erpnext team to remove warning
