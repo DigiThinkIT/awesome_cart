@@ -2,18 +2,26 @@ window.awc_checkout = {};
 
 awc_checkout = {
 	showPage: function (page) {
-		this.validate();
 
-		$('.panel').slideUp('fast');
-		$(page).slideDown('fast');
-		var bcSelector = $(page).attr('data-bc');
-		if (bcSelector) {
-			var $bc = $(bcSelector);
-			$('#checkout-breadcrumb .breadcrumb')
-				.not($bc)
-				.removeClass('active');
-			$bc.addClass('active');
+		if ( awc_checkout._page_change_id ) {
+			clearTimeout(awc_checkout._page_change_id);
 		}
+
+		awc_checkout._page_change_id = setTimeout((function(page) {
+			awc_checkout.validate();
+			$('.panel').slideUp('fast');
+			$(page).slideDown('fast');
+			var bcSelector = $(page).attr('data-bc');
+			if (bcSelector) {
+				var $bc = $(bcSelector);
+				$('#checkout-breadcrumb .breadcrumb')
+					.not($bc)
+					.removeClass('active');
+				$bc.addClass('active');
+			}
+		}).bind(awc_checkout, page), 100);
+
+		console.log("Show page: ", page);
 
 	},
 

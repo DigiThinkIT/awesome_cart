@@ -51,7 +51,7 @@
 						</ul>
 					</div>
 
-					<div id="checkout-shipping-address" data-bc="#bc-shipping-addr" class="panel">
+					<div id="checkout-shipping-address" data-bc="#bc-shipping" class="panel">
 							{% include "templates/includes/shipping/shipping_address.html" with context %}
 					</div>
 
@@ -78,15 +78,15 @@
 						<p>Please review your information before once more before completing checkout</p>
 
 						<div class="confirm-box dti-form" id="checkout-confirm-shipping">
-							<h4>Shipping Information</h4>
+							<h4>Shipping Information<button class="btn btn-default btn-primary">Edit</button></h4>
 							<div class="content"></div>
-							<button class="btn btn-default btn-primary">Edit Shipping</button>
+
 						</div>
 
 						<div class="confirm-box dti-form" id="checkout-confirm-billing">
-							<h4>Billing Information</h4>
+							<h4>Billing Information<button class="btn btn-default btn-primary">Edit</button></h4>
 							<div class="content"></div>
-							<button class="btn btn-default btn-primary">Edit Billing</button>
+
 						</div>
 
 						<div class="confirm-box dti-form" id="checkout-confirm-totals">

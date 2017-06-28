@@ -4,6 +4,7 @@
 		"public/js/awc_cart.js"
 	],
 	"css/awc_cart.css": [
-		"public/css/awc_cart.css"
+		"public/css/awc_cart.css",
+		"public/css/checkout.css"
 	]
 }

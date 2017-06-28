@@ -1,0 +1,8 @@
+.addresses-container {
+	max-height:50vh;
+	overflow-y:auto;
+}
+
+.addresses-container .address-item {
+	padding: 0;
+}

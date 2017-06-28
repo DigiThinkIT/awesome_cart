@@ -31,7 +31,11 @@ web_include_js = [
 ]
 
 web_include_css = [
-	"/assets/awesome_cart/css/awc_cart.css"
+	"/assets/css/awc_cart.css"
+]
+
+app_include_css = [
+	"/assets/css/awc_cart.css"
 ]
 
 website_route_rules = [
