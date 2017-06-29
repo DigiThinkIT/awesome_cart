@@ -568,9 +568,11 @@ def sync_awc_and_quotation(awc_session, quotation):
 					update_quotation_item_awc_fields(item, awc_item)
 
 					if awc_item.get("options", {}).get("custom", {}).get("rate", None) != None:
+						item.set("ignore_pricing_rule", 1)
 						set_quotation_item_rate(item, awc_item["options"]["custom"]["rate"], product)
 					else:
 						set_quotation_item_rate(item, product.get("price"), product)
+						item.set("ignore_pricing_rule", 0)
 
 					awc_items_matched.append(awc_item.get("id"))
 				else:
@@ -597,20 +599,15 @@ def sync_awc_and_quotation(awc_session, quotation):
 					if awc_item.get("options", {}).get("image"):
 						item_data["image"] = awc_item["options"]["image"]
 
-					# if awc_item.get('options'):
-					# 	item_data['awc_group'] = awc_item['options'].get('group')
-					# 	item_data['awc_subgroup'] = awc_item['options'].get('subgroup')
-					# 	item_data['awc_group_label'] = awc_item['options'].get('label')
-					# 	if awc_item['options'].get('description'):
-					# 		item_data['description'] = awc_item['options'].get('description')
-
 					update_quotation_item_awc_fields(item_data, awc_item)
 
 					new_quotation_item = quotation.append("items", item_data)
 
 					if awc_item.get("options", {}).get("custom", {}).get("rate", None) != None:
+						new_quotation_item.set("ignore_pricing_rule", 1)
 						set_quotation_item_rate(new_quotation_item, awc_item["options"]["custom"]["rate"], product)
 					else:
+						new_quotation_item.set("ignore_pricing_rule", 0)
 						set_quotation_item_rate(new_quotation_item, product.get("price"), product)
 
 					awc_item["unit"] = new_quotation_item.rate
@@ -656,7 +653,8 @@ def sync_awc_and_quotation(awc_session, quotation):
 				"warehouse": product.get("warehouse"),
 				"unit": item.rate,
 				"total": item.amount,
-				"image": item.image
+				"image": item.image,
+				"base_price": product.get("base_price")
 			}
 
 			if item.awc_group:
@@ -666,6 +664,11 @@ def sync_awc_and_quotation(awc_session, quotation):
 					"label": item.awc_group_label,
 					"image": item.image
 				}
+
+				if awc_item["base_price"] != awc_item["unit"]:
+					awc_item["options"]["custom"] = {
+						"rate": item.rate
+					}
 
 			awc["items"].append(awc_item)
 			awc_is_dirty = True
@@ -1001,9 +1004,11 @@ def cart(data=None, action=None):
 				# TODO: ( >_<) shitty way of setting rate due to rate reset
 				#       Please fix when not utterly pissed off
 				if item.get("options", {}).get("custom", {}).get("rate", None) != None:
+					quotation_item.set("ignore_pricing_rule", 1)
 					set_quotation_item_rate(quotation_item, item["options"]["custom"]["rate"], product)
 					item_data['total'] = item["options"]["custom"]["rate"] * cint(item.get("qty"))
 				else:
+					quotation_item.set("ignore_pricing_rule", 0)
 					set_quotation_item_rate(quotation_item, product.get("price"), product)
 					item_data['total'] = product.get("price") * cint(item.get("qty"))
 
@@ -1026,13 +1031,18 @@ def cart(data=None, action=None):
 			quotation.flags.ignore_permissions = True
 			quotation.save()
 
+			log("Quotation after add to cart: \n{0}", pretty_json(quotation.as_dict()))
+
 			frappe.db.commit()
 
 			collect_totals(quotation, awc, awc_session)
+			log("Quotation after collecting totals: \n{0}", pretty_json(quotation.as_dict()))
 		else:
 			collect_totals(None, awc, awc_session)
 
 		set_awc_session(awc_session)
+
+		log("Awc session after add to cart: \n{0}", pretty_json(awc_session))
 
 		return { "success": True, "data": data, "totals": awc.get("totals") }
 
