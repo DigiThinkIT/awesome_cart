@@ -704,7 +704,7 @@ def update_shipping_quotation(quotation, awc_session):
 		if rate:
 			shipping_tax = {
 				"tax_amount": rate.get("fee"),
-				"description": "Shipping("+rate.get("name")+")",
+				"description": "Shipping ("+rate.get("name")+")",
 				"charge_type": "Actual",
 				"account_head": frappe.get_value("Awc Settings", "Awc Settings", "shipping_account"),
 			}
@@ -789,7 +789,7 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 	if not rate and awc_session.get("shipping_method"):
 		rate = awc_session["shipping_method"]
 
-	if not rate and len(awc_session["shipping_rates_list"]) > 0:
+	if not rate and len(awc_session.get("shipping_rates_list", [])) > 0:
 		rate = awc_session["shipping_rates_list"][0]
 
 	if rate:
