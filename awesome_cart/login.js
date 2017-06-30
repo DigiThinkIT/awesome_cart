@@ -31,8 +31,9 @@ login.bind_events = function() {
 		args.cmd = "frappe.core.doctype.user.user.sign_up";
 		args.email = ($("#signup_email").val() || "").trim();
 		args.redirect_to = get_url_arg("redirect-to") || '';
-		args.full_name = ($("#signup_fullname").val() || "").trim();
-		if(!args.email || !valid_email(args.email) || !args.full_name) {
+		args.first_name = ($("#signup_firstname").val() || "").trim();
+		args.last_name = ($("#signup_lastname").val() || "").trim();
+		if(!args.email || !valid_email(args.email) || !args.first_name || !args.last_name) {
 			frappe.msgprint(__("Valid email and name required"));
 			return false;
 		}
