@@ -3,11 +3,11 @@ window.awc_checkout = {};
 awc_checkout = {
 	showPage: function (page) {
 
-		if ( awc_checkout._page_change_id ) {
+		if (awc_checkout._page_change_id) {
 			clearTimeout(awc_checkout._page_change_id);
 		}
 
-		awc_checkout._page_change_id = setTimeout((function(page) {
+		awc_checkout._page_change_id = setTimeout((function (page) {
 			awc_checkout.validate();
 			$('.panel').slideUp('fast');
 			$(page).slideDown('fast');
@@ -34,11 +34,19 @@ awc_checkout = {
 			$('#checkout-confirm-shipping .content').empty().append(shipping_summary);
 			var totals = cart.totals;
 			shipping_total = null;
+			tax_total = null;
 
 			// find shipping total
 			$.each(totals.other, function (i, t) {
 				if (t.name.indexOf("Shipping") == 0) {
 					shipping_total = t;
+				}
+			})
+
+			// find sales tax
+			$.each(totals.other, function (i, t) {
+				if (t.name.indexOf("Sales") == 0) {
+					tax_total = t;
 				}
 			})
 
@@ -53,6 +61,15 @@ awc_checkout = {
 					$('#checkout-confirm-totals .shipping-total .method').empty().text(shipping_total.label + ":");
 				}
 			}
+
+            if (tax_total) {
+				$('#checkout-confirm-totals .tax-total .value').empty().text(cart.storeAdapter.formatCurrency(tax_total.value));
+				$('#checkout-confirm-totals .tax-total .method').empty().text("Sales Tax: ");
+			} else {
+				$('#checkout-confirm-totals .tax-total .value').empty();
+				$('#checkout-confirm-totals .tax-total .method').empty();
+			}
+
 
 			$('#checkout-confirm-totals .sub-total .value').text(cart.storeAdapter.formatCurrency(totals.sub_total));
 			$('#checkout-confirm-totals .grand-total .value').text(cart.storeAdapter.formatCurrency(totals.grand_total));
@@ -259,18 +276,18 @@ awc_checkout = {
 
 		// handles change event and key up event properly plus auto complete support from browser
 		$('input[id^=awc_ship__], select[id^=awc_ship__], input[id^=billing_], select[id^=billing_]')
-			.bind('keyup change', function() {
+			.bind('keyup change', function () {
 				// determine field name by the last word in the id attribute
 				var field_name = $(this).attr('data-type')
 				// determine if we are handling a select element
 				var is_select = $(this).is('select');
 				// get element value differently if a select element vs an input
-				var value = is_select?$(this).find(':selected').attr('value'):$(this).val();
+				var value = is_select ? $(this).find(':selected').attr('value') : $(this).val();
 				// determine if we are handling a shipping field or billing field
 				var is_ship = $(this).attr('id').indexOf('ship') >= 0;
 				// get a reference to the shipform or billform depending on what is_ship value
-				var data = is_ship?shipform:billform;
-				data[field_name] = value?true:false;
+				var data = is_ship ? shipform : billform;
+				data[field_name] = value ? true : false;
 			})
 
 		$('#form-bill-addr .btn-nextbtn').click(function () {
