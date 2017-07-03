@@ -865,7 +865,7 @@ def cart(data=None, action=None):
 			if not address_name:
 				new_address = frappe.new_doc("Address")
 				new_address.update({
-					"address_title": data[0].get("address").get("title"),
+					#"address_title": data[0].get("address").get("title"),
 					"address_type": data[0].get("address").get("address_type", "Shipping"),
 					"customer": quotation.customer,
 					"address_line1": data[0].get("address").get("address_1"),

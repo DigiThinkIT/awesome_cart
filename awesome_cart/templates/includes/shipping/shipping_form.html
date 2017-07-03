@@ -3,11 +3,15 @@
 			<form class="awc-form">
         <div class="row no-gutter">
             <div class="col-sm-6">
-                <div class="field required">
-                    <label for="awc_ship__title">Address Label</label>
-                    <input id="awc_ship__title" name="title" placeholder="Address Label" data-type="title" />
-                </div>
-            </div>
+							<div class="field">
+									<label for="awc_ship__is_residential">Is Residential</label>
+									<select id="awc_ship__is_residential" name="is_residential" data-type="is_residential">
+										<option value="1" selected>Yes</option>
+										<option value="0">No</option>
+									</select>
+									<span class="select-arrow glyphicon glyphicon-triangle-bottom"></span>
+							</div>
+						</div>
             <div class="col-sm-6">
                 <div class="field required">
                     <label for="awc_ship__phone">Phone</label>
@@ -65,18 +69,6 @@
                 </div>
             </div>
         </div>
-				<div class="row no-gutter">
-					<div class="col-sm-12">
-							<div class="field">
-									<label for="awc_ship__is_residential">Is Residential</label>
-									<select id="awc_ship__is_residential" name="is_residential" data-type="is_residential">
-										<option value="1" selected>Yes</option>
-										<option value="0">No</option>
-									</select>
-									<span class="select-arrow glyphicon glyphicon-triangle-bottom"></span>
-							</div>
-					</div>
-				</div>
 			</form>
         <div style="text-align: center;">
             <button style="display: inline; margin-right: 10px;" class="btn btn-default btn-primary btn-back">Back</button>
