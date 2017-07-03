@@ -512,7 +512,7 @@ cart.scan_forms = function() {
     // handle smart placeholder labels
     $('.awc-form .field').not('.awc-form-bound').each(function() {
         var $field = $(this);
-        var $input = $(this).find('input:first, select:first');
+        var $input = $(this).find('input:first, select:first, textarea:first');
         $field.addClass(".awc-form-bound");
 
         $input

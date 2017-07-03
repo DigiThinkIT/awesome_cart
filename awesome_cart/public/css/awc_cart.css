@@ -121,28 +121,33 @@
 	font-weight: bolder;
 }
 /* webkit */
-.awc-form .field.focus:not(.custom) input::-webkit-input-placeholder {
+.awc-form .field.focus:not(.custom) input::-webkit-input-placeholder,
+.awc-form .field.focus:not(.custom) textarea::-webkit-input-placeholder {
 	transition: opacity 0.5s 0s ease;
   opacity: 0;
 }
 /* FF 19+ */
-.awc-form .field.focus:not(.custom) input::-moz-placeholder {
+.awc-form .field.focus:not(.custom) input::-moz-placeholder,
+.awc-form .field.focus:not(.custom) textarea::-moz-placeholder {
 	transition: opacity 0.5s 0s ease;
   opacity: 0;
 }
 /* MS 10+ */
-.awc-form .field.focus:not(.custom) input:-ms-input-placeholder {
+.awc-form .field.focus:not(.custom) input:-ms-input-placeholder,
+.awc-form .field.focus:not(.custom) textarea:-ms-input-placeholder {
 	transition: opacity 0.5s 0s ease;
   opacity: 0;
 }
 /* FF18- */
-.awc-form .field.focus:not(.custom) input:-moz-placeholder {
+.awc-form .field.focus:not(.custom) input:-moz-placeholder,
+.awc-form .field.focus:not(.custom) textarea:-moz-placeholder {
 	transition: opacity 0.5s 0s ease;
   opacity: 0;
 }
 
 .awc-form .field:not(.custom) select,
-.awc-form .field:not(.custom) input {
+.awc-form .field:not(.custom) input,
+.awc-form .field:not(.custom) textarea {
 	border: none;
 	background: transparent;
 	outline: none;
@@ -155,7 +160,10 @@
 /* removes autofill forced background color */
 .awc-form .field:not(.custom) input:-webkit-autofill,
 .awc-form .field:not(.custom) input:-webkit-autofill:hover,
-.awc-form .field:not(.custom) input:-webkit-autofill:focus {
+.awc-form .field:not(.custom) input:-webkit-autofill:focus,
+.awc-form .field:not(.custom) textarea:-webkit-autofill,
+.awc-form .field:not(.custom) textarea:-webkit-autofill:hover,
+.awc-form .field:not(.custom) textarea:-webkit-autofill:focus {
 	-webkit-box-shadow:0 0 0 9999px white inset; /* Change the color to your own background color */
 }
 
@@ -193,39 +201,47 @@
 
 /** bof - Colorize placeholder on error **/
 /* webkit */
-.awc-form .field.required.error input::-webkit-input-placeholder {
+.awc-form .field.required.error input::-webkit-input-placeholder,
+.awc-form .field.required.error textarea::-webkit-input-placeholder {
 	color: #f00;
 }
 /* FF 19+ */
-.awc-form .field.required.error input::-moz-placeholder {
+.awc-form .field.required.error input::-moz-placeholder,
+.awc-form .field.required.error textarea::-moz-placeholder {
 	color: #f00;
 }
 /* MS 10+ */
-.awc-form .field.required.error input:-ms-input-placeholder {
+.awc-form .field.required.error input:-ms-input-placeholder,
+.awc-form .field.required.error textarea:-ms-input-placeholder {
 	color: #f00;
 }
 /* FF18- */
-.awc-form .field.required.error input:-moz-placeholder {
+.awc-form .field.required.error input:-moz-placeholder,
+.awc-form .field.required.error textarea:-moz-placeholder {
 	color: #f00;
 }
 
 /* webkit */
-.awc-form .field.locked input::-webkit-input-placeholder {
+.awc-form .field.locked input::-webkit-input-placeholder,
+.awc-form .field.locked textarea::-webkit-input-placeholder {
 	color: transparent;
 }
 
 /* FF 19+ */
-.awc-form .field.locked input::-moz-placeholder {
+.awc-form .field.locked input::-moz-placeholder,
+.awc-form .field.locked textarea::-moz-placeholder {
 	color: transparent;
 }
 
 /* MS 10+ */
-.awc-form .field.locked input:-ms-input-placeholder {
+.awc-form .field.locked input:-ms-input-placeholder,
+.awc-form .field.locked textarea:-ms-input-placeholder {
 	color: transparent;
 }
 
 /* FF18- */
-.awc-form .field.locked input:-moz-placeholder {
+.awc-form .field.locked input:-moz-placeholder,
+.awc-form .field.locked textarea:-moz-placeholder {
 	color: transparent;
 }
 
