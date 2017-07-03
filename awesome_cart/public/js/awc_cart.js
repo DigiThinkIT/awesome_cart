@@ -320,7 +320,7 @@ awc_checkout = {
 					e.stopPropagation();
 					$('#billing-addrs .selected').removeClass('selected');
 					$(this).addClass('selected');
-					awc_checkout.showPage('#checkout-shipping-method');
+					awc_checkout.showPage('#checkout-confirmation');
 				})
 
 				awc_checkout.showPage('#checkout-shipping-method');
