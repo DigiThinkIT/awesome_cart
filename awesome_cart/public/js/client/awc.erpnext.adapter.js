@@ -185,7 +185,8 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
         args: {
             gateway_service: gateway_service,
             billing_address: awc_checkout.billing_address,
-            shipping_address: awc_checkout.shipping_address
+            shipping_address: awc_checkout.shipping_address,
+						instructions: $("#order-instructions").val()
         },
         freeze: true,
         freeze_message: "Validating Order",

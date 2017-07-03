@@ -1127,7 +1127,7 @@ def update_shipping_rate(address, awc_session):
 	return rates
 
 @frappe.whitelist()
-def create_transaction(gateway_service, billing_address, shipping_address):
+def create_transaction(gateway_service, billing_address, shipping_address, instructions=""):
 
 	if isinstance(billing_address, basestring):
 		billing_address = json.loads(billing_address)
@@ -1148,6 +1148,13 @@ def create_transaction(gateway_service, billing_address, shipping_address):
 	# fetch awc
 	awc_session = get_awc_session()
 	awc = awc_session.get("cart")
+
+	# assign instructions to quotation
+	if instructions:
+		quotation.set("instructions", instructions)
+		quotation.flags.ignore_permissions=1
+		quotation.save()
+
 	# make sure quotation and awc match
 	sync_awc_and_quotation(awc_session, quotation)
 	# create awc transaction to process payments first
