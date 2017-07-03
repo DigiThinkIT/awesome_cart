@@ -360,7 +360,6 @@ var AwcShippingProvider = Class.extend({
       if ($("#checkout-shipping").attr('data-select') == 'true') {
           address_data.shipping_address = $('#awc-shipping-form').attr('data-name');
           address_data.phone = $form.find('input[name="phone"]').val();
-          address_data.title = $form.find('input[name="title"]').val();
           address_data.address_1 = $form.find('input[name="address_1"]').val();
           address_data.address_2 = $form.find('input[name="address_2"]').val();
           address_data.city = $form.find('input[name="city"]').val();
@@ -370,7 +369,6 @@ var AwcShippingProvider = Class.extend({
 					address_data.address_type = $form.find('select[name="is_residential"] option:checked').attr('value')==1?"Residential":"Shipping";
       } else {
           address_data.shipping_address = $('#shipping-addrs div.selected').attr('data-name');
-          address_data.title = $('#shipping-addrs .selected span#title strong').text();
           address_data.phone = $('#shipping-addrs .selected span#phone').text();
           address_data.address_1 = $('#shipping-addrs .selected span#line1').text();
           address_data.address_2 = $('#shipping-addrs .selected span#line2').text();
@@ -384,7 +382,6 @@ var AwcShippingProvider = Class.extend({
       current_address_data = {
           shipping_address: this.data.shipping_address,
           phone: this.data.phone,
-          title: this.data.title,
           address_1: this.data.address_1,
           address_2: this.data.address_2,
           city: this.data.city,
@@ -410,9 +407,7 @@ var AwcShippingProvider = Class.extend({
           valid: true,
           address: this.data
       }
-      if (!this.data.title) {
-          result.valid = false;
-      }
+
       if (!this.data.address_1) {
           result.valid = false;
       }

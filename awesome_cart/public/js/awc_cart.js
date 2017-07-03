@@ -239,7 +239,6 @@ awc_checkout = {
 		});
 
 		var shipform = {
-			"title": false,
 			"phone": false,
 			"address_1": false,
 			"city": false,
@@ -249,7 +248,6 @@ awc_checkout = {
 
 		//validation for billing address form fields
 		var billform = {
-			"title": false,
 			"phone": false,
 			"address_1": false,
 			"city": false,
@@ -274,7 +272,7 @@ awc_checkout = {
 			})
 
 		$('#form-bill-addr .btn-nextbtn').click(function () {
-			if (billform.title == true && billform.phone == true && billform.address_1 == true && billform.city == true && billform.pincode == true && billform.country == true) {
+			if (billform.phone == true && billform.address_1 == true && billform.city == true && billform.pincode == true && billform.country == true) {
 				awc_checkout.showPage('#checkout-confirmation');
 				$('#ship-form-err-msg').remove();
 			} else {
@@ -284,7 +282,7 @@ awc_checkout = {
 		})
 
 		$('#awc-shipping-form .btn-nextbtn').click(function () {
-			if (shipform.title == true && shipform.phone == true && shipform.address_1 == true && shipform.city == true && shipform.pincode == true && shipform.country == true) {
+			if (shipform.phone == true && shipform.address_1 == true && shipform.city == true && shipform.pincode == true && shipform.country == true) {
 				//adding newly entered shipping address on billing address tab in awc
 				var div = document.createElement('div');
 				div.setAttribute('class', 'col-md-12 col-sm-12');
@@ -302,7 +300,6 @@ awc_checkout = {
 				}
 				str = "<div class='well'>\
                 			<div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
-                    			<span id='title'><strong id='title'>" + $('#awc_ship__title').val() + "</strong></strong><br>\
                     			<p>\
                         			<span id='line1'>" + $('#awc_ship__line1').val() + "</span>,\
 									" + line2str + "\
@@ -320,7 +317,7 @@ awc_checkout = {
 					e.stopPropagation();
 					$('#billing-addrs .selected').removeClass('selected');
 					$(this).addClass('selected');
-					awc_checkout.showPage('#checkout-shipping-method');
+					awc_checkout.showPage('#checkout-confirmation');
 				})
 
 				awc_checkout.showPage('#checkout-shipping-method');
