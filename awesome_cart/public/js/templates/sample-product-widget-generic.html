@@ -30,6 +30,31 @@
         {{/each}}
       {{/if}}
 
+      {{#if (or custom.display_engrave_on_case custom.display_special_instructions) }}
+				<div class="custom-fields awc-form">
+    			{{#if custom.display_engrave_on_case}}
+          <div class="row no-gutter">
+						<div class="col-sm-12">
+							<div class="field {{#if custom.require_engrave_on_case}}required{{/if}}">
+								<label for="product-engrave-on-case">{{custom.display_engrave_on_case}}</label>
+								<input id="product-engrave-on-case" {{#if custom.require_engrave_on_case}}data-awc-required="yes"{{/if}} data-awc-custom-field="designer_name_on_case" placeholder="{{custom.display_engrave_on_case}}"/>
+							</div>
+						</div>
+					</div>
+					{{/if}}
+					{{#if custom.display_special_instructions}}
+					<div class="row no-gutter">
+						<div class="col-sm-12">
+							<div class="field">
+								<label for="product-engrave-on-case">Special Instructions</label>
+								<textarea id="product-instructions" data-awc-required="no" data-awc-custom-field="instructions" placeholder="Special Instructions"></textarea>
+							</div>
+						</div>
+					</div>
+					{{/if}}
+				</div>
+      {{/if}}
+
       <div class="text-center">
           <span class="product-price"><span class="text">Starting at <br></span><span class="value price" id="price_label">{{currency price }}</span></span>
       </div>
@@ -44,6 +69,9 @@
           </div>
           <a data-awc-addtocart
              data-awc-qty-from="#product-qty"
+					{{#if (or custom.display_engrave_on_case custom.display_special_instructions) }}
+						 data-awc-custom-fields="{{#if custom.display_engrave_on_case}}#product-engrave-on-case{{/if}}{{#if custom.display_engrave_on_case}},#product-instructions{{/if}}"
+					{{/if}}
           {{#if options.variants}}
 					   data-awc-price-selector="#price_label"
              data-awc-options data-awc-options-hashes="{{ htmlEncode (json this.options.hashes) }}"
