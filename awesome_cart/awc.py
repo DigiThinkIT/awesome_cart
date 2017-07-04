@@ -591,7 +591,7 @@ def sync_awc_and_quotation(awc_session, quotation):
 						"doctype": "Quotation Item",
 						"item_code": awc_item.get("sku"),
 						"item_name": product.get("name"),
-						"description": product.get("name"),
+						"description": awc_item.get("options", {}).get("description", product.get("name")),
 						"qty": cint(awc_item.get("qty")),
 						"warehouse": product.get("warehouse")
 					}
@@ -654,16 +654,19 @@ def sync_awc_and_quotation(awc_session, quotation):
 				"unit": item.rate,
 				"total": item.amount,
 				"image": item.image,
-				"base_price": product.get("base_price")
+				"base_price": product.get("base_price"),
+				"options": {
+					"description": item.description
+				}
 			}
 
 			if item.awc_group:
-				awc_item["options"] = {
+				awc_item["options"].update({
 					"group": item.awc_group,
 					"subgroup": item.awc_subgroup,
 					"label": item.awc_group_label,
 					"image": item.image
-				}
+				})
 
 				if awc_item["base_price"] != awc_item["unit"]:
 					awc_item["options"]["custom"] = {
@@ -992,7 +995,7 @@ def cart(data=None, action=None):
 					"doctype": "Quotation Item",
 					"item_code": item.get("sku"),
 					"item_name": product.get("name"),
-					"description": product.get("name"),
+					"description": item.get("options", {}).get("description", product.get("name")),
 					"qty": cint(item.get("qty")),
 					"warehouse": product.get("warehouse")
 				}
