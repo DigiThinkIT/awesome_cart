@@ -29,7 +29,7 @@ def get_context(context):
 	default_country_doc = next((x for x in context["countries"] if x.name == default_country), None)
 
 	if frappe.session.user != "Guest":
-		context["addresses"] = frappe.get_all("Address", filters={"customer" : get_current_customer().name}, fields="*")
+		context["addresses"] = frappe.get_all("Address", filters={"customer" : get_current_customer().name, "disabled": False}, fields="*")
 	
 	country_idx = context["countries"].index(default_country_doc)
 	context["countries"].pop(country_idx)
