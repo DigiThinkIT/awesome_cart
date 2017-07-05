@@ -28,35 +28,23 @@ awc_checkout = {
     validate: function() {
         var checkout_enabled = true;
 
+        var totals = cart.totals;
+
+        $('#checkout-confirm-totals .other-totals').empty();
+        // find shipping total
+        $.each(totals.other, function (i, t) {
+          $('#checkout-confirm-totals .other-totals').append($(
+            '<div class="other"><span class="method">'+t.label+':</span><span class="value">'+t.value+'</span></div>'
+          ));
+        });
+
+        $('#checkout-confirm-totals .sub-total .value').text(cart.storeAdapter.formatCurrency(totals.sub_total));
+        $('#checkout-confirm-totals .grand-total .value').text(cart.storeAdapter.formatCurrency(totals.grand_total));
+
         if (awc_checkout.shipping_provider) {
             var shipping_validation_response = awc_checkout.shipping_provider.validate();
             var shipping_summary = awc_checkout.shipping_provider.getSummary();
             $('#checkout-confirm-shipping .content').empty().append(shipping_summary);
-            var totals = cart.totals;
-            shipping_total = null;
-
-            // find shipping total
-            $.each(totals.other, function(i, t) {
-                if (t.name.indexOf("Shipping") == 0) {
-                    shipping_total = t;
-                }
-            })
-
-
-            if (shipping_validation_response.valid == false) {
-                checkout_enabled = false;
-                $('#checkout-confirm-totals .shipping-total .value').empty().append('<span class="error">-</span>');
-                $('#checkout-confirm-totals .shipping-total .method').empty().append('<span class="error">(missing)</span>');
-            } else {
-                if (shipping_total) {
-                    $('#checkout-confirm-totals .shipping-total .value').empty().text(cart.storeAdapter.formatCurrency(shipping_total.value));
-                    $('#checkout-confirm-totals .shipping-total .method').empty().text(shipping_total.label + ":");
-                }
-            }
-
-            $('#checkout-confirm-totals .sub-total .value').text(cart.storeAdapter.formatCurrency(totals.sub_total));
-            $('#checkout-confirm-totals .grand-total .value').text(cart.storeAdapter.formatCurrency(totals.grand_total));
-
 
             awc_checkout.shipping_address = shipping_validation_response.address;
         }
@@ -299,18 +287,18 @@ awc_checkout = {
                     statestr = "";
                 }
                 str = "<div class='well'>\
-                			<div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
-                    			<p>\
-                        			<span id='line1'>" + $('#awc_ship__line1').val() + "</span>,\
-									" + line2str + "\
-			                        <span id='city'>" + $('#awc_ship__city').val() + "</span>,\
-                        			" + statestr + "\
-		        	                <span id='country'>" + $('#awc_ship__country').val() + "</span>,\
-        		    	            <span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>\
-    			                    <span id='phone'>" + $('#awc_ship__phone').val() + "</span>\
-                    			</p>\
-                			</div>\
-            			</div>";
+                      <div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
+                          <p>\
+                              <span id='line1'>" + $('#awc_ship__line1').val() + "</span>,\
+                  " + line2str + "\
+                              <span id='city'>" + $('#awc_ship__city').val() + "</span>,\
+                              " + statestr + "\
+                              <span id='country'>" + $('#awc_ship__country').val() + "</span>,\
+                              <span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>\
+                              <span id='phone'>" + $('#awc_ship__phone').val() + "</span>\
+                          </p>\
+                      </div>\
+                  </div>";
                 div.innerHTML = str;
                 $('#billing-addrs div.row').prepend(div);
                 $('#billing-addrs #same-as-ship-addr.addr').click(function(e) {
