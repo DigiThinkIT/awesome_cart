@@ -435,6 +435,10 @@ def collect_totals(quotation, awc, awc_session):
 
 			total_entry["value"] = tax.get("tax_amount")
 
+		# dumb tax sorting by names
+		tax_order = {"Sales Tax": -1000, "Shipping": -500}
+		awc["totals"]["other"].sort(key=lambda x: next((v for k,v in tax_order.items() if x["name"].startswith(k)), 1000))
+
 	else:
 		awc["totals"]["sub_total"] = 0
 		awc["totals"]["grand_total"] = 0

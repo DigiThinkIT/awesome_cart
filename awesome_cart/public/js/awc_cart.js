@@ -28,35 +28,25 @@ awc_checkout = {
 	validate: function () {
 		var checkout_enabled = true;
 
+		var totals = cart.totals;
+		shipping_total = null;
+
+		$('#checkout-confirm-totals .other-totals').empty();
+		// find shipping total
+		$.each(totals.other, function (i, t) {
+			$('#checkout-confirm-totals .other-totals').append($(
+				'<div class="other"><span class="method">'+t.label+':</span><span class="value">'+t.value+'</span></div>'
+			));
+
+		});
+
+		$('#checkout-confirm-totals .sub-total .value').text(cart.storeAdapter.formatCurrency(totals.sub_total));
+		$('#checkout-confirm-totals .grand-total .value').text(cart.storeAdapter.formatCurrency(totals.grand_total));
+		
 		if (awc_checkout.shipping_provider) {
 			var shipping_validation_response = awc_checkout.shipping_provider.validate();
 			var shipping_summary = awc_checkout.shipping_provider.getSummary();
 			$('#checkout-confirm-shipping .content').empty().append(shipping_summary);
-			var totals = cart.totals;
-			shipping_total = null;
-
-			// find shipping total
-			$.each(totals.other, function (i, t) {
-				if (t.name.indexOf("Shipping") == 0) {
-					shipping_total = t;
-				}
-			})
-
-
-			if (shipping_validation_response.valid == false) {
-				checkout_enabled = false;
-				$('#checkout-confirm-totals .shipping-total .value').empty().append('<span class="error">-</span>');
-				$('#checkout-confirm-totals .shipping-total .method').empty().append('<span class="error">(missing)</span>');
-			} else {
-				if (shipping_total) {
-					$('#checkout-confirm-totals .shipping-total .value').empty().text(cart.storeAdapter.formatCurrency(shipping_total.value));
-					$('#checkout-confirm-totals .shipping-total .method').empty().text(shipping_total.label + ":");
-				}
-			}
-
-			$('#checkout-confirm-totals .sub-total .value').text(cart.storeAdapter.formatCurrency(totals.sub_total));
-			$('#checkout-confirm-totals .grand-total .value').text(cart.storeAdapter.formatCurrency(totals.grand_total));
-
 
 			awc_checkout.shipping_address = shipping_validation_response.address;
 		}
