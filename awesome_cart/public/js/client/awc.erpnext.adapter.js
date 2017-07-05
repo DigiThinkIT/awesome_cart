@@ -186,7 +186,7 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
             gateway_service: gateway_service,
             billing_address: awc_checkout.billing_address,
             shipping_address: awc_checkout.shipping_address,
-						instructions: $("#order-instructions").val()
+            instructions: $("#order-instructions").val()
         },
         freeze: true,
         freeze_message: "Validating Order",
@@ -281,6 +281,9 @@ var AwcShippingProvider = Class.extend({
         var update = true;
         if ( base._shipping_methods ) {
           if ( awc._.isEqual(base._shipping_methods, rates) ) {
+            $method_form.fadeIn('fast');
+            $method_form.parent().find('.error').fadeOut('fast');
+            $method_form.parent().find('.spinner').fadeOut('fast');
             return;
           }
         }
@@ -308,8 +311,8 @@ var AwcShippingProvider = Class.extend({
                   checked = "checked='checked'";
                   base.data.ship_method = method.name;
                   base.method_valid = true;
-									base.fee = method.fee;
-									base.label = method.label;
+                  base.fee = method.fee;
+                  base.label = method.label;
                   $("#bc-shipping-method").addClass("valid");
               }
               var $method = $(
@@ -329,7 +332,7 @@ var AwcShippingProvider = Class.extend({
                     base.fee = method.fee;
                     base.label = method.label;
                     cart.calculateShipping(base.data.ship_method);
-										base.validate();
+                    base.validate();
                   }
               })
           });
@@ -339,15 +342,20 @@ var AwcShippingProvider = Class.extend({
               // first item. This can occur if address method was removed due
               // to a change of address from a previous selection
               $method_form.find('input[type="radio"]:first').click();
-					}
+          }
+
+          $method_form.fadeIn('fast');
+          $method_form.parent().find('.error').fadeOut('fast');
+          $method_form.parent().find('.spinner').fadeOut('fast');
 
           // finally trigger validation once more to update ui with default selections
           awc_checkout.validate();
         } else {
             base.method_valid = false;
             $("#bc-shipping-method").removeClass("valid");
-            $method_form.empty();
-            $method_form.append('<li class="error">Invalid Shipping Address. Edit your shipping information to get shipping quote.</li>');
+            $method_form.fadeOut('fast');
+            $method_form.parent().find('.error').fadeIn('fast');
+            $method_form.parent().find('.spinner').fadeOut('fast');
         }
     },
 
@@ -366,8 +374,8 @@ var AwcShippingProvider = Class.extend({
           address_data.city = $form.find('input[name="city"]').val();
           address_data.state = $form.find('input[name="state"]').val();
           address_data.pincode = $form.find('input[name="pincode"]').val();
-					address_data.country = $form.find('select[name="country"] option:checked').attr('value');
-					address_data.address_type = $form.find('select[name="is_residential"] option:checked').attr('value')==1?"Residential":"Shipping";
+          address_data.country = $form.find('select[name="country"] option:checked').attr('value');
+          address_data.address_type = $form.find('select[name="is_residential"] option:checked').attr('value')==1?"Residential":"Shipping";
       } else {
           address_data.shipping_address = $('#shipping-addrs div.selected').attr('data-name');
           address_data.phone = $('#shipping-addrs .selected span#phone').text();
@@ -377,7 +385,7 @@ var AwcShippingProvider = Class.extend({
           address_data.state = $('#shipping-addrs .selected span#state').text();
           address_data.pincode = $('#shipping-addrs .selected span#postal_code').text();
           address_data.country = $('#shipping-addrs .selected span#country').text();
-					address_data.address_type = $('#shipping-addrs div.selected').attr('data-address-type');
+          address_data.address_type = $('#shipping-addrs div.selected').attr('data-address-type');
       }
 
       current_address_data = {
@@ -388,14 +396,14 @@ var AwcShippingProvider = Class.extend({
           city: this.data.city,
           state: this.data.state,
           pincode: this.data.pincode,
-					country: this.data.country,
-					address_type: this.data.address_type
+          country: this.data.country,
+          address_type: this.data.address_type
       }
 
       if ( awc._.isEqual(current_address_data, address_data) && this.result ) {
-					$form.trigger('address_change', this.data);
+          $form.trigger('address_change', this.data);
           this.result.valid = this.address_valid && base.method_valid
- 					return this.result;
+           return this.result;
       }
 
       $.each(address_data, function(k, v) {
@@ -435,17 +443,21 @@ var AwcShippingProvider = Class.extend({
       this.valid = result.valid;
       if (result.valid) {
           $("#bc-shipping").addClass("valid");
+          $method_form.fadeOut('fast');
+          $method_form.parent().find('.error').fadeOut('fast');
+          $method_form.parent().find('.spinner').fadeIn('fast');
           cart.calculateShipping(this.data.ship_method, this.data);
       } else {
           $("#bc-shipping").removeClass("valid");
-          $method_form.empty();
-          $method_form.append('<li class="error">Invalid Shipping Address. Edit your shipping information to get shipping quote.</li>');
+          $method_form.fadeOut('fast');
+          $method_form.parent().find('.error').fadeIn('fast');
+          $method_form.parent().find('.spinner').fadeOut('fast');
       }
 
       // only validate if both address and shipping method validated
-			this.address_valid = result.valid;
+      this.address_valid = result.valid;
       result.valid = result.valid && base.method_valid
-			this.result = result;
+      this.result = result;
 
       return result;
     },
@@ -514,7 +526,7 @@ cart.scan_forms = function() {
         $input
             .change(function() {
                 var is_select = $(this).is('select');
-								var value = is_select?$(this).find(':selected').attr('value'):$(this).val();
+                var value = is_select?$(this).find(':selected').attr('value'):$(this).val();
 
                 if (value) {
                     $field.addClass('hasvalue');
