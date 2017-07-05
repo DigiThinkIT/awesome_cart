@@ -507,7 +507,7 @@ def clear_awc_session():
 	awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
 	return set_awc_session(awc_session)
 
-def sync_awc_and_quotation(awc_session, quotation):
+def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False):
 	# convert quotation to awc object
 	# and merge items in the case where items are added before logging in.
 
@@ -516,7 +516,6 @@ def sync_awc_and_quotation(awc_session, quotation):
 	# 2) remove invalid awc items who's skus do not match any products(awc items)
 	# 3) loop over remaining unmatched quotation items and create awc items
 	# 4) remove invalid quotation items who's skus do not match any products(awc items)
-	quotation_is_dirty = False
 	awc = awc_session.get("cart")
 
 	if not awc:
@@ -558,6 +557,10 @@ def sync_awc_and_quotation(awc_session, quotation):
 
 					if item.awc_group_label != awc_item.get('options', {}).get('label'):
 						item.awc_group_label = awc_item.get('options', {}).get('label')
+						quotation_is_dirty = True
+
+					if item.description != awc_item.get("options", {}).get("description", item.description):
+						item.description = awc_item.get("options", {}).get("description")
 						quotation_is_dirty = True
 
 					if not item.image and awc_item.get("options", {}).get("image") and item.image != awc_item.get("options", {}).get("image"):
@@ -1145,21 +1148,24 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 
 	# fetch customer
 	customer = get_current_customer()
+
 	# fetch quotation
 	cart_info = get_cart_quotation()
 	quotation = cart_info.get('doc')
+
 	# fetch awc
 	awc_session = get_awc_session()
 	awc = awc_session.get("cart")
 
+	quotation_is_dirty = False
 	# assign instructions to quotation
 	if instructions:
-		quotation.set("instructions", instructions)
-		quotation.flags.ignore_permissions=1
-		quotation.save()
+		quotation.instructions = instructions
+		quotation_is_dirty = False
 
 	# make sure quotation and awc match
-	sync_awc_and_quotation(awc_session, quotation)
+	sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty)
+
 	# create awc transaction to process payments first
 	# sales order and friends will be generated from this data
 	data = {
