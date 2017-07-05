@@ -15,7 +15,6 @@ from .dbug import pretty_json
 def update_context(context):
 
 	path = frappe.local.request.path[1:]
-	print("Path: %s" % frappe.local.request.path)
 	context.current_date = ''
 
 
