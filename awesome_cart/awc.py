@@ -747,6 +747,9 @@ def update_quotation_item_awc_fields(quotation_item, awc_item):
 		if awc_item['options'].get('description'):
 			set_field(quotation_item, 'description', awc_item['options'].get('description'))
 
+		if awc_item['options'].get('image'):
+			set_field(quotation_item, 'image', awc_item['options'].get('image'))
+
 		if awc_item['options'].get('custom'):
 			for field, value in awc_item['options']['custom'].items():
 				set_field(quotation_item, field, value)
