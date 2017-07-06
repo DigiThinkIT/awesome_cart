@@ -60,3 +60,17 @@ def get_order_data():
 @frappe.whitelist()
 def delete_address(address_name):
 	frappe.db.set_value("Address", address_name, "disabled", 1)
+
+@frappe.whitelist()
+def edit_address(address):
+	address =  json.loads(address)
+	add_doc = frappe.get_doc("Address", address.get('address_name'))
+	add_doc.address_type = "Residential" if address.get('address_type') == "Yes" else "Office"
+	add_doc.address_line1 = address.get('address_line1')
+	add_doc.address_line2 = address.get('address_line2')
+	add_doc.phone = address.get('address_phone')
+	add_doc.city = address.get('address_city')
+	add_doc.state = address.get('address_state')
+	add_doc.pincode = address.get('address_zip')
+	add_doc.country = address.get('address_country')
+	add_doc.save()
