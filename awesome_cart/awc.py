@@ -798,26 +798,95 @@ def update_cart_settings(quotation, awc_session):
 	#quotation.run_method("calculate_taxes_and_totals")
 	update_shipping_quotation(quotation, awc_session)
 
+def reset_shipping():
+	customer = get_current_customer()
+	awc_session = get_awc_session()
+	awc = awc_session.get("cart")
+	quotation = None
+
+	if not awc:
+		awc = clear_awc_session()
+
+	if customer:
+		cart_info = get_user_quotation(awc_session)
+		quotation = cart_info.get('doc')
+
+		if len(quotation.items) == 0:
+			apply_cart_settings(quotation=quotation)
+		quotation.flags.ignore_permissions=True
+
+	if quotation:
+		sync_awc_and_quotation(awc_session, quotation)
+
+
+	if "shipping_method" in awc_session:
+		del awc_session["shipping_method"]
+
+	if "shipping_address" in awc_session:
+		del awc_session["shipping_address"]
+
+	if "shipping_rates_list" in awc_session:
+		awc_session["shipping_rates_list"] = []
+
+	if quotation:
+		update_cart_settings(quotation, awc_session)
+		quotation.flags.ignore_permissions = True
+		quotation.save()
+
+		collect_totals(quotation, awc, awc_session)
+	else:
+		collect_totals(None, awc, awc_session)
+
+	set_awc_session(awc_session)
+	frappe.db.commit()
+
 def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 	awc = awc_session.get("cart")
 
-	if not rate_name and not address:
+	# clean up for old test data
+	if "shipping_method" in awc_session and awc_session.get("shipping_method") == None:
+		del awc_session["shipping_method"]
+
+	# if no rate_name provided get last method selected
+	if not rate_name:
 		rate_name = awc_session.get("shipping_method", {}).get("name")
+
+	if rate_name != awc_session.get("shipping_method", {}).get("name"):
+		rate_changed = True
+	else:
+		rate_changed = False
+
+	# rate selection
+	rate = awc_session.get("shipping_rates", {}).get(rate_name, None)
+
+	# if no address provided get last provided address
+	if not address:
 		address = awc_session.get("shipping_address")
 
-	if address:
+	if address and awc_session.get("shipping_address") and \
+		len(address.items()) > 0 and len(awc_session["shipping_address"].items()) > 0:
+
+		address_field_equal = reduce((lambda x, y: x and y), [ \
+			address.get(k, None) == v \
+			for k,v in awc_session.get("shipping_address", {}).items() \
+		])
+	else:
+		address_field_equal = False
+
+	address_changed = len(address.items()) != len(awc_session.get("shipping_address", {})) or not address_field_equal
+
+	if address and address_changed:
 		awc_session["shipping_rates_list"] = update_shipping_rate(address, awc_session)
 
-	rate = awc_session.get("shipping_rates", {}).get(rate_name, None)
-	if not rate and awc_session.get("shipping_method"):
-		rate = awc_session["shipping_method"]
-
+	# if we have no selection but we have shipping rates, pick first option
 	if not rate and len(awc_session.get("shipping_rates_list", [])) > 0:
 		rate = awc_session["shipping_rates_list"][0]
 
-	if rate:
+	# if no rates available, then reset shipping method
+	if rate and len(awc_session.get("shipping_rates_list", [])) > 0:
 		awc_session["shipping_method"] = rate
-
+	else:
+		del awc_session["shipping_method"]
 
 	shipping_address_name = None
 
@@ -834,7 +903,7 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 		collect_totals(None, awc, awc_session)
 
 	if save:
-		log("Saving session:\n{0}", pretty_json(awc_session))
+		#log("Saving session:\n{0}", pretty_json(awc_session))
 		set_awc_session(awc_session)
 
 	return {
@@ -876,7 +945,7 @@ def cart(data=None, action=None):
 	if quotation:
 		sync_awc_and_quotation(awc_session, quotation)
 
-	log(pretty_json(awc))
+	#log(pretty_json(awc))
 
 	if not action:
 		return { "data": awc, "success": True}
@@ -1055,18 +1124,18 @@ def cart(data=None, action=None):
 			quotation.flags.ignore_permissions = True
 			quotation.save()
 
-			log("Quotation after add to cart: \n{0}", pretty_json(quotation.as_dict()))
+			#log("Quotation after add to cart: \n{0}", pretty_json(quotation.as_dict()))
 
 			frappe.db.commit()
 
 			collect_totals(quotation, awc, awc_session)
-			log("Quotation after collecting totals: \n{0}", pretty_json(quotation.as_dict()))
+			#log("Quotation after collecting totals: \n{0}", pretty_json(quotation.as_dict()))
 		else:
 			collect_totals(None, awc, awc_session)
 
 		set_awc_session(awc_session)
 
-		log("Awc session after add to cart: \n{0}", pretty_json(awc_session))
+		#log("Awc session after add to cart: \n{0}", pretty_json(awc_session))
 
 		return { "success": True, "data": data, "totals": awc.get("totals") }
 
