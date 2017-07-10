@@ -331,7 +331,7 @@ awc_checkout = {
 							</div>\
 						</div>";
                     div.innerHTML = str;
-                    if ($('#billing-addrs #same-as-ship-addr.addr')) {
+                    if (!$('#billing-addrs #same-as-ship-addr.addr.selected')) {
                         $('#billing-addrs #same-as-ship-addr.addr').parent().remove();
                     }
                     $('#billing-addrs div.row').prepend(div);
