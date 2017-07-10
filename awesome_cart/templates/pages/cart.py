@@ -30,7 +30,7 @@ def get_context(context):
 
 	if frappe.session.user != "Guest":
 		context["addresses"] = frappe.get_all("Address", filters={"customer" : get_current_customer().name, "disabled": False}, fields="*")
-	
+
 	country_idx = context["countries"].index(default_country_doc)
 	context["countries"].pop(country_idx)
 	context["countries"] = [default_country_doc] + context["countries"]
@@ -44,6 +44,7 @@ def get_context(context):
 	context.is_logged = awc.is_logged_in()
 	login.apply_context(context)
 
+
 	if context.is_logged:
 		# load gateway provider into context
 		gateway_provider = frappe.get_hooks('awc_gateway_form_provider')
@@ -53,5 +54,7 @@ def get_context(context):
 				address_same_as_label="Same as Shipping Address",
 				address_same_as_source="#awc-shipping-form"
 			))
+
+	awc.reset_shipping()
 
 	return context

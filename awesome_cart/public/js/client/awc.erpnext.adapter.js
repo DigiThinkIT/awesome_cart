@@ -386,6 +386,7 @@ var AwcShippingProvider = Class.extend({
             address_data.state = $('#shipping-addrs .selected span#state').text();
             address_data.pincode = $('#shipping-addrs .selected span#postal_code').text();
             address_data.country = $('#shipping-addrs .selected span#country').text();
+						address_data.is_residential = $('#shipping-addrs div.selected').attr('data-is-residential');
             address_data.address_type = $('#shipping-addrs div.selected').attr('data-address-type');
         }
 
