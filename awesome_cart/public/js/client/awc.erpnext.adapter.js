@@ -566,6 +566,41 @@ $(function() {
     $popup.fadeOut('fast');
   })
 
+	frappe.call({
+		method: "awesome_cart.power.get_power_user_settings",
+		args: {},
+		callback: function(data) {
+			if ( data.message == "Power User" ) {
+				// if not selected a customer yet and we have more than one customer
+				if ( !data.selected_customer && data.customers && data.customers.length > 1 ) {
+					cart.template("Power User - Customer Select Window")
+						.promiseReady()
+						.then(function(tpl) {
+							var $cwindow = $(tpl.beginRender({ customers: data.customers}));
+							$('body').append($cwindow);
+							tpl.endRender();
+
+							$cwindow.find('.item').click(function() {
+								var customer_name = $(this).attr("data-customer-name");
+								frappe.call({
+									method: "awesome_cart.power.set_cart_customer",
+									args: {
+										customer_name: customer_name
+									},
+									freeze: 1,
+									callback: function() {
+										window.location.reload();
+									}
+								});
+							});
+
+						});
+				}
+			}
+		}});
+
+
+
   cart.on('add-to-cart-completed', function() {
     $popup.fadeIn('fast');
   })

@@ -1,0 +1,10 @@
+<div class="overlay" id="customer-select-window">
+  <div class="window">
+		<h1>Select Customer to Place Orders Under</h1>
+    <ul>
+      {{#customers}}
+        <li><div class="item" data-customer-name="{{customer_name}}">{{#if this.image}}<img src="{{image}}"/>{{/if}}{{this.label}}</div></li>
+      {{/customers}}
+    </ul>
+  </div>
+</div>

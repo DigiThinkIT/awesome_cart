@@ -417,3 +417,48 @@
 .awc-form .actions {
 	margin-top: 2em;
 }
+
+#customer-select-window {
+	position: fixed;
+	background: rgba(0,0,0,.3);
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 99999;
+}
+
+#customer-select-window .window {
+	position: absolute;
+	width: 300px;
+	max-height: 400px;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	padding: .8em;
+	overflow: auto;
+	background: #e8e8e8;
+	color: #000;
+}
+
+#customer-select-window .window ul {
+	display: block;
+	padding: 0;
+	margin: 0;
+}
+
+#customer-select-window .window li {
+	display: block;
+	list-style: none;
+	padding: 0;
+	margin: 2px;
+}
+
+#customer-select-window .window li .item img {
+	height: 2em;
+}
+
+#customer-select-window .window li .item:hover {
+	background: #333;
+	color: #fff;
+}
