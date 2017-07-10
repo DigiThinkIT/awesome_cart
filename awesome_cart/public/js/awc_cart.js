@@ -260,6 +260,7 @@ awc_checkout = {
             })
 
         $('#form-bill-addr .btn-nextbtn').click(function() {
+            if ($('#form-bill-addr .btn-nextbtn').text() == 'Next') {
             if (billform.phone == true && billform.address_1 == true && billform.city == true && billform.pincode == true && billform.country == true) {
                 awc_checkout.showPage('#checkout-confirmation');
                 $('#ship-form-err-msg').remove();
@@ -267,53 +268,111 @@ awc_checkout = {
                 $('#ship-form-err-msg').remove();
                 $(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
             }
-        })
+            } else if ($('#form-bill-addr .btn-nextbtn').text() == 'Save') {
+                var address = {
+                    address_name: $('#gateway-selector-billing-form.awc-form').attr('data-name'),
+                    address_phone: $('#billing_phone').val(),
+                    address_line1: $('#billing_line1').val(),
+                    address_line2: $('#billing_line2').val(),
+                    address_city: $('#billing_city').val(),
+                    address_state: $('#billing_state').val(),
+                    address_zip: $('#billing_pincode').val(),
+                    address_country: $('#billing_country').val()  
+                };
+                $('#billing-addrs .edited span#phone').text($('#billing_phone').val());
+                $('#billing-addrs .edited span#line1').text($('#billing_line1').val());
+                $('#billing-addrs .edited span#line2').text($('#billing_line2').val());
+                $('#billing-addrs .edited span#city').text($('#billing_city').val());
+                $('#billing-addrs .edited span#state').text($('#billing_state').val());
+                $('#billing-addrs .edited span#postal_code').text($('#billing_pincode').val());
+                $('#billing-addrs .edited span#country').text($('#billing_country').val());
+                $('#billing-addrs .addr .edited').removeClass('edited');
+                $('#form-bill-addr .btn-nextbtn').text('Next');
+                frappe.call({
+                    method: "awesome_cart.utils.edit_address",
+                    args: { address: address }
+                });
+                $('#select-bill-addr').css('display', 'block');
+                $('#form-bill-addr').css('display', 'none');
+                $('#form-bill-addr.awc-form').removeAttr('data-name');
+            }
+            
+        });
 
         $('#awc-shipping-form .btn-nextbtn').click(function() {
-            if (shipform.phone == true && shipform.address_1 == true && shipform.city == true && shipform.pincode == true && shipform.country == true) {
-                //adding newly entered shipping address on billing address tab in awc
-                var div = document.createElement('div');
-                div.setAttribute('class', 'col-md-12 col-sm-12');
-                div.setAttribute('style', 'padding:0');
-                var line2str, statestr;
-                if ($('#awc_ship__line2').val()) {
-                    line2str = "<span id='line2'>" + $('#awc_ship__line2').val() + "</span>,";
-                } else {
-                    line2str = "";
-                }
-                if ($('#awc_ship__state').val()) {
-                    statestr = "<span id='stste'>" + $('#awc_ship__state').val() + "</span>,";
-                } else {
-                    statestr = "";
-                }
-                str = "<div class='well'>\
-                      <div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
-                          <p>\
-                              <span id='line1'>" + $('#awc_ship__line1').val() + "</span>,\
-                  " + line2str + "\
-                              <span id='city'>" + $('#awc_ship__city').val() + "</span>,\
-                              " + statestr + "\
-                              <span id='country'>" + $('#awc_ship__country').val() + "</span>,\
-                              <span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>\
-                              <span id='phone'>" + $('#awc_ship__phone').val() + "</span>\
-                          </p>\
-                      </div>\
-                  </div>";
-                div.innerHTML = str;
-                $('#billing-addrs div.row').prepend(div);
-                $('#billing-addrs #same-as-ship-addr.addr').click(function(e) {
-                    e.stopPropagation();
-                    $('#billing-addrs .selected').removeClass('selected');
-                    $(this).addClass('selected');
-                    awc_checkout.showPage('#checkout-confirmation');
-                })
+            if ($('#awc-shipping-form .btn-nextbtn').text() == 'Next') {
+                if (shipform.phone == true && shipform.address_1 == true && shipform.city == true && shipform.pincode == true && shipform.country == true) {
+                    //adding newly entered shipping address on billing address tab in awc
+                    var div = document.createElement('div');
+                    div.setAttribute('class', 'col-md-12 col-sm-12');
+                    div.setAttribute('style', 'padding:0');
+                    var line2str, statestr;
+                    if ($('#awc_ship__line2').val()) {
+                        line2str = "<span id='line2'>" + $('#awc_ship__line2').val() + "</span>,";
+                    } else {
+                        line2str = "";
+                    }
+                    if ($('#awc_ship__state').val()) {
+                        statestr = "<span id='stste'>" + $('#awc_ship__state').val() + "</span>,";
+                    } else {
+                        statestr = "";
+                    }
+                    str = "<div class='well'>\
+                            <div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
+                                <p>\
+                                    <span id='line1'>" + $('#awc_ship__line1').val() + "</span>,\
+                                    " + line2str + "\
+                                    <span id='city'>" + $('#awc_ship__city').val() + "</span>,\
+                                    " + statestr + "\
+                                    <span id='country'>" + $('#awc_ship__country').val() + "</span>,\
+                                    <span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>\
+                                    <span id='phone'>" + $('#awc_ship__phone').val() + "</span>\
+                                </p>\
+                            </div>\
+                        </div>";
+                    div.innerHTML = str;
+                    $('#billing-addrs div.row').prepend(div);
+                    $('#billing-addrs #same-as-ship-addr.addr').click(function(e) {
+                        e.stopPropagation();
+                        $('#billing-addrs .selected').removeClass('selected');
+                        $(this).addClass('selected');
+                        awc_checkout.showPage('#checkout-confirmation');
+                    })
 
-                awc_checkout.showPage('#checkout-shipping-method');
-                $('#ship-form-err-msg').remove();
+                    awc_checkout.showPage('#checkout-shipping-method');
+                    $('#ship-form-err-msg').remove();
 
-            } else {
-                $('#ship-form-err-msg').remove();
-                $(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
+                } else {
+                    $('#ship-form-err-msg').remove();
+                    $(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
+                }
+            } else if ($('#awc-shipping-form .btn-nextbtn').text() == 'Save') {
+                var address = {
+                    address_name: $('#awc-shipping-form.awc-form').attr('data-name'),
+                    address_type: $('#awc_ship__is_residential').val(),
+                    address_phone: $('#awc_ship__phone').val(),
+                    address_line1: $('#awc_ship__line1').val(),
+                    address_line2: $('#awc_ship__line2').val(),
+                    address_city: $('#awc_ship__city').val(),
+                    address_state: $('#awc_ship__state').val(),
+                    address_zip: $('#awc_ship__zip').val(),
+                    address_country: $('#awc_ship__country').val()
+                };
+                $('#shipping-addrs .edited span#phone').text($('#awc_ship__phone').val());
+                $('#shipping-addrs .edited span#line1').text($('#awc_ship__line1').val());
+                $('#shipping-addrs .edited span#line2').text($('#awc_ship__line2').val());
+                $('#shipping-addrs .edited span#city').text($('#awc_ship__city').val());
+                $('#shipping-addrs .edited span#state').text($('#awc_ship__state').val());
+                $('#shipping-addrs .edited span#postal_code').text($('#awc_ship__zip').val());
+                $('#shipping-addrs .edited span#country').text($('#awc_ship__country').val());
+                $('#shipping-addrs .addr .edited').removeClass('edited');
+                $('#awc-shipping-form .btn-nextbtn').text('Next');
+                frappe.call({
+                    method: "awesome_cart.utils.edit_address",
+                    args: { address: address }
+                });
+                awc_checkout.showPage('#checkout-shipping-address');
+                $('#awc-shipping-form.awc-form').removeAttr('data-name');
             }
         })
 
@@ -324,7 +383,43 @@ awc_checkout = {
                 args: { "address_name": $(this).closest('div').attr('data-name') }
             });
             $(this).closest('div.address-item').remove();
+            $('#billing-addrs .addresses-container div.addr[data-name='+$(this).closest('div').attr('data-name')+']').parent().remove();
         });
+
+        $('.addresses-container .edit').click(function(e) {
+            if ($(this).attr('data-type') == "ship") {
+                e.stopPropagation();
+                $('#awc-shipping-form.awc-form').attr('data-name', $(this).closest('div').attr('data-name'));
+                $('#awc_ship__phone').val($(this).siblings('span#phone').text());
+                $('#awc_ship__line1').val($(this).siblings('span#line1').text());
+                $('#awc_ship__line2').val($(this).siblings('span#line2').text());
+                $('#awc_ship__city').val($(this).siblings('span#city').text());
+                $('#awc_ship__state').val($(this).siblings('span#state').text());
+                $('#awc_ship__zip').val($(this).siblings('span#postal_code').text());
+                $('#awc_ship__country').val($(this).siblings('span#country').text());
+                $(this).closest('div').addClass('edited');
+                $('#awc-shipping-form .btn-nextbtn').text('Save');
+                $('#checkout-shipping .field.required').removeClass('required');
+                awc_checkout.showPage('#checkout-shipping');
+            } else if ($(this).attr('data-type') == "bill") {
+                e.stopPropagation();
+                $('#gateway-selector-billing-form.awc-form').attr('data-name', $(this).closest('div').attr('data-name'));
+                $('#billing_phone').val($(this).siblings('span#phone').text());            
+                $('#billing_line1').val($(this).siblings('span#line1').text());            
+                $('#billing_line2').val($(this).siblings('span#line2').text());            
+                $('#billing_city').val($(this).siblings('span#city').text());            
+                $('#billing_state').val($(this).siblings('span#state').text());            
+                $('#billing_pincode').val($(this).siblings('span#postal_code').text());            
+                $('#billing_country').val($(this).siblings('span#country').text());            
+                $(this).closest('div').addClass('edited');
+                $('#form-bill-addr .btn-nextbtn').text('Save');
+                $('#form-bill-addr .field.required').removeClass('required');
+                $('#select-bill-addr').css('display', 'none');
+                $('#form-bill-addr').css('display', 'block');
+                
+            }
+        });
+
 
 
         cart.on('init', onCartChanges);
