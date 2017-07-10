@@ -34,7 +34,7 @@ awc_checkout = {
         // find shipping total
         $.each(totals.other, function(i, t) {
             $('#checkout-confirm-totals .other-totals').append($(
-                '<div class="other"><span class="method">' + t.label + ':</span><span class="value">' + art.storeAdapter.formatCurrency(t.value) + '</span></div>'
+                '<div class="other"><span class="method">' + t.label + ':</span><span class="value">' + cart.storeAdapter.formatCurrency(t.value) + '</span></div>'
             ));
         });
 
@@ -318,18 +318,18 @@ awc_checkout = {
                         statestr = "";
                     }
                     str = "<div class='well'>\
-                            <div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
-                                <p>\
-                                    <span id='line1'>" + $('#awc_ship__line1').val() + "</span>,\
-                                    " + line2str + "\
-                                    <span id='city'>" + $('#awc_ship__city').val() + "</span>,\
-                                    " + statestr + "\
-                                    <span id='country'>" + $('#awc_ship__country').val() + "</span>,\
-                                    <span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>\
-                                    <span id='phone'>" + $('#awc_ship__phone').val() + "</span>\
-                                </p>\
-                            </div>\
-                        </div>";
+							<div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
+								<p>\
+									<span id='line1'>" + $('#awc_ship__line1').val() + "</span>,\
+									" + line2str + "\
+									<span id='city'>" + $('#awc_ship__city').val() + "</span>,\
+									" + statestr + "\
+									<span id='country'>" + $('#awc_ship__country').val() + "</span>,\
+									<span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>\
+									<span id='phone'>" + $('#awc_ship__phone').val() + "</span>\
+								</p>\
+							</div>\
+						</div>";
                     div.innerHTML = str;
                     $('#billing-addrs div.row').prepend(div);
                     $('#billing-addrs #same-as-ship-addr.addr').click(function(e) {
