@@ -37,6 +37,7 @@ class AWCTransaction(Document):
 					parent=quotation.customer,
 					address_1=self.get("billing_address_1"),
 					address_2=self.get("billing_address_2"),
+					address_type="Billing",
 					city=self.get("billing_city"),
 					state=self.get("billing_state"),
 					pincode=self.get("billing_pincode"),
@@ -50,26 +51,7 @@ class AWCTransaction(Document):
 				)
 
 			# check if we have a shipping address linked
-			if self.get('shipping_address'):
-				quotation.shipping_address_name = self.shipping_address
-			else:
-				# else create one from transaction data
-				quotation.shipping_address_name = create_address(
-					parent_dt="Customer",
-					parent=quotation.customer,
-					address_1=self.get("shipping_address_1"),
-					address_2=self.get("shipping_address_2"),
-					city=self.get("shipping_city"),
-					state=self.get("shipping_state"),
-					pincode=self.get("shipping_pincode"),
-					email=self.get("payer_email"),
-					country=self.get("shipping_country"),
-					address_type=self.get("shipping_type", "Shipping"),
-					phone=self.get("shipping_phone"),
-					title=self.get("shipping_title"),
-					return_name=1,
-					flags={"ignore_permissions": 1}
-				)
+			quotation.shipping_address_name = self.shipping_address
 
 			#if self.get("shipping_method"):
 			#	quotation.append("taxes", {

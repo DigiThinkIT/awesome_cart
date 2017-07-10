@@ -63,7 +63,6 @@ def delete_address(address_name):
 @frappe.whitelist()
 def edit_address(address):
 	address =  json.loads(address)
-	print address
 	add_doc = frappe.get_doc("Address", address.get('address_name'))
 	add_doc.address_type = "Residential" if address.get('address_type') == "Yes" else "Office"
 	add_doc.address_line1 = address.get('address_line1')
@@ -73,5 +72,6 @@ def edit_address(address):
 	add_doc.state = address.get('address_state')
 	add_doc.pincode = address.get('address_zip')
 	add_doc.country = address.get('address_country')
+	add_doc.flags.ignore_permissions=True
 	add_doc.save()
 	frappe.db.commit()
