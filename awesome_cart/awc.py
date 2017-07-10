@@ -9,9 +9,16 @@ from erpnext.stock.get_item_details import apply_price_list_on_item
 from erpnext.shopping_cart.product import get_product_info
 
 from compat.customer import get_current_customer
-from compat.shopping_cart import get_cart_quotation, apply_cart_settings, set_taxes
+from compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotation
 from compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing_rule_for_item
 from .dbug import pretty_json, log
+
+def get_user_quotation(awc_session):
+	party = None
+	if awc_session.get("selected_customer"):
+		party = frappe.get_doc("Customer", awc_session["selected_customer"])
+
+	return get_cart_quotation(party=party)
 
 def find_index(arr, fn):
 	for i, item in enumerate(arr):
@@ -204,12 +211,15 @@ def get_content_sections(awc_item):
 
 	return sections
 
-def _get_cart_quotation():
-	cart_info = get_cart_quotation()
+def _get_cart_quotation(awc_session=None):
+	if not awc_session:
+		awc_session = get_awc_session()
+
+	cart_info = get_user_quotation(awc_session)
 	return cart_info.get('doc')
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
-def get_product_by_sku(sku, detailed=0):
+def get_product_by_sku(sku, detailed=0, awc_session=None):
 	"""Get's product in awcjs format by its sku and optionally detailed data."""
 
 	price_list = None
@@ -847,16 +857,17 @@ def cart(data=None, action=None):
 
 	customer = get_current_customer()
 	quotation = None
+	awc_session = get_awc_session()
 
 	if customer:
-		cart_info = get_cart_quotation()
+		cart_info = get_user_quotation(awc_session)
 		quotation = cart_info.get('doc')
+
 		if len(quotation.items) == 0:
 			apply_cart_settings(quotation=quotation)
 		quotation.flags.ignore_permissions=True
 		quotation.save()
 
-	awc_session = get_awc_session()
 	awc = awc_session.get("cart")
 
 	if not awc:
@@ -1156,13 +1167,14 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	# fetch customer
 	customer = get_current_customer()
 
-	# fetch quotation
-	cart_info = get_cart_quotation()
-	quotation = cart_info.get('doc')
-
 	# fetch awc
 	awc_session = get_awc_session()
 	awc = awc_session.get("cart")
+
+	# fetch current quotation
+	cart_info = get_user_quotation(awc_session)
+	quotation = cart_info.get('doc')
+
 
 	quotation_is_dirty = False
 	# assign instructions to quotation
