@@ -34,7 +34,7 @@ awc_checkout = {
         // find shipping total
         $.each(totals.other, function (i, t) {
           $('#checkout-confirm-totals .other-totals').append($(
-            '<div class="other"><span class="method">'+t.label+':</span><span class="value">'+t.value+'</span></div>'
+            '<div class="other"><span class="method">'+t.label+':</span><span class="value">'+art.storeAdapter.formatCurrency(t.value)+'</span></div>'
           ));
         });
 
