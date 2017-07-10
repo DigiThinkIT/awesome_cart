@@ -21,8 +21,6 @@ awc_checkout = {
             }
         }).bind(awc_checkout, page), 100);
 
-        console.log("Show page: ", page);
-
     },
 
     validate: function() {
