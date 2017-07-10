@@ -37,7 +37,6 @@ class AWCTransaction(Document):
 					parent=quotation.customer,
 					address_1=self.get("billing_address_1"),
 					address_2=self.get("billing_address_2"),
-					address_type="Billing",
 					city=self.get("billing_city"),
 					state=self.get("billing_state"),
 					pincode=self.get("billing_pincode"),
