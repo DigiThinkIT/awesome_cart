@@ -32,10 +32,10 @@ awc_checkout = {
 
         $('#checkout-confirm-totals .other-totals').empty();
         // find shipping total
-        $.each(totals.other, function (i, t) {
-          $('#checkout-confirm-totals .other-totals').append($(
-            '<div class="other"><span class="method">'+t.label+':</span><span class="value">'+art.storeAdapter.formatCurrency(t.value)+'</span></div>'
-          ));
+        $.each(totals.other, function(i, t) {
+            $('#checkout-confirm-totals .other-totals').append($(
+                '<div class="other"><span class="method">' + t.label + ':</span><span class="value">' + art.storeAdapter.formatCurrency(t.value) + '</span></div>'
+            ));
         });
 
         $('#checkout-confirm-totals .sub-total .value').text(cart.storeAdapter.formatCurrency(totals.sub_total));
@@ -261,13 +261,13 @@ awc_checkout = {
 
         $('#form-bill-addr .btn-nextbtn').click(function() {
             if ($('#form-bill-addr .btn-nextbtn').text() == 'Next') {
-            if (billform.phone == true && billform.address_1 == true && billform.city == true && billform.pincode == true && billform.country == true) {
-                awc_checkout.showPage('#checkout-confirmation');
-                $('#ship-form-err-msg').remove();
-            } else {
-                $('#ship-form-err-msg').remove();
-                $(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
-            }
+                if (billform.phone == true && billform.address_1 == true && billform.city == true && billform.pincode == true && billform.country == true) {
+                    awc_checkout.showPage('#checkout-confirmation');
+                    $('#ship-form-err-msg').remove();
+                } else {
+                    $('#ship-form-err-msg').remove();
+                    $(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
+                }
             } else if ($('#form-bill-addr .btn-nextbtn').text() == 'Save') {
                 var address = {
                     address_name: $('#gateway-selector-billing-form.awc-form').attr('data-name'),
@@ -277,7 +277,7 @@ awc_checkout = {
                     address_city: $('#billing_city').val(),
                     address_state: $('#billing_state').val(),
                     address_zip: $('#billing_pincode').val(),
-                    address_country: $('#billing_country').val()  
+                    address_country: $('#billing_country').val()
                 };
                 $('#billing-addrs .edited span#phone').text($('#billing_phone').val());
                 $('#billing-addrs .edited span#line1').text($('#billing_line1').val());
@@ -296,7 +296,7 @@ awc_checkout = {
                 $('#form-bill-addr').css('display', 'none');
                 $('#form-bill-addr.awc-form').removeAttr('data-name');
             }
-            
+
         });
 
         $('#awc-shipping-form .btn-nextbtn').click(function() {
@@ -383,7 +383,7 @@ awc_checkout = {
                 args: { "address_name": $(this).closest('div').attr('data-name') }
             });
             $(this).closest('div.address-item').remove();
-            $('#billing-addrs .addresses-container div.addr[data-name='+$(this).closest('div').attr('data-name')+']').parent().remove();
+            $('#billing-addrs .addresses-container div.addr[data-name=' + $(this).closest('div').attr('data-name') + ']').parent().remove();
         });
 
         $('.addresses-container .edit').click(function(e) {
@@ -397,6 +397,7 @@ awc_checkout = {
                 $('#awc_ship__state').val($(this).siblings('span#state').text());
                 $('#awc_ship__zip').val($(this).siblings('span#postal_code').text());
                 $('#awc_ship__country').val($(this).siblings('span#country').text());
+                $('#awc_ship__is_residential').val($(this).closest('div').attr('data-is-residential'));
                 $(this).closest('div').addClass('edited');
                 $('#awc-shipping-form .btn-nextbtn').text('Save');
                 $('#checkout-shipping .field.required').removeClass('required');
@@ -404,19 +405,19 @@ awc_checkout = {
             } else if ($(this).attr('data-type') == "bill") {
                 e.stopPropagation();
                 $('#gateway-selector-billing-form.awc-form').attr('data-name', $(this).closest('div').attr('data-name'));
-                $('#billing_phone').val($(this).siblings('span#phone').text());            
-                $('#billing_line1').val($(this).siblings('span#line1').text());            
-                $('#billing_line2').val($(this).siblings('span#line2').text());            
-                $('#billing_city').val($(this).siblings('span#city').text());            
-                $('#billing_state').val($(this).siblings('span#state').text());            
-                $('#billing_pincode').val($(this).siblings('span#postal_code').text());            
-                $('#billing_country').val($(this).siblings('span#country').text());            
+                $('#billing_phone').val($(this).siblings('span#phone').text());
+                $('#billing_line1').val($(this).siblings('span#line1').text());
+                $('#billing_line2').val($(this).siblings('span#line2').text());
+                $('#billing_city').val($(this).siblings('span#city').text());
+                $('#billing_state').val($(this).siblings('span#state').text());
+                $('#billing_pincode').val($(this).siblings('span#postal_code').text());
+                $('#billing_country').val($(this).siblings('span#country').text());
                 $(this).closest('div').addClass('edited');
                 $('#form-bill-addr .btn-nextbtn').text('Save');
                 $('#form-bill-addr .field.required').removeClass('required');
                 $('#select-bill-addr').css('display', 'none');
                 $('#form-bill-addr').css('display', 'block');
-                
+
             }
         });
 
