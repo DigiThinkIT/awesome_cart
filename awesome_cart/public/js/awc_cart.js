@@ -350,7 +350,7 @@ awc_checkout = {
             } else if ($('#awc-shipping-form .btn-nextbtn').text() == 'Save') {
                 var address = {
                     address_name: $('#awc-shipping-form.awc-form').attr('data-name'),
-                    address_type: $('#awc_ship__is_residential').val(),
+                    address_is_residential: $('#awc_ship__is_residential').val(),
                     address_phone: $('#awc_ship__phone').val(),
                     address_line1: $('#awc_ship__line1').val(),
                     address_line2: $('#awc_ship__line2').val(),
@@ -366,7 +366,8 @@ awc_checkout = {
                 $('#shipping-addrs .edited span#state').text($('#awc_ship__state').val());
                 $('#shipping-addrs .edited span#postal_code').text($('#awc_ship__zip').val());
                 $('#shipping-addrs .edited span#country').text($('#awc_ship__country').val());
-                $('#shipping-addrs .addr .edited').removeClass('edited');
+                $('#shipping-addrs .addr.edited').attr('data-is-residential', $('#awc_ship__is_residential').val());
+                $('#shipping-addrs .addr.edited').removeClass('edited');
                 $('#awc-shipping-form .btn-nextbtn').text('Next');
                 frappe.call({
                     method: "awesome_cart.utils.edit_address",
