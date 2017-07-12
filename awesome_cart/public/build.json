@@ -6,5 +6,16 @@
 	"css/awc_cart.css": [
 		"public/css/awc_cart.css",
 		"public/css/checkout.css"
+	],
+	"js/credit_gateway_embed.js": [
+		"public/js/credit_gateway/credit_gateway_summary.html",
+		"public/js/credit_gateway/process.js",
+		"public/js/credit_gateway/embed.js"
+	],
+	"css/credit_gateway_embed.css": [
+		"public/css/credit_gateway/embed.css"
+	],
+	"js/credit_gateway_settings.js": [
+		"awesome_cart/doctype/credit_gateway_settings/credit_gateway_settings.js"
 	]
 }

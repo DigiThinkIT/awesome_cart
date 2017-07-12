@@ -21,6 +21,7 @@ fixtures = [
 	}
 ]
 
+integration_services = ["Credit Gateway"]
 #update_website_context = "awesome_cart.utils.update_context"
 web_include_js = [
 	# polyfills for browser compatibility
@@ -37,12 +38,16 @@ web_include_css = [
 app_include_css = [
 	"/assets/css/awc_cart.css"
 ]
+app_include_js = [
+	"/assets/js/credit_gateway_settings.js"
+]
 
 website_route_rules = [
 	{ "from_route": "/cart_success/<path:so_name>", "to_route": "cart_success" },
 	{ "from_route": "/awc_template/<name>", "to_route": "awc_template" },
 	{ "from_route": "/p/<name>", "to_route": "awc_product" },
-	{ "from_route": "/p/<name>/<unique>", "to_route": "awc_product" }
+	{ "from_route": "/p/<name>/<unique>", "to_route": "awc_product" },
+	{ "from_route": "/integrations/credit_gateway_checkout/<name>", "to_route": "integrations/credit_gateway_checkout" }
 ]
 
 # cart context override
