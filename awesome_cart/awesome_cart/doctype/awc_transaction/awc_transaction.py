@@ -23,6 +23,7 @@ LOG_LEVELS = {
 }
 
 class AWCTransaction(Document):
+
 	def on_payment_authorized(self, payment_status):
 		try:
 			quotation = frappe.get_doc("Quotation", self.order_id)
@@ -69,41 +70,52 @@ class AWCTransaction(Document):
 			# create sales order
 			so = convert_quotation_to_sales_order(quotation)
 
-			# then immediately create payment request
-			# no emails should be sent as this is intended for immediate fullfilment
+			if self.flags.get("skip_payment_request", False):
+				so.submit()
+				so.save()
 
-			req_type = frappe.local.response.get("type", None)
-			req_location = frappe.local.response.get("location", None)
+				self.reference_doctype = "Sales Order"
+				self.reference_docname = so.name
+			else:
+				# then immediately create payment request
+				# no emails should be sent as this is intended for immediate fullfilment
 
-			preq = payment_request.make_payment_request(dt="Sales Order", dn=so.name, submit_doc=1, return_doc=1, mute_email=1)
+				req_type = frappe.local.response.get("type", None)
+				req_location = frappe.local.response.get("location", None)
 
-			#############################################################
-			# DIRTY FIX: payment request codebase redirects
-			# shopping cart payment requests. Here we are undoing that.
-			if req_type:
-				frappe.local.response["type"] = req_type
-			elif frappe.local.response.get("type"):
-				frappe.local.response.pop("type")
+				preq = payment_request.make_payment_request(dt="Sales Order", dn=so.name, submit_doc=1, return_doc=1, mute_email=1)
 
-			if req_location:
-				frappe.local.response["location"] = req_location
-			elif frappe.local.response.get("location"):
-				frappe.local.response.pop("location")
-			#############################################################
+				#############################################################
+				# DIRTY FIX: payment request codebase redirects
+				# shopping cart payment requests. Here we are undoing that.
+				if req_type:
+					frappe.local.response["type"] = req_type
+				elif frappe.local.response.get("type"):
+					frappe.local.response.pop("type")
 
-			preq.flags.ignore_permissions=1
-			preq.insert()
+				if req_location:
+					frappe.local.response["location"] = req_location
+				elif frappe.local.response.get("location"):
+					frappe.local.response.pop("location")
+				#############################################################
 
-			# update transaction record to track payment request record
-			self.reference_doctype = "Payment Request"
-			self.reference_docname = preq.name
+				preq.flags.ignore_permissions=1
+				preq.insert()
+
+				# update transaction record to track payment request record
+				self.reference_doctype = "Payment Request"
+				self.reference_docname = preq.name
+
 			self.order_id = so.name
 			self.flags.ignore_permissions = 1
 			self.save()
 
-			# finally let payment request run its own code to finalize transaction
-			# invoice, payment entry docs should be created here
-			result = preq.run_method("on_payment_authorized", payment_status)
+			if not self.flags.get("skip_payment_request", False):
+				# finally let payment request run its own code to finalize transaction
+				# invoice, payment entry docs should be created here
+				result = preq.run_method("on_payment_authorized", payment_status)
+			else:
+				result = None
 
 			#update shipping method in Sales Order
 			if self.get("shipping_method"):
