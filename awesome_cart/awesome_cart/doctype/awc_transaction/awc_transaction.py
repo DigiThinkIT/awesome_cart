@@ -83,7 +83,7 @@ class AWCTransaction(Document):
 				req_type = frappe.local.response.get("type", None)
 				req_location = frappe.local.response.get("location", None)
 
-				preq = payment_request.make_payment_request(dt="Sales Order", dn=so.name, submit_doc=1, return_doc=1, mute_email=1)
+				preq = payment_request.make_payment_request(dt="Sales Order", dn=so.name, submit_doc=1, return_doc=0, mute_email=1)
 
 				#############################################################
 				# DIRTY FIX: payment request codebase redirects
@@ -100,7 +100,10 @@ class AWCTransaction(Document):
 				#############################################################
 
 				preq.flags.ignore_permissions=1
-				preq.insert()
+				#preq.insert()
+
+				if preq.docstatus != 1:
+					preg.submit()
 
 				# update transaction record to track payment request record
 				self.reference_doctype = "Payment Request"
