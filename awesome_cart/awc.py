@@ -55,7 +55,7 @@ def get_price(item_code, price_list=None, qty=1, find_price_list=False):
 	customer = get_current_customer()
 	awc_session = get_awc_session()
 	if awc_session.get("selected_customer"):
-		customer = frappe.get_doc("Custoemr", awc_session.get("selected_customer"))
+		customer = frappe.get_doc("Customer", awc_session.get("selected_customer"))
 
 	if not price_list and find_price_list and is_logged_in():
 		quotation = _get_cart_quotation()
