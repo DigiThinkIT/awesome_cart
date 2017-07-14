@@ -876,7 +876,8 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 	else:
 		address_field_equal = False
 
-	address_changed = len(address.items()) != len(awc_session.get("shipping_address", {})) or not address_field_equal
+	if address:
+		address_changed = len(address.items()) != len(awc_session.get("shipping_address", {})) or not address_field_equal
 
 	if address and address_changed:
 		awc_session["shipping_rates_list"] = update_shipping_rate(address, awc_session)
