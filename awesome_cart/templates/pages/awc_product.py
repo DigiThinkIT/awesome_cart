@@ -6,13 +6,11 @@ from awesome_cart.awc import get_awc_item_by_route
 def get_context(context):
 
 	path_parts = context.get("pathname", "").split('/')
-	print(path_parts)
 	route = path_parts[1]
 	if len(path_parts) > 2:
 		cart_tag = path_parts[2]
 	else:
 		cart_tag = None
-	print(route)
 
 	awc_item, item = get_awc_item_by_route(route)
 
