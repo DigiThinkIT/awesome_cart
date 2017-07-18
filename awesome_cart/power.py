@@ -47,8 +47,16 @@ def get_power_user_settings():
 
 @frappe.whitelist()
 def set_cart_customer(customer_name):
-	awc_session = awc.get_awc_session()
-	awc_session["selected_customer"] = customer_name
-	awc.set_awc_session(awc_session)
+	user_doc = frappe.get_doc("User", frappe.session.user)
 
-	frappe.db.commit()
+	if user_doc.get("is_power_user"):
+
+		awc_session = awc.get_awc_session()
+		awc_session["selected_customer"] = customer_name
+		awc.set_awc_session(awc_session)
+
+		frappe.db.commit()
+
+		return "Success"
+
+	return "You are NOT allowed to order for this customer"
