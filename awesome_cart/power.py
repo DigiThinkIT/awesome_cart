@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 import traceback
 import frappe
 
-import awc
+from .session import get_awc_session, set_awc_session
+from .dbug import pretty_json
 
 def get_user_contacts(user):
 
@@ -26,7 +27,7 @@ def get_power_user_settings():
 	user_doc = frappe.get_doc("User", frappe.session.user)
 
 	if user_doc.get("is_power_user"):
-		awc_session = awc.get_awc_session()
+		awc_session = get_awc_session()
 		contacts = get_user_contacts(frappe.session.user)
 
 		# pickup selected customer if already selceted
@@ -49,11 +50,13 @@ def get_power_user_settings():
 def set_cart_customer(customer_name):
 	user_doc = frappe.get_doc("User", frappe.session.user)
 
-	if user_doc.get("is_power_user"):
+	if user_doc.get("is_power_user") or user_doc.name == "Administrator":
 
-		awc_session = awc.get_awc_session()
+		awc_session = get_awc_session()
 		awc_session["selected_customer"] = customer_name
-		awc.set_awc_session(awc_session)
+		set_awc_session(awc_session)
+
+		print("Switching power user: {0}".format(pretty_json(awc_session)))
 
 		frappe.db.commit()
 
