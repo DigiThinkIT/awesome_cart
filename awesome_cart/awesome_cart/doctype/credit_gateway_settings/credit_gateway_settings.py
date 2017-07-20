@@ -90,9 +90,6 @@ class CreditGatewaySettings(IntegrationService):
 		#return context["total_credit"] > 0
 		customer = get_current_customer()
 
-		print("Credit Gateway, customer: {0}".format(customer.name))
-		print("allow billme, {0}".format(customer.get("allow_billme_later", False)))
-
 		return customer.get("allow_billme_later", False)
 
 	def get_embed_context(self, context):
