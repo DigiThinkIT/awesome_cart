@@ -59,6 +59,7 @@ from frappe import _, _dict
 from frappe.utils import get_url, call_hook_method, cint, flt
 from frappe.integration_broker.doctype.integration_service.integration_service import IntegrationService, get_integration_controller
 from awesome_cart import awc
+from awesome_cart.compat.customer import get_current_customer
 from dti_devtools.debug import log, pretty_json
 
 class CreditGatewaySettings(IntegrationService):
@@ -85,7 +86,14 @@ class CreditGatewaySettings(IntegrationService):
 
 	def is_available(self, context={}):
 		self.get_embed_context(context)
-		return context["total_credit"] > 0
+		# disabled until Eric figures out if JHA wants to check against credit
+		#return context["total_credit"] > 0
+		customer = get_current_customer()
+
+		print("Credit Gateway, customer: {0}".format(customer.name))
+		print("allow billme, {0}".format(customer.get("allow_billme_later", False)))
+
+		return customer.get("allow_billme_later", False)
 
 	def get_embed_context(self, context):
 		awc_session = awc.get_awc_session()

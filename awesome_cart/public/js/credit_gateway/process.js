@@ -76,18 +76,23 @@ frappe.integration_service.credit_gateway_gateway = Class.extend({
 		var error = {};
 		var address = {};
 
+		/* disable momentarily until Eric figures out if JHA wants to enable
+		 * checks on credit
+
 		this.$total_credit.text('$'+this.total_credit.toFixed(2));
 		this.$total_unpaid.text((this.total_unpaid>0?'-':'')+'$'+this.total_unpaid.toFixed(2));
 		this.$order_total.text('$'+this.order_total.toFixed(2));
 		this.$available_credit.text('$'+this.available_credit.toFixed(2));
+		*/
 
 		$('#credit-gateway-form .error').fadeOut('fast');
 
+		/*
 		if ( this.available_credit < this.order_total ) {
 			$('#credit-gateway-form .feedback-not-enough-credit').fadeIn('fast');
 			valid = false;
 			error["credit"] = "Not Enough Credit Available";
-		}
+		}*/
 
 		if ( this.process_data.billing_info ) {
 			if ( !this.process_data.billing_info.address_1 ) {
