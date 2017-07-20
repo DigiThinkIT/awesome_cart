@@ -136,6 +136,11 @@ def get_awc_item_custom_data(name):
 	for custom in awc_item.get("custom_data"):
 		custom_data[custom.key] = custom.value
 
+	hooks = frappe.get_hooks("awc_item_custom_data") or []
+	if hooks:
+		for method in hooks:
+			result = frappe.call(method, custom_data)
+
 	return custom_data
 
 def build_awc_options_from_varients(item):
@@ -466,65 +471,6 @@ def collect_totals(quotation, awc, awc_session):
 
 		awc["totals"]["grand_total"] = awc["totals"]["sub_total"] + awc["totals"].get("shipping_total", 0)
 
-# def get_awc_session():
-# 	# get session id from request
-# 	sid = frappe.local.session.get("awc_sid", frappe.local.request.cookies.get("awc_sid"))
-# 	if sid:
-# 		awc_sid = "awc_session_{0}".format(sid)
-# 	awc_session = None
-#
-# 	pretty_json(awc_session)
-#
-# 	# lets make sure IPs match before applying this sid
-# 	if sid != None:
-# 		awc_session = frappe.cache().get_value(awc_sid)
-# 		if awc_session:
-# 			if awc_session.get("session_ip") != frappe.local.request_ip:
-# 				# IP do not match... force build session from scratch
-# 				sid = None
-# 				awc_sid = None
-# 				awc_session = None
-#
-# 	if awc_session is None:
-# 		if not sid:
-# 			sid = random_string(64)
-# 			awc_sid = "awc_session_{0}".format(sid)
-#
-# 		awc_session = {
-# 			"session_ip": frappe.local.request_ip,
-# 			"cart": { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
-# 		}
-#
-# 		frappe.cache().set_value(awc_sid, awc_session)
-# 	else:
-# 		# update old session structures
-# 		if not awc_session.get("cart"):
-# 			awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
-#
-# 		if not awc_session["cart"].get("totals"):
-# 			awc_session["cart"]["totals"] = { "sub_total": 0, "grand_total": 0, "other": [] }
-#
-# 		if not awc_session["cart"]["totals"].get("other"):
-# 			awc_session["cart"]["totals"]["other"] = []
-#
-# 	frappe.local.session["awc_sid"] = sid
-# 	frappe.local.cookie_manager.set_cookie("awc_sid", frappe.local.session["awc_sid"] )
-#
-# 	return awc_session
-#
-# def set_awc_session(session):
-# 	awc_session = get_awc_session()
-# 	frappe.cache().set_value("awc_session_{0}".format(frappe.local.session["awc_sid"]), session)
-# 	return session
-#
-# def clear_awc_session():
-# 	awc_session = get_awc_session()
-# 	del awc_session["shipping_method"]
-# 	del awc_session["shipping_rates"]
-# 	del awc_session["shipping_rates_list"]
-# 	awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
-# 	return set_awc_session(awc_session)
-
 def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False):
 	# convert quotation to awc object
 	# and merge items in the case where items are added before logging in.
@@ -705,6 +651,16 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False):
 		idx = quotation.items.index(item)
 		del quotation.items[idx]
 		quotation_is_dirty = True
+
+	hooks = frappe.get_hooks("awc_sync_with_quotation") or []
+	if hooks:
+		for awc_item in awc["items"]:
+			quotation_item = None
+			if awc_item.get("id"):
+				quotation_item = next((itm for itm in quotation.get("items", []) if itm.get("name") == awc_item.get("id")), None)
+
+			for method in hooks:
+				frappe.call(method, awc_item=awc_item, quotation_item=quotation_item, quotation=quotation, awc_session=awc_session)
 
 
 	if quotation_is_dirty:

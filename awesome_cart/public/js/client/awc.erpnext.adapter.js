@@ -386,7 +386,7 @@ var AwcShippingProvider = Class.extend({
             address_data.state = $('#shipping-addrs .selected span#state').text();
             address_data.pincode = $('#shipping-addrs .selected span#postal_code').text();
             address_data.country = $('#shipping-addrs .selected span#country').text();
-						address_data.is_residential = $('#shipping-addrs div.selected').attr('data-is-residential');
+            address_data.is_residential = $('#shipping-addrs div.selected').attr('data-is-residential');
             address_data.address_type = $('#shipping-addrs div.selected').attr('data-address-type');
         }
 
@@ -521,14 +521,14 @@ var cart = new awc.AwesomeCart({
 
 cart.scan_forms = function() {
 
-		function toTitleCase(str)
-		{
-			if ( str ) {
-		    return str.replace(/\b\w+/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-			}
+    function toTitleCase(str)
+    {
+      if ( str ) {
+        return str.replace(/\b\w+/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+      }
 
-			return str;
-		}
+      return str;
+    }
 
     // handle smart placeholder labels
     $('.awc-form .field').not('.awc-form-bound').each(function() {
@@ -539,10 +539,10 @@ cart.scan_forms = function() {
         $input
             .change(function() {
                 var is_select = $(this).is('select');
-								if ( $(this).has('[data-auto-titlecase]') ) {
-									$(this).val(toTitleCase($(this).val()))
-								}
-								var value = is_select ? $(this).find(':selected').attr('value') : $(this).val();
+                if ( $(this).has('[data-auto-titlecase]') ) {
+                  $(this).val(toTitleCase($(this).val()))
+                }
+                var value = is_select ? $(this).find(':selected').attr('value') : $(this).val();
 
                 if (value) {
                     $field.addClass('hasvalue');
@@ -559,9 +559,9 @@ cart.scan_forms = function() {
             })
             .blur(function() {
                 $field.removeClass('focus');
-								if ( $(this).has('[data-auto-titlecase]') ) {
-									$(this).val(toTitleCase($(this).val()))
-								}
+                if ( $(this).has('[data-auto-titlecase]') ) {
+                  $(this).val(toTitleCase($(this).val()))
+                }
             })
             .focus(function() {
                 $field.addClass('focus');

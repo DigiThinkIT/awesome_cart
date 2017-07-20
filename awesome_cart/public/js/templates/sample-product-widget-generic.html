@@ -30,7 +30,7 @@
         {{/each}}
       {{/if}}
 
-      {{#if (or custom.display_engrave_on_case custom.display_special_instructions) }}
+      {{#if (or (or custom.display_engrave_on_case custom.display_special_instructions) custom.requires_iem_owner) }}
 				<div class="custom-fields awc-form">
     			{{#if custom.display_engrave_on_case}}
           <div class="row no-gutter">
@@ -38,6 +38,70 @@
 							<div class="field {{#if custom.require_engrave_on_case}}required{{/if}}">
 								<label for="product-engrave-on-case">{{custom.display_engrave_on_case}}</label>
 								<input id="product-engrave-on-case" {{#if custom.require_engrave_on_case}}data-awc-required="yes"{{/if}} data-awc-custom-field="designer_name_on_case" placeholder="{{custom.display_engrave_on_case}}"/>
+							</div>
+						</div>
+					</div>
+					{{/if}}
+					{{#if custom.requires_iem_owner}}
+					 <div class="personalization-form">
+						<div class="row no-gutter">
+							<div class="col-sm-12">
+								<h3>Person wearing these</h3>
+							</div>
+						</div>
+						{{#if custom.impression_contacts}}
+						<div class="row no-gutter">
+							<div class="col-sm-12">
+								<div class="field">
+									<label form="impression_id">Person wearing these</label>
+									<select id="impression_id"
+										name="impression_id"
+										data-awc-required="yes"
+										data-awc-custom-field="impression_id"
+										placeholder="Persone wearing these">
+										<option value="" selected>New Contact</option>
+										{{#with custom}}
+											{{#impression_contacts}}
+										<option value="{{name}}"
+											data-first-name="{{first_name}}"
+											data-last-name="{{last_name}}"
+											data-email="{{email_id}}"
+											data-impression-id="{{impression_id}}">{{label}}</option>
+											{{/impression_contacts}}
+										{{/with}}
+									</select>
+									<span class="select-arrow glyphicon glyphicon-triangle-bottom"></span>
+								</div>
+							</div>
+						</div>
+						{{jsinclude "/assets/jhaudio3d/js/iem_owner_form.js"}}
+						{{/if}}
+						<div class="row no-gutter">
+							<div class="col-sm-6">
+								<div class="field required">
+									<label for="owner_name">First Name</label>
+									<input id="owner_name" name="owner_first_name" data-auto-titlecase data-awc-required="yes" data-awc-custom-field="designer_owner_first_name" placeholder="First Name"/>
+								</div>
+							</div>
+							<div class="col-sm-6">
+								<div class="field required">
+									<label for="owner_name">Last Name</label>
+									<input id="owner_name" name="owner_last_name" data-auto-titlecase data-awc-required="yes" data-awc-custom-field="designer_owner_last_name" placeholder="Last Name"/>
+								</div>
+							</div>
+						</div>
+						<div class="row no-gutter">
+							<div class="col-sm-6">
+								<div class="field">
+									<label for="band_name">Band Name (if applicable)</label>
+									<input id="band_name" name="band_name" data-awc-custom-field="designer_band_name" placeholder="Band Name (if applicable)"/>
+								</div>
+							</div>
+							<div class="col-sm-6">
+								<div class="field required">
+									<label for="owner_email">Email Address</label>
+									<input id="owner_email" name="owner_email" data-awc-required="yes" data-awc-custom-field="designer_owner_email" placeholder="Email Address"/>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -69,8 +133,8 @@
           </div>
           <a data-awc-addtocart
              data-awc-qty-from="#product-qty"
-					{{#if (or custom.display_engrave_on_case custom.display_special_instructions) }}
-						 data-awc-custom-fields="{{#if custom.display_engrave_on_case}}#product-engrave-on-case{{/if}}{{#if custom.display_engrave_on_case}},#product-instructions{{/if}}"
+					{{#if (or (or custom.display_engrave_on_case custom.display_special_instructions) custom.requires_iem_owner) }}
+						 data-awc-custom-fields=".custom-fields"
 					{{/if}}
           {{#if options.variants}}
 					   data-awc-price-selector="#price_label"
