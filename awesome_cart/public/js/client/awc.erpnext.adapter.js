@@ -539,7 +539,7 @@ cart.scan_forms = function() {
         $input
             .change(function() {
                 var is_select = $(this).is('select');
-                if ( $(this).has('[data-auto-titlecase]') ) {
+                if ( $(this).is('[data-auto-titlecase]') ) {
                   $(this).val(toTitleCase($(this).val()))
                 }
                 var value = is_select ? $(this).find(':selected').attr('value') : $(this).val();
@@ -559,7 +559,7 @@ cart.scan_forms = function() {
             })
             .blur(function() {
                 $field.removeClass('focus');
-                if ( $(this).has('[data-auto-titlecase]') ) {
+                if ( $(this).is('[data-auto-titlecase]') ) {
                   $(this).val(toTitleCase($(this).val()))
                 }
             })
