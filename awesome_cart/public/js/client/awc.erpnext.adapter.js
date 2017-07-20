@@ -520,6 +520,16 @@ var cart = new awc.AwesomeCart({
 });
 
 cart.scan_forms = function() {
+
+		function toTitleCase(str)
+		{
+			if ( str ) {
+		    return str.replace(/\b\w+/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+			}
+
+			return str;
+		}
+
     // handle smart placeholder labels
     $('.awc-form .field').not('.awc-form-bound').each(function() {
         var $field = $(this);
@@ -529,7 +539,10 @@ cart.scan_forms = function() {
         $input
             .change(function() {
                 var is_select = $(this).is('select');
-                var value = is_select ? $(this).find(':selected').attr('value') : $(this).val();
+								if ( $(this).has('[data-auto-titlecase]') ) {
+									$(this).val(toTitleCase($(this).val()))
+								}
+								var value = is_select ? $(this).find(':selected').attr('value') : $(this).val();
 
                 if (value) {
                     $field.addClass('hasvalue');
@@ -546,6 +559,9 @@ cart.scan_forms = function() {
             })
             .blur(function() {
                 $field.removeClass('focus');
+								if ( $(this).has('[data-auto-titlecase]') ) {
+									$(this).val(toTitleCase($(this).val()))
+								}
             })
             .focus(function() {
                 $field.addClass('focus');
