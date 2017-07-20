@@ -2,12 +2,14 @@
 <div class="row">
 	<div class="col-sm-12 credit_gateway-summary bill-me label">To Be Billed Later</div>
 </div>
+  <!--
   <div class="row">
 		<div class="col-sm-6 credit_gateway-summary available-credit label">Available Credit</div>
     <div class="col-sm-6 credit_gateway-summary available-credit value {%= available_credit >= order_total?"":"error" %}">
 			{% if ( !available_credit ) { %}Missing{% } else { %}{%= available_credit.toFixed(2) %}{% } %}
 		</div>
   </div>
+  -->
   {% if ( billing_info ) { %}
   <div class="row">
     <address class="col-sm-12">
