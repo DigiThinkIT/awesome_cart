@@ -10,6 +10,7 @@ from erpnext.shopping_cart.cart import get_cart_quotation
 from awesome_cart import awc
 from awesome_cart.compat.frappe import login_context
 from awesome_cart.compat.customer import get_current_customer
+from awesome_cart.session import get_awc_session
 
 from widgets_collection import login
 
@@ -22,6 +23,7 @@ def get_context(context):
 	context["no_cache"] = 1
 
 	settings = frappe.db.get("Awc Settings")
+	awc_session = get_awc_session()
 
 	context["countries"] = [ x for x in frappe.get_list("Country", fields=["country_name", "name"], ignore_permissions=1) ]
 
@@ -36,6 +38,7 @@ def get_context(context):
 	context["countries"] = [default_country_doc] + context["countries"]
 
 	context["shipping_rate_api"] = frappe.get_hooks("shipping_rate_api")[0]
+	context["selected_customer"] = awc_session.get("selected_customer")
 
 	# remove? shipping is essential here anyways
 	context.shipping_enabled = 1 if settings.awc_shipping_enabled else 0

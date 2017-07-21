@@ -26,12 +26,17 @@ def get_power_user_settings():
 
 	user_doc = frappe.get_doc("User", frappe.session.user)
 
-	if user_doc.get("is_power_user"):
+	if user_doc.get("is_power_user") or frappe.session.user == "Administrator":
 		awc_session = get_awc_session()
 		contacts = get_user_contacts(frappe.session.user)
 
 		# pickup selected customer if already selceted
 		frappe.local.response["selected_customer"] = awc_session.get("selected_customer")
+
+		if frappe.local.response["selected_customer"]:
+			frappe.local.response["selected_customer_image"] = frappe.get_value("Customer", awc_session.get("selected_customer"), "image")
+		else:
+			frappe.local.response["selected_customer_image"] = None
 
 		# list all customers this user may make purchases for
 		frappe.local.response["customers"] = [{
