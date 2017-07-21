@@ -124,6 +124,14 @@ class AWCTransaction(Document):
 			if self.get("shipping_method"):
 				frappe.db.set_value("Sales Order", self.order_id, "fedex_shipping_method", self.get("shipping_method"))
 
+			if self.get("gateway_service"):
+				if self.get("gateway_service") != "credit_gateway":
+					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Payment Pending")
+				else:
+					frappe.db.set_value("Sales Order", self.order_id, "payment_method", self.get("gateway_service"))
+					frappe.db.set_value("Sales Order", self.order_id, "authorize_production", 1)
+					frappe.db.set_value("Sales Order", self.order_id, "authorize_delivery", 1)				
+
 			# override redirection to orders page
 			if result:
 				result = '/iems#filter=custom'
