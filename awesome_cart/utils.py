@@ -9,6 +9,8 @@ import traceback
 from frappe import _
 from frappe.utils import random_string
 
+from .session import clear_awc_session
+
 from .dbug import pretty_json
 
 
@@ -23,6 +25,9 @@ def on_session_creation(login_manager):
 
 
 def on_logout(login_manager):
+
+	clear_awc_session()
+
 	# destroys cart session on logout
 	sid = frappe.local.session.get(
 		"awc_sid", frappe.local.request.cookies.get("awc_sid"))
@@ -64,7 +69,7 @@ def delete_address(address_name):
 def edit_address(address):
 	address =  json.loads(address)
 	add_doc = frappe.get_doc("Address", address.get('address_name'))
-	add_doc.is_residential = address.get('address_is_residential') 
+	add_doc.is_residential = address.get('address_is_residential')
 	add_doc.address_line1 = address.get('address_line1')
 	add_doc.address_line2 = address.get('address_line2')
 	add_doc.phone = address.get('address_phone')

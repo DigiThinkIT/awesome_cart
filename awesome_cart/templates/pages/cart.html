@@ -92,7 +92,11 @@
 						</div>
 
 						<div class="confirm-box dti-form" id="checkout-confirm-totals">
+							{% if selected_customer %}
+							<h4 class="selected-customer"><span>Totals For:</span><span class="value">{{ selected_customer }}</span></h4>
+							{% else %}
 							<h4>Your Totals:</h4>
+							{% endif %}
 							<div class="content">
 								<div class="sub-total">Subtotal: <span class="value"></span></div>
 								<div class="other-totals">

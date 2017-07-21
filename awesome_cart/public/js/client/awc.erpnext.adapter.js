@@ -590,31 +590,60 @@ $(function() {
         args: {},
         callback: function(data) {
             if (data.message == "Power User") {
-                // if not selected a customer yet and we have more than one customer
-                if (!data.selected_customer && data.customers && data.customers.length > 1) {
-                    cart.template("Power User - Customer Select Window")
-                        .promiseReady()
-                        .then(function(tpl) {
-                            var $cwindow = $(tpl.beginRender({ customers: data.customers }));
-                            $('body').append($cwindow);
-                            tpl.endRender();
+							var cwindow_tpl = cart.template("Power User - Customer Select Window").promiseReady();
+							var $cwindow = null;
 
-                            $cwindow.find('.item').click(function() {
-                                var customer_name = $(this).attr("data-customer-name");
-                                frappe.call({
-                                    method: "awesome_cart.power.set_cart_customer",
-                                    args: {
-                                        customer_name: customer_name
-                                    },
-                                    freeze: 1,
-                                    callback: function() {
-                                        window.location.reload();
-                                    }
-                                });
-                            });
+							if ( data.selected_customer) {
+								window.selected_customer = data.selected_customer;
+								var $customer = $('<div class="customer-name"><span class="for">For:</span> ' + data.selected_customer + '</div>');
+								$("#website-post-login a.dropdown-toggle:first").append($customer);
+								$("#website-post-login a.dropdown-toggle .full-name").addClass('is-power-user');
+								if ( data.selected_customer_image ) {
+									var $logo = $('<img />');
+									$logo.attr('src', data.selected_customer_image);
+									$("#website-post-login a.dropdown-toggle .avatar").empty().append($logo);
+								}
 
-                        });
-                }
+							}
+
+							if ( data.customers && data.customers.length > 1 ) {
+								cwindow_tpl = cwindow_tpl.then(function(tpl) {
+										$cwindow = $(tpl.beginRender({ customers: data.customers }));
+										$('body').append($cwindow);
+										$cwindow.hide();
+										tpl.endRender();
+
+										$cwindow.find('.item').click(function() {
+											var customer_name = $(this).attr("data-customer-name");
+											frappe.call({
+												method: "awesome_cart.power.set_cart_customer",
+												args: {
+													customer_name: customer_name
+												},
+												freeze: 1,
+												callback: function() {
+													window.location.reload();
+												}
+											});
+										});
+
+										var $menu_item = $('<li data-label="Switch Customer"><a rel="nofollow">Switch Customer</a></li>');
+										$("#website-post-login ul.dropdown-menu").append($menu_item);
+										$menu_item.find('a').click(function() {
+											$cwindow.fadeIn('fast');
+										});
+
+										return tpl;
+									});
+
+							}
+              // if not selected a customer yet and we have more than one customer
+              if (!data.selected_customer && data.customers && data.customers.length > 1) {
+                  cwindow_tpl.then(function(tpl) {
+										$cwindow.fadeIn('fast');
+										return tpl;
+									})
+              }
             }
         }
     });

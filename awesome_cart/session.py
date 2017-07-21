@@ -60,7 +60,15 @@ def set_awc_session(session):
 
 def clear_awc_session():
 	awc_session = get_awc_session()
-	del awc_session["shipping_method"]
-	del awc_session["shipping_rates"]
-	del awc_session["shipping_rates_list"]
+
+	if awc_session.get("shipping_method"):
+		del awc_session["shipping_method"]
+	if awc_session.get("shipping_rates"):
+		del awc_session["shipping_rates"]
+	if awc_session.get("shipping_rates_list"):
+		del awc_session["shipping_rates_list"]
+	if awc_session.get("selected_customer"):
+		del awc_session["selected_customer"]
+	if awc_session.get("selected_customer_image"):
+		del awc_session["selected_customer_image"]
 	awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
