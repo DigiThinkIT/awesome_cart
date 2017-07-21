@@ -1,17 +1,17 @@
 #checkout-panels {
-  display: none;
+	display: none;
 }
 
 #checkout-panels .panel {
-  display: block;
+	display: block;
 }
 
 #checkout-panels > .panel ~ .panel{
-  display: none;
+	display: none;
 }
 
 .awc-form .no-pad {
-  padding: 0;
+	padding: 0;
 }
 
 .awc-form .nopadding {
@@ -28,19 +28,19 @@
 
 /* remove spacing between middle columns */
 .awc-form .row.no-inner-gutter [class*='col-']:not(:first-child):not(:last-child) {
-  padding-right: 0;
-  padding-left: 0;
+	padding-right: 0;
+	padding-left: 0;
 }
 /* remove right padding from first column */
 .awc-form .row.no-inner-gutter [class*='col-']:first-child {
 	padding-right: 0;
 }
 .awc-form .row.no-inner-gutter [class*='col-']:last-child {
-  padding-left: 0;
+	padding-left: 0;
 }
 .awc-form .row.no-gutter [class*='col-'] {
-  padding-right: 0;
-  padding-left: 0;
+	padding-right: 0;
+	padding-left: 0;
 }
 
 .awc-form .field {
@@ -52,7 +52,7 @@
 	margin: .1em;
 }
 .awc-form .field:not(.custom) {
-  padding: 0 .2em 0;
+	padding: 0 .2em 0;
 }
 
 .awc-form .field.hidden {
@@ -89,26 +89,26 @@
 }
 
 .awc-form .field:not(.custom) label {
-  display: block;
-  position: absolute;
-  top: 25%;
+	display: block;
+	position: absolute;
+	top: 25%;
 	left: .8em;
-  font-size: .6em;
-  font-weight: bolder;
-  opacity: 0;
-  transition: all .5s;
+	font-size: .6em;
+	font-weight: bolder;
+	opacity: 0;
+	transition: all .5s;
 }
 
 .awc-form .field.hasvalue:not(.custom) label,
 .awc-form .field.focus:not(.custom) label {
-  opacity: 1;
-  transition: all .5s;
-  top: .1em;
+	opacity: 1;
+	transition: all .5s;
+	top: .1em;
 }
 
 .awc-form .field.focus:not(.custom) label {
-  color: #286090;
-  font-weight: bolder;
+	color: #286090;
+	font-weight: bolder;
 }
 
 .awc-form .field.error:not(.custom) label {
@@ -124,25 +124,25 @@
 .awc-form .field.focus:not(.custom) input::-webkit-input-placeholder,
 .awc-form .field.focus:not(.custom) textarea::-webkit-input-placeholder {
 	transition: opacity 0.5s 0s ease;
-  opacity: 0;
+	opacity: 0;
 }
 /* FF 19+ */
 .awc-form .field.focus:not(.custom) input::-moz-placeholder,
 .awc-form .field.focus:not(.custom) textarea::-moz-placeholder {
 	transition: opacity 0.5s 0s ease;
-  opacity: 0;
+	opacity: 0;
 }
 /* MS 10+ */
 .awc-form .field.focus:not(.custom) input:-ms-input-placeholder,
 .awc-form .field.focus:not(.custom) textarea:-ms-input-placeholder {
 	transition: opacity 0.5s 0s ease;
-  opacity: 0;
+	opacity: 0;
 }
 /* FF18- */
 .awc-form .field.focus:not(.custom) input:-moz-placeholder,
 .awc-form .field.focus:not(.custom) textarea:-moz-placeholder {
 	transition: opacity 0.5s 0s ease;
-  opacity: 0;
+	opacity: 0;
 }
 
 .awc-form .field:not(.custom) select,
@@ -181,7 +181,7 @@
 
 /* overrides bootstrap glyph positioning for select down arrow */
 .awc-form .field .select-arrow {
-  position: absolute;
+	position: absolute;
 	right: 1em;
 	top: 50%;
 	transform: translateY(-50%);
@@ -263,7 +263,7 @@
 	transform: translateY(-50%);
 	background: #ccc;
 	-webkit-transition: .4s;
-  transition: .4s;
+	transition: .4s;
 	border-radius: 30px;
 	cursor: pointer;
 }
@@ -310,12 +310,12 @@
 }
 
 .awc-form .radioctrl .btn-group .btn span {
-  position: absolute;
+	position: absolute;
 	display: block;
-  margin: 0;
-  padding: 0;
-  left: 50%;
-  top: 50%;
+	margin: 0;
+	padding: 0;
+	left: 50%;
+	top: 50%;
 	transform: translateX( -50%) translateY(-50%);
 }
 
@@ -351,10 +351,10 @@
 
 /* The switch - the box around the slider */
 .awc-form .switch {
-  position: absolute;
-  display: inline-block;
-  width: 60px;
-  height: 34px;
+	position: absolute;
+	display: inline-block;
+	width: 60px;
+	height: 34px;
 	top: 50%;
 	transform: translateY(-50%);
 	right: 2px;
@@ -374,43 +374,59 @@
 
 /* The slider */
 .awc-form .slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	-webkit-transition: .4s;
+	transition: .4s;
 	border-radius: 34px;
 }
 
 .awc-form .slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+	position: absolute;
+	content: "";
+	height: 26px;
+	width: 26px;
+	left: 4px;
+	bottom: 4px;
+	background-color: white;
+	-webkit-transition: .4s;
+	transition: .4s;
 	border-radius: 50%;
 }
 
 .awc-form input:checked + .slider {
-  background-color: #286090;
+	background-color: #286090;
 }
 
 .awc-form input:focus + .slider:before {
-  box-shadow: 0 0 1px 2px #286090;
+	box-shadow: 0 0 1px 2px #286090;
 }
 
 .awc-form input:checked + .slider:before {
-  -webkit-transform: translateX(26px);
-  -ms-transform: translateX(26px);
-  transform: translateX(26px);
+	-webkit-transform: translateX(26px);
+	-ms-transform: translateX(26px);
+	transform: translateX(26px);
+}
+
+.awc-form .field.custom.line {
+	line-height: 2em;
+	padding-left: 1em;
+	display: flex;
+	flex-direction: row;
+}
+.awc-form .field.custom.line input {
+	margin-top: 12px;
+}
+.awc-form .field.custom.line label {
+	padding: 0 0 0 .5em;
+	margin: 6px 0 0 0;
+	flex-grow: 1;
+	flex-shrink: 1;
 }
 
 
