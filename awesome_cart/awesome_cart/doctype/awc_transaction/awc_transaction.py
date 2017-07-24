@@ -127,7 +127,11 @@ class AWCTransaction(Document):
 			if self.get("gateway_service"):
 				if self.get("gateway_service") == "credit_gateway":
 					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Payment Pending")
-				else:
+				elif self.get("gateway_service") == "authorizenet":
+					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Card")
+					frappe.db.set_value("Sales Order", self.order_id, "authorize_production", 1)
+					frappe.db.set_value("Sales Order", self.order_id, "authorize_delivery", 1)				
+				else:					
 					frappe.db.set_value("Sales Order", self.order_id, "payment_method", self.get("gateway_service"))
 					frappe.db.set_value("Sales Order", self.order_id, "authorize_production", 1)
 					frappe.db.set_value("Sales Order", self.order_id, "authorize_delivery", 1)				
