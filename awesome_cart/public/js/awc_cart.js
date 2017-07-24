@@ -71,6 +71,7 @@ awc_checkout = {
     nextPage: function() {
         var $page = $('.panel:visible');
         awc_checkout.showPage($page.next());
+        $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
     },
 
     setupPage: function() {
@@ -79,6 +80,7 @@ awc_checkout = {
         $('#checkout-shipping-address .btn-next')
             .click(function(e) {
                 awc_checkout.showPage('#checkout-shipping-method')
+                $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
             })
 
         // map address "edit" Button clicks ----------------------------
@@ -88,9 +90,11 @@ awc_checkout = {
                 if ($('#checkout-shipping').attr('data-select') == "true") {
                     e.preventDefault();
                     awc_checkout.showPage('#checkout-shipping');
+                    $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
                 } else {
                     e.preventDefault();
                     awc_checkout.showPage('#checkout-shipping-address');
+                    $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
                 }
             })
 
@@ -112,6 +116,7 @@ awc_checkout = {
         $('#checkout-error .btn-primary')
             .click(function() {
                 awc_checkout.showPage('#checkout-billing');
+                $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
             })
 
         $('#checkout-confirmation input[name="accept_terms"]')
@@ -179,6 +184,7 @@ awc_checkout = {
         $('#checkout-shipping-address .btn-primary').click(function(e) {
             $('#checkout-shipping').attr('data-select', 'true');
             awc_checkout.showPage('#checkout-shipping');
+            $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
         })
 
         $('#select-bill-addr .btn-add-bill-addr').click(function(e) {
@@ -192,6 +198,7 @@ awc_checkout = {
                 $('#shipping-addrs .selected').removeClass('selected');
                 $(this).addClass('selected');
                 awc_checkout.showPage('#checkout-shipping-method');
+                $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
             })
             //clicking bill addr
         $('#billing-addrs .addr').click(function(e) {
@@ -199,6 +206,7 @@ awc_checkout = {
             $('#billing-addrs .selected').removeClass('selected');
             $(this).addClass('selected');
             awc_checkout.showPage('#checkout-confirmation');
+            $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
         })
 
         $("#awc-shipping-form .btn-back").click(function(e) {
@@ -206,6 +214,7 @@ awc_checkout = {
             $('#checkout-shipping').attr('data-select', 'false');
             $('#checkout-shipping-address .addr').removeClass('selected');
             awc_checkout.showPage('#checkout-shipping-address');
+            $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
         })
 
         $("#form-bill-addr .btn-back").click(function(e) {
@@ -261,6 +270,7 @@ awc_checkout = {
             if ($('#form-bill-addr .btn-nextbtn').text() == 'Next') {
                 if (billform.phone == true && billform.address_1 == true && billform.city == true && billform.pincode == true && billform.country == true) {
                     awc_checkout.showPage('#checkout-confirmation');
+                    $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
                     $('#ship-form-err-msg').remove();
                 } else {
                     $('#ship-form-err-msg').remove();
@@ -338,6 +348,7 @@ awc_checkout = {
                         $('#billing-addrs .selected').removeClass('selected');
                         $(this).addClass('selected');
                         awc_checkout.showPage('#checkout-confirmation');
+                        $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
                     })
 
                     awc_checkout.showPage('#checkout-shipping-method');
@@ -374,6 +385,7 @@ awc_checkout = {
                     args: { address: address }
                 });
                 awc_checkout.showPage('#checkout-shipping-address');
+                $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
                 $('#awc-shipping-form.awc-form').removeAttr('data-name');
             }
         })
@@ -404,6 +416,7 @@ awc_checkout = {
                 $('#awc-shipping-form .btn-nextbtn').text('Save');
                 $('#checkout-shipping .field.required').removeClass('required');
                 awc_checkout.showPage('#checkout-shipping');
+                $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
             } else if ($(this).attr('data-type') == "bill") {
                 e.stopPropagation();
                 $('#gateway-selector-billing-form.awc-form').attr('data-name', $(this).closest('div').attr('data-name'));
