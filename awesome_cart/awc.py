@@ -11,8 +11,8 @@ from erpnext.shopping_cart.product import get_product_info
 from compat.customer import get_current_customer
 from compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotation
 from compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing_rule_for_item
-from .dbug import pretty_json, log
 from .session import *
+from dti_devtools.debug import pretty_json, log
 
 def get_user_quotation(awc_session):
 	party = None
@@ -51,12 +51,10 @@ def is_logged_in():
 
 	return True
 
-def get_price(item_code, price_list=None, qty=1, find_price_list=False):
+def get_price(item_code, price_list=None, qty=1, find_price_list=False, customer=None):
 
-	customer = get_current_customer()
-	awc_session = get_awc_session()
-	if awc_session.get("selected_customer"):
-		customer = frappe.get_doc("Customer", awc_session.get("selected_customer"))
+	if not customer:
+		customer = get_current_customer()
 
 	if not price_list and find_price_list and is_logged_in():
 		quotation = _get_cart_quotation()

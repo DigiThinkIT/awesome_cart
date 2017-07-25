@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import throw, _
 
-from awesome_cart.compat.erpnext.shopping_cart import get_party, get_cart_quotation, \
+from awesome_cart.compat.erpnext.shopping_cart import get_party, \
 	apply_cart_settings, set_taxes, get_address_docs, \
 	get_applicable_shipping_rules, decorate_quotation_doc, get_shopping_cart_settings
 
@@ -35,7 +35,7 @@ def _override_get_cart_quotation(party=None):
 
 	quotation = frappe.get_all("Quotation", fields=["name"], filters=
 		{party.doctype.lower(): party.name, "order_type": "Shopping Cart", "docstatus": 0},
-		order_by="modified desc", limit_page_length=1)
+		order_by="modified desc", limit=1, limit_page_length=1)
 
 	if quotation:
 		qdoc = frappe.get_doc("Quotation", quotation[0].name)
