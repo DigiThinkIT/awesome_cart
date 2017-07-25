@@ -846,7 +846,7 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 	# if no rates available, then reset shipping method
 	if rate and len(awc_session.get("shipping_rates_list", [])) > 0:
 		awc_session["shipping_method"] = rate
-	else:
+	else if "shipping_method" in awc_session:
 		del awc_session["shipping_method"]
 
 	shipping_address_name = None
