@@ -1,4 +1,63 @@
-awc.debug.level = awc.debug.LEVEL.NONE;
+awc.debug.level = awc.debug.LEVEL.DEBUG;
+
+/* soft wrapper over frappe.call to improve error handling */
+awc.call = function(method, args, freeze, freeze_message) {
+  var last_error = null;
+  var call_log = method + (args?"("+JSON.stringify(args)+")":"()");
+
+  return new awc.Promise(function(resolve, reject) {
+    frappe.call({
+      method: method,
+      args: args || {},
+      freeze: freeze,
+      freeze_message: freeze_message
+    })
+    .done(function(data, textStatus, xhr) {
+      awc.debug.log(call_log, data, textStatus, xhr);
+      if(typeof data === "string") data = JSON.parse(data);
+      var status = xhr.statusCode().status;
+
+      resolve({
+        data: data,
+        status: status,
+        recoverable: data.recoverable || false,
+        xhr: xhr,
+        textStatus: textStatus
+      });
+    })
+    .fail(function(xhr, textStatus) {
+      awc.debug.error(call_log, xhr, textStatus);
+      var status = xhr.statusCode().status;
+      var _server_messages = null;
+
+      if (xhr.responseJSON && xhr.responseJSON._server_messages) {
+        var _server_messages = JSON.parse(xhr.responseJSON._server_messages);
+      }
+
+      var errors = [];
+      if ( _server_messages ) {
+        try {
+          for(var i = 0; i < _server_messages.length; i++) {
+            errors.push("Server Error: " + JSON.parse(_server_messages[i]).message);
+          }
+        } catch(ex) {
+          errors.push(data._server_messages);
+          errors.push(ex);
+        }
+      }
+
+      reject({
+        data: errors,
+        status: status,
+        recoverable: 0,
+        xhr: xhr,
+        textStatus: textStatus
+      });
+    });
+
+    return null;
+  });
+}
 
 awc.ErpnextAdapter = function() {
     awc.StoreAdapter.prototype.constructor.call(this)
@@ -44,28 +103,31 @@ awc.ErpnextAdapter.prototype._fetchProducts = function(filter, start, limit) {
     var base = this;
 
     return new awc.Promise(function(resolve, reject) {
-        frappe.call({
-            method: "awesome_cart.awc.fetch_products",
-            args: {
-                tags: tags.join(','),
-                terms: terms,
-                start: start ? start : 0,
-                limit: limit
-            },
-            freeze: 1,
-            callback: function(result) {
-                if (result.message.success) {
-                    if (result.message.data.totals) {
-                        base._totals = result.message.data.totals;
-                    }
+      awc.call("awesome_cart.awc.fetch_products",{
+          tags: tags.join(','),
+          terms: terms,
+          start: start ? start : 0,
+          limit: limit
+      }, 1)
+      .then(function(resp) {
+        var result = resp.data;
 
-                    resolve(result.message.data)
-                } else {
-                    reject(result.message.data)
-                }
+        if (result.message.success) {
+            if (result.message.data.totals) {
+                base._totals = result.message.data.totals;
             }
-        })
-    })
+
+            resolve(result.message.data)
+        } else {
+            reject(result.message.data)
+        }
+				return resp;
+      }).catch(function(err) {
+        reject(err);
+      });
+
+        return null;
+    });
 }
 
 awc.ErpnextAdapter.prototype.loadTemplate = function(name) {
@@ -94,27 +156,32 @@ awc.ErpnextAdapter.prototype.fetchCartSession = function() {
 awc.ErpnextAdapter.prototype.sessionAction = function(action, data) {
     var base = this;
     return new awc.Promise(function(resolve, reject) {
-        frappe.call({
-            method: "awesome_cart.awc.cart",
-            freeze: 1,
-            args: {
-                action: action,
-                data: data
-            },
-            callback: function(result) {
-                dispalyAddr(result.message.shipping_address_name);
-                if (result.message.success) {
-                    if (result.message.totals) {
-                        base._totals = result.message.totals;
-                    }
+      awc.call("awesome_cart.awc.cart", {
+          action: action,
+          data: data
+      }, 1)
+      .then(function(resp) {
+        var result = resp.data;
 
-                    resolve(result.message)
-                } else {
-                    reject(result.message.data)
-                }
+        dispalyAddr(result.message.shipping_address_name);
+        if (result.message.success) {
+            if (result.message.totals) {
+                base._totals = result.message.totals;
             }
-        })
-    })
+            resolve(result.message)
+        } else {
+            reject(result.message.data)
+        }
+
+				return resp;
+      }).catch(function(err) {
+        awc.debug.error("Error during session action");
+        awc.debug.error(err);
+        reject(err);
+      })
+
+        return null;
+    });
 
 }
 
@@ -134,30 +201,34 @@ awc.ErpnextAdapter.prototype.getProductBySKU = function(sku, detailed) {
             // else return promise with cache data
             return new awc.Promise(function(resolve) {
                 return resolve(base.itemCache[skuHash]);
-            })
+            });
         }
     }
 
     // otherwise, fetch item from backend
     return base.itemCache[skuHash] = new awc.Promise(function(resolve, reject) {
-        frappe.call({
-            method: "awesome_cart.awc.get_product_by_sku",
-            args: {
-                sku: sku,
-                detailed: detailed ? 1 : 0
-            },
-            freeze: 1,
-            callback: function(result) {
-                if (result.message.success) {
-                    resolve(base.itemCache[skuHash] = result.message.data)
-                } else {
-                    reject(result.message)
-                }
-            }
-        })
+      awc.call("awesome_cart.awc.get_product_by_sku", {
+          sku: sku,
+          detailed: detailed ? 1 : 0
+      }, 1)
+      .then(function(resp) {
+        var result = resp.data;
+        if (result.message.success) {
+            resolve(base.itemCache[skuHash] = result.message.data)
+        } else {
+            reject(result.message)
+        }
+
+				return resp;
+      })
+      .catch(function(err) {
+        awc.debug.error("Error while fething product by sku");
+        awc.debug.error(err)
+        reject(err);
+      });
 
         return null;
-    })
+    });
 
 }
 
@@ -180,54 +251,56 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
     }
 
     awc_checkout.showPage('#checkout-processing')
-    frappe.call({
-        method: "awesome_cart.awc.create_transaction",
-        args: {
-            gateway_service: gateway_service,
-            billing_address: awc_checkout.billing_address,
-            shipping_address: awc_checkout.shipping_address,
-            instructions: $("#order-instructions").val()
-        },
-        freeze: true,
-        freeze_message: "Validating Order",
-        callback: function(data) {
-            var result = data.message;
-            if (result.success) {
-                // copy validation data to continue checkout process
-                for (var k in result.data) {
-                    gateway_request[k] = result.data[k];
-                }
-
-                awc.debug.log("Preparing for checkout!", gateway_request);
-                awc_checkout.gateway_provider.process(gateway_request, function(err, data) {
-                    if (err) {
-                        $('#checkout-error .msg').text(err.error);
-                        awc.debug.error(err);
-                        awc_checkout.showPage('#checkout-error');
-                    } else {
-                        frappe.call({
-                            method: "awesome_cart.utils.get_order_data",
-                            callback: function(result) {
-                                window.dataLayer = window.dataLayer || []
-                                dataLayer.push(result.message)
-                                awc_checkout.showPage('#checkout-success');
-                                window.location.href = data.redirect_to;
-                            },
-                        });
-
-                    }
-                });
-            } else {
-                $('#checkout-error .msg').text(err.error);
-                awc.debug.error(result.error);
-                awc_checkout.showPage('#checkout-error');
+    awc.call("awesome_cart.awc.create_transaction", {
+        gateway_service: gateway_service,
+        billing_address: awc_checkout.billing_address,
+        shipping_address: awc_checkout.shipping_address,
+        instructions: $("#order-instructions").val()
+    }, 1, "Validating Order")
+    .then(function(resp) {
+        var result = resp.data.message;
+        if (result.success) {
+            // copy validation data to continue checkout process
+            for (var k in result.data) {
+                gateway_request[k] = result.data[k];
             }
-        },
-        error: function(err) {
-            $('#checkout-error .msg').text(err.error);
-            awc.debug.error(err);
+
+            awc.debug.log("Preparing for checkout!", gateway_request);
+            awc_checkout.gateway_provider.process(gateway_request, function(err, data) {
+                if (err) {
+                    $('#checkout-error .msg').text(err.errors.join(', '));
+                    awc.debug.error(err);
+                    awc_checkout.showPage('#checkout-error');
+                } else {
+                    awc.call("awesome_cart.utils.get_order_data", null, 1)
+                    .then(function(data) {
+                        var result = data.data;
+                        window.dataLayer = window.dataLayer || []
+                        dataLayer.push(result.message)
+                        awc_checkout.showPage('#checkout-success');
+                        window.location.href = data.redirect_to;
+                    })
+                    .catch(function(err) {
+                        awc.debug.error(err);
+                        awc_checkout.showPage('#checkout-success');
+                        window.location.href = data.redirect_to;
+                    })
+
+                }
+            });
+        } else {
+            $('#checkout-error .msg').text(result.error);
+            awc.debug.error(result.error);
             awc_checkout.showPage('#checkout-error');
         }
+
+				return resp;
+    })
+    .catch(function(err) {
+      awc.debug.error("Error while sending gateway data");
+      awc.debug.error(err);
+      $('#checkout-error .msg').text(err.errors.join(", "));
+      awc_checkout.showPage('#checkout-error');
     })
 }
 
@@ -585,70 +658,73 @@ $(function() {
         $popup.fadeOut('fast');
     })
 
-    frappe.call({
-        method: "awesome_cart.power.get_power_user_settings",
-        args: {},
-        callback: function(data) {
+    awc.call("awesome_cart.power.get_power_user_settings")
+        .then(function(resp) {
+            var data = resp.data;
             if (data.message == "Power User") {
-							var cwindow_tpl = cart.template("Power User - Customer Select Window").promiseReady();
-							var $cwindow = null;
+                var cwindow_tpl = cart.template("Power User - Customer Select Window").promiseReady();
+                var $cwindow = null;
 
-							if ( data.selected_customer) {
-								window.selected_customer = data.selected_customer;
-								var $customer = $('<div class="customer-name"><span class="for">For:</span> ' + data.selected_customer + '</div>');
-								$("#website-post-login a.dropdown-toggle:first").append($customer);
-								$("#website-post-login a.dropdown-toggle .full-name").addClass('is-power-user');
-								if ( data.selected_customer_image ) {
-									var $logo = $('<img />');
-									$logo.attr('src', data.selected_customer_image);
-									$("#website-post-login a.dropdown-toggle .avatar").empty().append($logo);
-								}
+                if ( data.selected_customer) {
+                    window.selected_customer = data.selected_customer;
+                    var $customer = $('<div class="customer-name"><span class="for">For:</span> ' + data.selected_customer + '</div>');
+                    $("#website-post-login a.dropdown-toggle:first").append($customer);
+                    $("#website-post-login a.dropdown-toggle .full-name").addClass('is-power-user');
+                    if ( data.selected_customer_image ) {
+                        var $logo = $('<img />');
+                        $logo.attr('src', data.selected_customer_image);
+                        $("#website-post-login a.dropdown-toggle .avatar").empty().append($logo);
+                    }
+                }
 
-							}
+                if ( data.customers && data.customers.length > 1 ) {
+                  cwindow_tpl = cwindow_tpl.then(function(tpl) {
+                      $cwindow = $(tpl.beginRender({ customers: data.customers }));
+                      $('body').append($cwindow);
+                      $cwindow.hide();
+                      tpl.endRender();
 
-							if ( data.customers && data.customers.length > 1 ) {
-								cwindow_tpl = cwindow_tpl.then(function(tpl) {
-										$cwindow = $(tpl.beginRender({ customers: data.customers }));
-										$('body').append($cwindow);
-										$cwindow.hide();
-										tpl.endRender();
+                      $cwindow.find('.item').click(function() {
+                        var customer_name = $(this).attr("data-customer-name");
 
-										$cwindow.find('.item').click(function() {
-											var customer_name = $(this).attr("data-customer-name");
-											frappe.call({
-												method: "awesome_cart.power.set_cart_customer",
-												args: {
-													customer_name: customer_name
-												},
-												freeze: 1,
-												callback: function() {
-													window.location.reload();
-												}
-											});
-										});
+                        awc.call("awesome_cart.power.set_cart_customer", {
+                                customer_name: customer_name
+                            }, 1)
+                            .then(function(resp) {
+                                window.location.reload();
+																return resp;
+                            })
+                            .catch(function(err) {
+                                awc.debug.error(err);
+                            });
+                      });
 
-										var $menu_item = $('<li data-label="Switch Customer"><a rel="nofollow">Switch Customer</a></li>');
-										$("#website-post-login ul.dropdown-menu").append($menu_item);
-										$menu_item.find('a').click(function() {
-											$cwindow.fadeIn('fast');
-										});
+                      var $menu_item = $('<li data-label="Switch Customer"><a rel="nofollow">Switch Customer</a></li>');
+                      $("#website-post-login ul.dropdown-menu").append($menu_item);
+                      $menu_item.find('a').click(function() {
+                        $cwindow.fadeIn('fast');
+                      });
 
-										return tpl;
-									});
+                      return tpl;
+                    });
 
-							}
-              // if not selected a customer yet and we have more than one customer
-              if (!data.selected_customer && data.customers && data.customers.length > 1) {
-                  cwindow_tpl.then(function(tpl) {
-										$cwindow.fadeIn('fast');
-										return tpl;
-									})
-              }
+                }
+                // if not selected a customer yet and we have more than one customer
+                if (!data.selected_customer && data.customers && data.customers.length > 1) {
+                    cwindow_tpl.then(function(tpl) {
+                      $cwindow.fadeIn('fast');
+                      return tpl;
+                    });
+                }
             }
-        }
-    });
 
-
+						return resp;
+        })
+        .catch(function(err) {
+          // ignore backend error as we don't want to break users navigation
+          // on this check.
+          awc.debug.error(err);
+        });
 
     cart.on('add-to-cart-completed', function() {
         $popup.fadeIn('fast');
