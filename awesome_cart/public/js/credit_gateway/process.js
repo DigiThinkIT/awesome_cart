@@ -22,25 +22,23 @@ frappe.integration_service.credit_gateway_gateway = Class.extend({
 	},
 
   _process: function(data, request_name, callback) {
-    frappe.call({
-      method: "awesome_cart.awesome_cart.doctype.credit_gateway_settings.credit_gateway_settings.process",
-      freeze: 1,
-      freeze_message: "Processing Order. Please Wait...",
-      args: {
-        options: data,
-        request_name: request_name
-      },
-      callback: function(result) {
-        if ( result.message.status == "Completed" ) {
-          callback(null, result.message);
-        } else {
-          callback(result.message, null);
-        }
-      },
-      error: function(err) {
-        callback(err, null);
-      }
-    });
+		awc.call("awesome_cart.awesome_cart.doctype.credit_gateway_settings.credit_gateway_settings.process",
+			{
+				options: data,
+				request_name: request_name
+			}, 1, "Processing Order. Please Wait..."
+		)
+		.then(function(resp) {
+			var result = resp.data;
+			if ( result.message.status == "Completed" ) {
+				callback(null, result.message);
+			} else {
+				callback(result.message, null);
+			}
+		})
+		.catch(function(err) {
+			callback(err, null);
+		});
 
   },
 
