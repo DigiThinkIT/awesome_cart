@@ -342,7 +342,7 @@ awc_checkout = {
                     if (!$('#billing-addrs #same-as-ship-addr.addr.selected')) {
                         $('#billing-addrs #same-as-ship-addr.addr').parent().remove();
                     }
-                    $('#billing-addrs div.row').prepend(div);
+                    $('#billing-addrs div.row .addresses-container').prepend(div);
                     $('#billing-addrs #same-as-ship-addr.addr').click(function(e) {
                         e.stopPropagation();
                         $('#billing-addrs .selected').removeClass('selected');
