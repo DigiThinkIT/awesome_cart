@@ -14,20 +14,20 @@ awc.call = function(method, args, freeze, freeze_message) {
     })
     .done(function(data, textStatus, xhr) {
       awc.debug.log(call_log, data, textStatus, xhr);
-			var parse_error = false;
+      var parse_error = false;
       if(typeof data === "string") {
-				try {
-					data = JSON.parse(data);
-				} catch(ex) {
-					parse_error = ex;
-					console.error(ex);
-				}
-			}
+        try {
+          data = JSON.parse(data);
+        } catch(ex) {
+          parse_error = ex;
+          console.error(ex);
+        }
+      }
       var status = xhr.statusCode().status;
 
       resolve({
         data: data,
-				parse_error: parse_error,
+        parse_error: parse_error,
         status: status,
         recoverable: data.recoverable || false,
         xhr: xhr,
@@ -38,33 +38,44 @@ awc.call = function(method, args, freeze, freeze_message) {
       awc.debug.error(call_log, xhr, textStatus);
       var status = xhr.statusCode().status;
       var _server_messages = null;
-			var parse_error = false;
-			var errors = [];
+      var parse_error = false;
+      var errors = [];
 
       if (xhr.responseJSON && xhr.responseJSON._server_messages) {
-				try {
-        	_server_messages = JSON.parse(xhr.responseJSON._server_messages);
-				} catch(ex) {
-					_server_messages = xhr.responseJSON._server_messages;
-					parse_error = ex;
-					errors.push(ex);
-				}
+        try {
+          _server_messages = JSON.parse(xhr.responseJSON._server_messages);
+        } catch(ex) {
+          _server_messages = xhr.responseJSON._server_messages;
+          parse_error = ex;
+          errors.push(ex);
+        }
       }
 
-      if ( _server_messages ) {
+      if ( _server_messages && _server_messages.contructor == Array ) {
         try {
           for(var i = 0; i < _server_messages.length; i++) {
-            errors.push("Server Error: " + JSON.parse(_server_messages[i]).message);
+						var msg;
+						try {
+							msg = JSON.parse(_server_messages[i]);
+							if ( msg.message ) {
+								msg = msg.message;
+							}
+						} catch(ex) {
+							msg = ex
+						}
+            errors.push("Server Error: " + msg);
           }
         } catch(ex) {
           errors.push(data._server_messages);
           errors.push(ex);
         }
-      }
+      } else if ( _server_messages && _server_messages.exc ) {
+				errors.push(_server_messages.exc);
+			}
 
       reject({
         data: errors,
-				parse_error: parse_error,
+        parse_error: parse_error,
         status: status,
         recoverable: 0,
         xhr: xhr,
@@ -138,7 +149,7 @@ awc.ErpnextAdapter.prototype._fetchProducts = function(filter, start, limit) {
         } else {
             reject(result.message.data)
         }
-				return resp;
+        return resp;
       }).catch(function(err) {
         reject(err);
       });
@@ -190,7 +201,7 @@ awc.ErpnextAdapter.prototype.sessionAction = function(action, data) {
             reject(result.message.data)
         }
 
-				return resp;
+        return resp;
       }).catch(function(err) {
         awc.debug.error("Error during session action");
         awc.debug.error(err);
@@ -236,7 +247,7 @@ awc.ErpnextAdapter.prototype.getProductBySKU = function(sku, detailed) {
             reject(result.message)
         }
 
-				return resp;
+        return resp;
       })
       .catch(function(err) {
         awc.debug.error("Error while fething product by sku");
@@ -285,19 +296,25 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
             awc.debug.log("Preparing for checkout!", gateway_request);
             awc_checkout.gateway_provider.process(gateway_request, function(err, data) {
                 if (err) {
-                    $('#checkout-error .msg').text(err.errors.join(', '));
+										if ( err.errors.length == 0 && err.status == 500 ) {
+											$('#checkout-error .msg').text("There was an internal server error while processing your order. Please contact us or try again later");
+										} else {
+                    	$('#checkout-error .msg').text(err.errors.join(', '));
+										}
+
                     awc.debug.error(err);
                     awc_checkout.showPage('#checkout-error');
                 } else {
                     awc.call("awesome_cart.utils.get_order_data", null, 1)
-                    .then(function(data) {
-                        var result = data.data;
+                    .then(function(resp) {
+                        var result = resp.data;
                         window.dataLayer = window.dataLayer || []
                         dataLayer.push(result.message)
                         awc_checkout.showPage('#checkout-success');
                         window.location.href = data.redirect_to;
                     })
                     .catch(function(err) {
+												var result = resp.data;
                         awc.debug.error(err);
                         awc_checkout.showPage('#checkout-success');
                         window.location.href = data.redirect_to;
@@ -311,12 +328,16 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
             awc_checkout.showPage('#checkout-error');
         }
 
-				return resp;
+        return resp;
     })
     .catch(function(err) {
       awc.debug.error("Error while sending gateway data");
       awc.debug.error(err);
-      $('#checkout-error .msg').text(err.errors.join(", "));
+			if ( err.errors.length == 0 && err.status == 500 ) {
+				$('#checkout-error .msg').text("There was an internal server error while processing your order. Please contact us or try again later");
+			} else {
+      	$('#checkout-error .msg').text(err.errors.join(", "));
+			}
       awc_checkout.showPage('#checkout-error');
     })
 }
@@ -709,7 +730,7 @@ $(function() {
                             }, 1)
                             .then(function(resp) {
                                 window.location.reload();
-																return resp;
+                                return resp;
                             })
                             .catch(function(err) {
                                 awc.debug.error(err);
@@ -735,7 +756,7 @@ $(function() {
                 }
             }
 
-						return resp;
+            return resp;
         })
         .catch(function(err) {
           // ignore backend error as we don't want to break users navigation
