@@ -1,4 +1,4 @@
-awc.debug.level = awc.debug.LEVEL.DEBUG;
+awc.debug.level = awc.debug.LEVEL.NONE;
 
 /* soft wrapper over frappe.call to improve error handling */
 awc.call = function(method, args, freeze, freeze_message) {
@@ -14,11 +14,20 @@ awc.call = function(method, args, freeze, freeze_message) {
     })
     .done(function(data, textStatus, xhr) {
       awc.debug.log(call_log, data, textStatus, xhr);
-      if(typeof data === "string") data = JSON.parse(data);
+			var parse_error = false;
+      if(typeof data === "string") {
+				try {
+					data = JSON.parse(data);
+				} catch(ex) {
+					parse_error = ex;
+					console.error(ex);
+				}
+			}
       var status = xhr.statusCode().status;
 
       resolve({
         data: data,
+				parse_error: parse_error,
         status: status,
         recoverable: data.recoverable || false,
         xhr: xhr,
@@ -29,12 +38,19 @@ awc.call = function(method, args, freeze, freeze_message) {
       awc.debug.error(call_log, xhr, textStatus);
       var status = xhr.statusCode().status;
       var _server_messages = null;
+			var parse_error = false;
+			var errors = [];
 
       if (xhr.responseJSON && xhr.responseJSON._server_messages) {
-        var _server_messages = JSON.parse(xhr.responseJSON._server_messages);
+				try {
+        	_server_messages = JSON.parse(xhr.responseJSON._server_messages);
+				} catch(ex) {
+					_server_messages = xhr.responseJSON._server_messages;
+					parse_error = ex;
+					errors.push(ex);
+				}
       }
 
-      var errors = [];
       if ( _server_messages ) {
         try {
           for(var i = 0; i < _server_messages.length; i++) {
@@ -48,6 +64,7 @@ awc.call = function(method, args, freeze, freeze_message) {
 
       reject({
         data: errors,
+				parse_error: parse_error,
         status: status,
         recoverable: 0,
         xhr: xhr,
