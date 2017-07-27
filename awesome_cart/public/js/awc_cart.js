@@ -182,6 +182,7 @@ awc_checkout = {
         }
 
         $('#checkout-shipping-address .btn-primary').click(function(e) {
+            $('#checkout-shipping-address .addr').removeClass('selected');
             $('#checkout-shipping').attr('data-select', 'true');
             awc_checkout.showPage('#checkout-shipping');
             $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
