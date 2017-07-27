@@ -306,14 +306,15 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
                     awc_checkout.showPage('#checkout-error');
                 } else {
                     awc.call("awesome_cart.utils.get_order_data", null, 1)
-                    .then(function(data) {
-                        var result = data.data;
+                    .then(function(resp) {
+                        var result = resp.data;
                         window.dataLayer = window.dataLayer || []
                         dataLayer.push(result.message)
                         awc_checkout.showPage('#checkout-success');
                         window.location.href = data.redirect_to;
                     })
                     .catch(function(err) {
+												var result = resp.data;
                         awc.debug.error(err);
                         awc_checkout.showPage('#checkout-success');
                         window.location.href = data.redirect_to;
