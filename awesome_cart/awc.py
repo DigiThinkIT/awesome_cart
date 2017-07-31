@@ -1167,12 +1167,13 @@ def update_shipping_rate(address, awc_session):
 
 	try:
 		rates = frappe.call(shipping_rate_api["module"], from_address=from_address, to_address=address, items=package_items)
-		if not rates:
+		if rates:
+			# cache quoted rates to reference later on checkout
+			awc_session["shipping_address"] = address
+			awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
+			awc_session["shipping_rates_list"] = rates
+		else:
 			rates = []
-		# cache quoted rates to reference later on checkout
-		awc_session["shipping_address"] = address
-		awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
-		awc_session["shipping_rates_list"] = rates
 
 	except Exception as ex:
 		log(traceback.format_exc())
