@@ -296,7 +296,7 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
             awc.debug.log("Preparing for checkout!", gateway_request);
             awc_checkout.gateway_provider.process(gateway_request, function(err, data) {
                 if (err) {
-										if ( err.errors.length == 0 && err.status == 500 ) {
+										if ( (!err.errors || err.errors.length == 0) || err.status == 500 ) {
 											$('#checkout-error .msg').text("There was an internal server error while processing your order. Please contact us or try again later");
 										} else {
                     	$('#checkout-error .msg').text(err.errors.join(', '));
@@ -333,7 +333,7 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
     .catch(function(err) {
       awc.debug.error("Error while sending gateway data");
       awc.debug.error(err);
-			if ( err.errors.length == 0 && err.status == 500 ) {
+			if ( (!err.errors || err.errors.length == 0) || err.status == 500 ) {
 				$('#checkout-error .msg').text("There was an internal server error while processing your order. Please contact us or try again later");
 			} else {
       	$('#checkout-error .msg').text(err.errors.join(", "));
