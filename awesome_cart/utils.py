@@ -99,7 +99,7 @@ def quotation_validate(doc, method):
 			if item.get("awc_group"):
 				groups[item.get("awc_group")].append(item)
 
-	idx = 0
+	idx = 1
 	for item in main_items:
 		item.set("idx", idx)
 		idx = idx + 1
