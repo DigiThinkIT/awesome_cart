@@ -1,4 +1,4 @@
-awc.debug.level = awc.debug.LEVEL.NONE;
+awc.debug.level = awc.debug.LEVEL.DEBUG;
 
 awc.Errors.CallException = awc.Errors.customError("CallException", function(
 	message, errors, parse_error, status, recoverable, xhr, textStatus) {
@@ -86,7 +86,7 @@ awc.call = function(method, args, freeze, freeze_message) {
         xhr: xhr,
         textStatus: textStatus
       });
-    },function(xhr, textStatus) {
+    }, function(xhr, textStatus) {
       awc.debug.error(call_log, xhr, textStatus);
       var status = xhr.statusCode().status;
       var _server_messages = null;

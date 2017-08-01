@@ -50,6 +50,12 @@ website_route_rules = [
 	{ "from_route": "/integrations/credit_gateway_checkout/<name>", "to_route": "integrations/credit_gateway_checkout" }
 ]
 
+doc_events = {
+	"Quotation": {
+		"validate": ["awesome_cart.utils.quotation_validate"]
+	}
+}
+
 # cart context override
 extend_website_page_controller_context = {
 	"erpnext.templates.pages.cart": "awesome_cart.templates.pages.cart"
