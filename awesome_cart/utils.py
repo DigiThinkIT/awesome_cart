@@ -11,7 +11,7 @@ from frappe.utils import random_string
 
 from .session import clear_awc_session
 
-from .dbug import pretty_json
+from dti_devtools.debug import pretty_json, log
 
 
 def update_context(context):
@@ -80,3 +80,32 @@ def edit_address(address):
 	add_doc.flags.ignore_permissions=True
 	add_doc.save()
 	frappe.db.commit()
+
+def quotation_validate(doc, method):
+	log(pretty_json(doc.as_dict()))
+	main_items = []
+	groups = {}
+
+	# find all parent items(not sub groups)
+	for item in sorted(doc.items, key=lambda x: x.idx):
+		if not item.get("awc_sub_group"):
+			main_items.append(item)
+			if item.get("awc_group") and not item.get("awc_group") in groups:
+				groups[item.get("awc_group")] = []
+		else:
+			if item.get("awc_group") and not item.get("awc_group") in groups:
+				groups[item.get("awc_group")] = []
+
+			if item.get("awc_group"):
+				groups[item.get("awc_group")].append(item)
+
+	idx = 0
+	for item in main_items:
+		item.set("idx", idx)
+		idx = idx + 1
+		if item.get("awc_group") and item.get("awc_group") in groups:
+			for sub_item in groups[item.get("awc_group")]:
+				sub_item.set("idx", idx)
+				idx = idx + 1
+
+	return True
