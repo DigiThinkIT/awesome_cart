@@ -53,6 +53,12 @@ website_route_rules = [
 doc_events = {
 	"Quotation": {
 		"validate": ["awesome_cart.utils.quotation_validate"]
+	},
+	"Sales Order": {
+		"validate": ["awesome_cart.utils.quotation_validate"]
+	},
+	"Sales Invoice": {
+		"validate": ["awesome_cart.utils.quotation_validate"]
 	}
 }
 
