@@ -1,18 +1,71 @@
 awc.debug.level = awc.debug.LEVEL.NONE;
 
+awc.Errors.CallException = awc.Errors.customError("CallException", function(
+	message, errors, parse_error, status, recoverable, xhr, textStatus) {
+	this.message = message;
+	this.errors = errors;
+	this.parse_error = parse_error;
+	this.status = status;
+	this.recoverable = recoverable;
+	this.xhr = xhr;
+	this.textStatus = textStatus;
+});
+
 /* soft wrapper over frappe.call to improve error handling */
 awc.call = function(method, args, freeze, freeze_message) {
   var last_error = null;
   var call_log = method + (args?"("+JSON.stringify(args)+")":"()");
 
+	var opts = {
+		method: method,
+		args: args,
+		freeze: freeze,
+		freeze_message: freeze_message
+	}
+
+	// opts = {"method": "PYTHON MODULE STRING", "args": {}, "callback": function(r) {}}
+	frappe.prepare_call(opts);
+	if(opts.freeze) { frappe.freeze(); }
+
   return new awc.Promise(function(resolve, reject) {
-    frappe.call({
-      method: method,
-      args: args || {},
-      freeze: freeze,
-      freeze_message: freeze_message
-    })
-    .done(function(data, textStatus, xhr) {
+
+		var deferred = $.ajax({
+			type: opts.type || "POST",
+			url: "/",
+			data: opts.args,
+			dataType: "json",
+			headers: { "X-Frappe-CSRF-Token": frappe.csrf_token },
+			statusCode: opts.statusCode || {
+				404: function(xhr) {
+					frappe.msgprint(__("Not found"));
+				},
+				403: function(xhr) {
+					frappe.msgprint(__("Not permitted"));
+				},
+				200: function(data, xhr) {
+					if(opts.callback)
+						opts.callback(data);
+					if(opts.success)
+						opts.success(data);
+				}
+			}
+		}).always(function(data) {
+			if(opts.freeze) {
+				frappe.unfreeze();
+			}
+
+			// executed before statusCode functions
+			if(data.responseText) {
+				try {
+					data = JSON.parse(data.responseText);
+				} catch(ex) {
+					data = {__server_messages: [ { message: data.responseText }]};
+				}
+			}
+			frappe.process_response(opts, data);
+		});
+
+		deferred.then(function(data, textStatus, xhr) {
       awc.debug.log(call_log, data, textStatus, xhr);
       var parse_error = false;
       if(typeof data === "string") {
@@ -33,8 +86,7 @@ awc.call = function(method, args, freeze, freeze_message) {
         xhr: xhr,
         textStatus: textStatus
       });
-    })
-    .fail(function(xhr, textStatus) {
+    },function(xhr, textStatus) {
       awc.debug.error(call_log, xhr, textStatus);
       var status = xhr.statusCode().status;
       var _server_messages = null;
@@ -73,14 +125,11 @@ awc.call = function(method, args, freeze, freeze_message) {
 				errors.push(_server_messages.exc);
 			}
 
-      reject({
-        data: errors,
-        parse_error: parse_error,
-        status: status,
-        recoverable: 0,
-        xhr: xhr,
-        textStatus: textStatus
-      });
+			reject(new awc.Errors.CallException(
+				"Error during a backend call. Please check your Internet connection",
+				errors, parse_error, status, false, xhr, textStatus
+			));
+
     });
 
     return null;
@@ -314,7 +363,7 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
                         window.location.href = data.redirect_to;
                     })
                     .catch(function(err) {
-												var result = resp.data;
+												var result = resp.errors;
                         awc.debug.error(err);
                         awc_checkout.showPage('#checkout-success');
                         window.location.href = data.redirect_to;
@@ -385,6 +434,25 @@ var AwcShippingProvider = Class.extend({
         this.data = data || {};
     },
 
+		calculate_shipping: function(method, address) {
+			var base = this;
+			var $form = $('#awc-shipping-form');
+			var $method_form = $('#awc-shipping-method');
+			return cart.calculateShipping(method, address)
+				.catch(awc.Errors.CallException, function(err) {
+					awc.debug.error(err);
+
+
+					$("#bc-shipping").removeClass("valid");
+					$method_form.fadeOut('fast');
+					$method_form.parent().find('.error .error-invalid-address').hide();
+					$method_form.parent().find('.error .error-other').text(err.message);
+					$method_form.parent().find('.error .error-other').show();
+					$method_form.parent().find('.error').fadeIn('fast');
+					$method_form.parent().find('.spinner').fadeOut('fast');
+				});
+		},
+
     update_shipping_rates: function(rates) {
         var base = this;
         var $form = $('#awc-shipping-form');
@@ -442,7 +510,7 @@ var AwcShippingProvider = Class.extend({
                         base.data.ship_method = method.name;
                         base.fee = method.fee;
                         base.label = method.label;
-                        cart.calculateShipping(base.data.ship_method);
+												base.calculate_shipping(base.data.ship_method);
                         base.validate();
                     }
                 })
@@ -465,6 +533,9 @@ var AwcShippingProvider = Class.extend({
             base.method_valid = false;
             $("#bc-shipping-method").removeClass("valid");
             $method_form.fadeOut('fast');
+						$method_form.parent().find('.error .error-invalid-address').show();
+						$method_form.parent().find('.error .error-other').empty();
+						$method_form.parent().find('.error .error-other').hide();
             $method_form.parent().find('.error').fadeIn('fast');
             $method_form.parent().find('.spinner').fadeOut('fast');
         }
@@ -560,11 +631,14 @@ var AwcShippingProvider = Class.extend({
             $method_form.fadeOut('fast');
             $method_form.parent().find('.error').fadeOut('fast');
             $method_form.parent().find('.spinner').fadeIn('fast');
-            cart.calculateShipping(this.data.ship_method, this.data);
+            base.calculate_shipping(this.data.ship_method, this.data);
         } else {
             $("#bc-shipping").removeClass("valid");
             $method_form.fadeOut('fast');
-            $method_form.parent().find('.error').fadeIn('fast');
+						$method_form.parent().find('.error .error-invalid-address').show();
+						$method_form.parent().find('.error .error-other').empty();
+						$method_form.parent().find('.error .error-other').hide();
+						$method_form.parent().find('.error').fadeIn('fast');
             $method_form.parent().find('.spinner').fadeOut('fast');
         }
 
