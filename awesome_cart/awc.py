@@ -821,6 +821,13 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 	if not address:
 		address = awc_session.get("shipping_address")
 
+	if rate_name == "PICK UP":
+		hq_address = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
+		address = frappe.get_doc("Address", hq_address).as_dict()
+		quotation.shipping_address_name = hq_address
+
+		#log(pretty_json(awc_session))
+
 	if address and awc_session.get("shipping_address") and \
 		len(address.items()) > 0 and len(awc_session["shipping_address"].items()) > 0:
 
@@ -1234,10 +1241,10 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		"billing_address": billing_address.get("billing_address")
 	}
 
-	log("Transaction Data")
-	log(pretty_json(data))
-	log("Quotation Data")
-	log(pretty_json(quotation.as_dict()))
+	#log("Transaction Data")
+	#log(pretty_json(data))
+	#log("Quotation Data")
+	#log(pretty_json(quotation.as_dict()))
 
 	if shipping_address.get("ship_method"):
 		# retrieve quoted charges

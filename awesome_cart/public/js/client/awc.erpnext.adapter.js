@@ -498,7 +498,7 @@ var AwcShippingProvider = Class.extend({
                     '<li>' +
                     '<label>' +
                     '<input type="radio" name="awc_shipping_method" value="' + method.name + '"' + checked + '>' +
-                    '<span class="label">' + method.label + " + $" + method.fee + '</span>' +
+                    '<span class="label">' + method.label + " + $" + method.fee.toFixed(2) + '</span>' +
                     '</label>' +
                     '</li>');
                 $method_form.append($method);

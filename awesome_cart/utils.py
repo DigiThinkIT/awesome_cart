@@ -82,7 +82,6 @@ def edit_address(address):
 	frappe.db.commit()
 
 def quotation_validate(doc, method):
-	log(pretty_json(doc.as_dict()))
 	main_items = []
 	groups = {}
 
