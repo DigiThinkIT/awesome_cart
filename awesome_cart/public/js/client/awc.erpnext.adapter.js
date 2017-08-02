@@ -1,4 +1,4 @@
-awc.debug.level = awc.debug.LEVEL.DEBUG;
+awc.debug.level = awc.debug.LEVEL.NONE;
 
 awc.Errors.CallException = awc.Errors.customError("CallException", function(
 	message, errors, parse_error, status, recoverable, xhr, textStatus) {
