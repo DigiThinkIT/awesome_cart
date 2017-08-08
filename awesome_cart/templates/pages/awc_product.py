@@ -18,6 +18,11 @@ def get_context(context):
 		frappe.local.flags.redirect_location = "404"
 		raise frappe.Redirect
 
+	for custom in awc_item.get('custom_data', []):
+		if custom.key == 'redirect':
+			frappe.local.flags.redirect_location = custom.value
+			raise frappe.Redirect
+
 	context["awc_item"] = awc_item
 	context["item"] = item
 	context["cart_tag"] = cart_tag
