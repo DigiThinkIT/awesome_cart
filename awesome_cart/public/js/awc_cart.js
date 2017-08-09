@@ -44,6 +44,10 @@ awc_checkout = {
             var shipping_summary = awc_checkout.shipping_provider.getSummary();
             $('#checkout-confirm-shipping .content').empty().append(shipping_summary);
 
+						if (shipping_validation_response.valid == false) {
+                checkout_enabled = false
+            }
+
             awc_checkout.shipping_address = shipping_validation_response.address;
         }
 
