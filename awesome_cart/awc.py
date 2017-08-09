@@ -1220,8 +1220,13 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		quotation.instructions = instructions
 		quotation_is_dirty = False
 
-	# make sure quotation and awc match
+	# make sure quotation email is contact person if we are a power user
 	sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty)
+
+	if awc_session.get("selected_customer") and quotation.contact_person:
+		email = frappe.get_value("Contact", quotation.contact_person, "email_id")
+	else:
+		email = quotation.contact_email
 
 	# create awc transaction to process payments first
 	# sales order and friends will be generated from this data
@@ -1231,7 +1236,7 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		"description": "Online Web Order",
 		"status": "Initiated",
 		"payer_name": quotation.contact_person,
-		"payer_email": quotation.contact_email,
+		"payer_email": email,
 		"amount": quotation.grand_total,
 		"currency": quotation.currency,
 		"session": json.dumps(awc),
