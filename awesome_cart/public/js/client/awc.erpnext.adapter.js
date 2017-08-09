@@ -669,7 +669,7 @@ var AwcShippingProvider = Class.extend({
             return txt;
         }
 
-        if (this.valid) {
+        if (this.result.valid) {
             // find shipping method label data
             var ship_method = "";
             for (var i in this._shipping_methods) {
