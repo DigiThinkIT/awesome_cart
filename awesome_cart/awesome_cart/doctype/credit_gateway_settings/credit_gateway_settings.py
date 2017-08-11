@@ -84,13 +84,27 @@ class CreditGatewaySettings(IntegrationService):
 		url = "./integrations/credit_gateway/{0},{1}"
 		return get_url(url.format(kwargs["reference_doctype"], kwargs["reference_docname"]))
 
-	def is_available(self, context={}):
-		self.get_embed_context(context)
-		# disabled until Eric figures out if JHA wants to check against credit
-		#return context["total_credit"] > 0
-		customer = get_current_customer()
+	def is_available(self, context={}, is_backend=0):
 
-		return customer.get("allow_billme_later", False)
+		print("Credit gateway...{0}".format(is_backend))
+		print(pretty_json(context))
+
+		# never available to backend
+		if is_backend:
+			return False
+
+		customer = get_current_customer()
+		print("Customer: {0}".format(customer))
+
+		if customer:
+			print(pretty_json(customer.as_dict()))
+			# disabled until Eric figures out if JHA wants to check against credit
+			#return context["total_credit"] > 0
+			self.get_embed_context(context)
+
+			return customer.get("allow_billme_later", False)
+
+		return False
 
 	def get_embed_context(self, context):
 		awc_session = awc.get_awc_session()
@@ -179,7 +193,7 @@ class CreditGatewaySettings(IntegrationService):
 		if custom_redirect_to:
 			redirect_to = custom_redirect_to
 
-		redirect_url = "/integrations/payment-success"
+		redirect_url = "/integrations/credit_success"
 		redirect_message = "Continue Shopping"
 		success = True
 
