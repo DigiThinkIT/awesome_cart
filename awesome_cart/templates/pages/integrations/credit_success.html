@@ -1,0 +1,22 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("Credit Request Accepted") }}{% endblock %}
+
+{%- block header -%}
+<h2>{{ _("Credit Request Accepted") }}<h2>
+{% endblock %}
+
+{%- block page_content -%}
+<p class="lead">{{ _("Your credit request was successfully accepted") }}</p>
+<p><a href="{{ frappe.form_dict.redirect_to or "/" }}"
+	class="btn btn-primary">{{ _("Continue") }}</a></p>
+{% endblock %}
+
+{% block style %}
+<style>
+#page-credit_success {
+	max-width: 1024px;
+	margin: auto;
+}
+</style>
+{% endblock %}

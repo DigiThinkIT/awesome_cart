@@ -1,14 +1,14 @@
 awc.debug.level = awc.debug.LEVEL.NONE;
 
 awc.Errors.CallException = awc.Errors.customError("CallException", function(
-	message, errors, parse_error, status, recoverable, xhr, textStatus) {
-	this.message = message;
-	this.errors = errors;
-	this.parse_error = parse_error;
-	this.status = status;
-	this.recoverable = recoverable;
-	this.xhr = xhr;
-	this.textStatus = textStatus;
+  message, errors, parse_error, status, recoverable, xhr, textStatus) {
+  this.message = message;
+  this.errors = errors;
+  this.parse_error = parse_error;
+  this.status = status;
+  this.recoverable = recoverable;
+  this.xhr = xhr;
+  this.textStatus = textStatus;
 });
 
 /* soft wrapper over frappe.call to improve error handling */
@@ -16,56 +16,56 @@ awc.call = function(method, args, freeze, freeze_message) {
   var last_error = null;
   var call_log = method + (args?"("+JSON.stringify(args)+")":"()");
 
-	var opts = {
-		method: method,
-		args: args,
-		freeze: freeze,
-		freeze_message: freeze_message
-	}
+  var opts = {
+    method: method,
+    args: args,
+    freeze: freeze,
+    freeze_message: freeze_message
+  }
 
-	// opts = {"method": "PYTHON MODULE STRING", "args": {}, "callback": function(r) {}}
-	frappe.prepare_call(opts);
-	if(opts.freeze) { frappe.freeze(); }
+  // opts = {"method": "PYTHON MODULE STRING", "args": {}, "callback": function(r) {}}
+  frappe.prepare_call(opts);
+  if(opts.freeze) { frappe.freeze(); }
 
   return new awc.Promise(function(resolve, reject) {
 
-		var deferred = $.ajax({
-			type: opts.type || "POST",
-			url: "/",
-			data: opts.args,
-			dataType: "json",
-			headers: { "X-Frappe-CSRF-Token": frappe.csrf_token },
-			statusCode: opts.statusCode || {
-				404: function(xhr) {
-					frappe.msgprint(__("Not found"));
-				},
-				403: function(xhr) {
-					frappe.msgprint(__("Not permitted"));
-				},
-				200: function(data, xhr) {
-					if(opts.callback)
-						opts.callback(data);
-					if(opts.success)
-						opts.success(data);
-				}
-			}
-		}).always(function(data) {
-			if(opts.freeze) {
-				frappe.unfreeze();
-			}
+    var deferred = $.ajax({
+      type: opts.type || "POST",
+      url: "/",
+      data: opts.args,
+      dataType: "json",
+      headers: { "X-Frappe-CSRF-Token": frappe.csrf_token },
+      statusCode: opts.statusCode || {
+        404: function(xhr) {
+          frappe.msgprint(__("Not found"));
+        },
+        403: function(xhr) {
+          frappe.msgprint(__("Not permitted"));
+        },
+        200: function(data, xhr) {
+          if(opts.callback)
+            opts.callback(data);
+          if(opts.success)
+            opts.success(data);
+        }
+      }
+    }).always(function(data) {
+      if(opts.freeze) {
+        frappe.unfreeze();
+      }
 
-			// executed before statusCode functions
-			if(data.responseText) {
-				try {
-					data = JSON.parse(data.responseText);
-				} catch(ex) {
-					data = {__server_messages: [ { message: data.responseText }]};
-				}
-			}
-			frappe.process_response(opts, data);
-		});
+      // executed before statusCode functions
+      if(data.responseText) {
+        try {
+          data = JSON.parse(data.responseText);
+        } catch(ex) {
+          data = {__server_messages: [ { message: data.responseText }]};
+        }
+      }
+      frappe.process_response(opts, data);
+    });
 
-		deferred.then(function(data, textStatus, xhr) {
+    deferred.then(function(data, textStatus, xhr) {
       awc.debug.log(call_log, data, textStatus, xhr);
       var parse_error = false;
       if(typeof data === "string") {
@@ -106,15 +106,15 @@ awc.call = function(method, args, freeze, freeze_message) {
       if ( _server_messages && _server_messages.contructor == Array ) {
         try {
           for(var i = 0; i < _server_messages.length; i++) {
-						var msg;
-						try {
-							msg = JSON.parse(_server_messages[i]);
-							if ( msg.message ) {
-								msg = msg.message;
-							}
-						} catch(ex) {
-							msg = ex
-						}
+            var msg;
+            try {
+              msg = JSON.parse(_server_messages[i]);
+              if ( msg.message ) {
+                msg = msg.message;
+              }
+            } catch(ex) {
+              msg = ex
+            }
             errors.push("Server Error: " + msg);
           }
         } catch(ex) {
@@ -122,13 +122,13 @@ awc.call = function(method, args, freeze, freeze_message) {
           errors.push(ex);
         }
       } else if ( _server_messages && _server_messages.exc ) {
-				errors.push(_server_messages.exc);
-			}
+        errors.push(_server_messages.exc);
+      }
 
-			reject(new awc.Errors.CallException(
-				"Error during a backend call. Please check your Internet connection",
-				errors, parse_error, status, false, xhr, textStatus
-			));
+      reject(new awc.Errors.CallException(
+        "Error during a backend call. Please check your Internet connection",
+        errors, parse_error, status, false, xhr, textStatus
+      ));
 
     });
 
@@ -344,30 +344,32 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
 
             awc.debug.log("Preparing for checkout!", gateway_request);
             awc_checkout.gateway_provider.process(gateway_request, function(err, data) {
+                console.log(data)
                 if (err) {
-										if ( (!err.errors || err.errors.length == 0) || err.status == 500 ) {
-											$('#checkout-error .msg').text("There was an internal server error while processing your order. Please contact us or try again later");
-										} else {
-                    	$('#checkout-error .msg').text(err.errors.join(', '));
-										}
+                    if ( (!err.errors || err.errors.length == 0) || err.status == 500 ) {
+                      $('#checkout-error .msg').text("There was an internal server error while processing your order. Please contact us or try again later");
+                    } else {
+                      $('#checkout-error .msg').text(err.errors.join(', '));
+                    }
 
                     awc.debug.error(err);
                     awc_checkout.showPage('#checkout-error');
                 } else {
                     awc.call("awesome_cart.utils.get_order_data", null, 1)
-                    .then(function(resp) {
-                        var result = resp.data;
-                        window.dataLayer = window.dataLayer || []
-                        dataLayer.push(result.message)
-                        awc_checkout.showPage('#checkout-success');
-                        window.location.href = data.redirect_to;
-                    })
-                    .catch(function(err) {
-												var result = resp.errors;
-                        awc.debug.error(err);
-                        awc_checkout.showPage('#checkout-success');
-                        window.location.href = data.redirect_to;
-                    })
+                      .then(function(resp) {
+                          var result = resp.data;
+                          window.dataLayer = window.dataLayer || []
+                          dataLayer.push(result.message)
+                          awc_checkout.showPage('#checkout-success');
+                          window.location.href = data.redirect_to;
+                          return resp;
+                      })
+                      .catch(function(err) {
+                          var result = resp.errors;
+                          awc.debug.error(err);
+                          awc_checkout.showPage('#checkout-success');
+                          window.location.href = data.redirect_to;
+                      })
 
                 }
             });
@@ -382,11 +384,11 @@ awc.ErpnextAdapter.prototype.validate = function(gateway_request, gateway_servic
     .catch(function(err) {
       awc.debug.error("Error while sending gateway data");
       awc.debug.error(err);
-			if ( (!err.errors || err.errors.length == 0) || err.status == 500 ) {
-				$('#checkout-error .msg').text("There was an internal server error while processing your order. Please contact us or try again later");
-			} else {
-      	$('#checkout-error .msg').text(err.errors.join(", "));
-			}
+      if ( (!err.errors || err.errors.length == 0) || err.status == 500 ) {
+        $('#checkout-error .msg').text("There was an internal server error while processing your order. Please contact us or try again later");
+      } else {
+        $('#checkout-error .msg').text(err.errors.join(", "));
+      }
       awc_checkout.showPage('#checkout-error');
     })
 }
@@ -434,24 +436,24 @@ var AwcShippingProvider = Class.extend({
         this.data = data || {};
     },
 
-		calculate_shipping: function(method, address) {
-			var base = this;
-			var $form = $('#awc-shipping-form');
-			var $method_form = $('#awc-shipping-method');
-			return cart.calculateShipping(method, address)
-				.catch(awc.Errors.CallException, function(err) {
-					awc.debug.error(err);
+    calculate_shipping: function(method, address) {
+      var base = this;
+      var $form = $('#awc-shipping-form');
+      var $method_form = $('#awc-shipping-method');
+      return cart.calculateShipping(method, address)
+        .catch(awc.Errors.CallException, function(err) {
+          awc.debug.error(err);
 
 
-					$("#bc-shipping").removeClass("valid");
-					$method_form.fadeOut('fast');
-					$method_form.parent().find('.error .error-invalid-address').hide();
-					$method_form.parent().find('.error .error-other').text(err.message);
-					$method_form.parent().find('.error .error-other').show();
-					$method_form.parent().find('.error').fadeIn('fast');
-					$method_form.parent().find('.spinner').fadeOut('fast');
-				});
-		},
+          $("#bc-shipping").removeClass("valid");
+          $method_form.fadeOut('fast');
+          $method_form.parent().find('.error .error-invalid-address').hide();
+          $method_form.parent().find('.error .error-other').text(err.message);
+          $method_form.parent().find('.error .error-other').show();
+          $method_form.parent().find('.error').fadeIn('fast');
+          $method_form.parent().find('.spinner').fadeOut('fast');
+        });
+    },
 
     update_shipping_rates: function(rates) {
         var base = this;
@@ -510,7 +512,7 @@ var AwcShippingProvider = Class.extend({
                         base.data.ship_method = method.name;
                         base.fee = method.fee;
                         base.label = method.label;
-												base.calculate_shipping(base.data.ship_method);
+                        base.calculate_shipping(base.data.ship_method);
                         base.validate();
                     }
                 })
@@ -533,9 +535,9 @@ var AwcShippingProvider = Class.extend({
             base.method_valid = false;
             $("#bc-shipping-method").removeClass("valid");
             $method_form.fadeOut('fast');
-						$method_form.parent().find('.error .error-invalid-address').show();
-						$method_form.parent().find('.error .error-other').empty();
-						$method_form.parent().find('.error .error-other').hide();
+            $method_form.parent().find('.error .error-invalid-address').show();
+            $method_form.parent().find('.error .error-other').empty();
+            $method_form.parent().find('.error .error-other').hide();
             $method_form.parent().find('.error').fadeIn('fast');
             $method_form.parent().find('.spinner').fadeOut('fast');
         }
@@ -635,10 +637,10 @@ var AwcShippingProvider = Class.extend({
         } else {
             $("#bc-shipping").removeClass("valid");
             $method_form.fadeOut('fast');
-						$method_form.parent().find('.error .error-invalid-address').show();
-						$method_form.parent().find('.error .error-other').empty();
-						$method_form.parent().find('.error .error-other').hide();
-						$method_form.parent().find('.error').fadeIn('fast');
+            $method_form.parent().find('.error .error-invalid-address').show();
+            $method_form.parent().find('.error .error-other').empty();
+            $method_form.parent().find('.error .error-other').hide();
+            $method_form.parent().find('.error').fadeIn('fast');
             $method_form.parent().find('.spinner').fadeOut('fast');
         }
 
