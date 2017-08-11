@@ -58,7 +58,7 @@ def set_cart_customer(customer_name):
 	if user_doc.get("is_power_user") or user_doc.name == "Administrator":
 
 		# lets make sure we have a primary contact first
-		contacts = frappe.get_all("Contact", filters={"customer_name": customer_name})
+		contacts = frappe.get_all("Contact", filters={"customer": customer_name})
 
 		if not contacts or len(contacts) == 0:
 			return "This Customer requires at least one Contact before placing an order!"
