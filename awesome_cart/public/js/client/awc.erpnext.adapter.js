@@ -553,8 +553,7 @@ var AwcShippingProvider = Class.extend({
         if ($("#checkout-shipping").attr('data-select') == 'true') {
             address_data.shipping_address = $('#awc-shipping-form').attr('data-name');
             address_data.phone = $form.find('input[name="phone"]').val();
-						address_data.building = $form.find('input[name="building"]').val();
-						address_data.address_1 = $form.find('input[name="address_1"]').val();
+            address_data.address_1 = $form.find('input[name="address_1"]').val();
             address_data.address_2 = $form.find('input[name="address_2"]').val();
             address_data.city = $form.find('input[name="city"]').val();
             address_data.state = $form.find('input[name="state"]').val();
@@ -565,8 +564,7 @@ var AwcShippingProvider = Class.extend({
         } else {
             address_data.shipping_address = $('#shipping-addrs div.selected').attr('data-name');
             address_data.phone = $('#shipping-addrs .selected span#phone').text();
-						address_data.building = $('#shipping-addrs .selected span#building').text();
-						address_data.address_1 = $('#shipping-addrs .selected span#line1').text();
+            address_data.address_1 = $('#shipping-addrs .selected span#line1').text();
             address_data.address_2 = $('#shipping-addrs .selected span#line2').text();
             address_data.city = $('#shipping-addrs .selected span#city').text();
             address_data.state = $('#shipping-addrs .selected span#state').text();
@@ -579,8 +577,7 @@ var AwcShippingProvider = Class.extend({
         current_address_data = {
             shipping_address: this.data.shipping_address,
             phone: this.data.phone,
-						building: this.data.building,
-						address_1: this.data.address_1,
+            address_1: this.data.address_1,
             address_2: this.data.address_2,
             city: this.data.city,
             state: this.data.state,
@@ -689,7 +686,6 @@ var AwcShippingProvider = Class.extend({
 
             return '<div class="row">' +
                 '<address class="col-sm-12">' +
-								ln("building") +
                 ln("address_1") +
                 ln("address_2") +
                 ln("city", 0) + ", " + ln("state", 0) + " " + ln("pincode") +

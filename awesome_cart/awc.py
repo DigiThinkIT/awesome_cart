@@ -927,7 +927,6 @@ def cart(data=None, action=None):
 					#"address_title": data[0].get("address").get("title"),
 					"address_type": data[0].get("address").get("address_type", "Shipping"),
 					"customer": quotation.customer,
-					"building": data[0].get("address").get("building"),
 					"address_line1": data[0].get("address").get("address_1"),
 					"address_line2": data[0].get("address").get("address_2"),
 					"city": data[0].get("address").get("city"),

@@ -368,8 +368,7 @@ awc_checkout = {
                     address_name: $('#awc-shipping-form.awc-form').attr('data-name'),
                     address_is_residential: $('#awc_ship__is_residential').val(),
                     address_phone: $('#awc_ship__phone').val(),
-										address_building: $('#awc_ship__building').val(),
-										address_line1: $('#awc_ship__line1').val(),
+                    address_line1: $('#awc_ship__line1').val(),
                     address_line2: $('#awc_ship__line2').val(),
                     address_city: $('#awc_ship__city').val(),
                     address_state: $('#awc_ship__state').val(),
@@ -377,7 +376,6 @@ awc_checkout = {
                     address_country: $('#awc_ship__country').val()
                 };
                 $('#shipping-addrs .edited span#phone').text($('#awc_ship__phone').val());
-								$('#shipping-addrs .edited span#building').text($('#awc_ship__building').val());
                 $('#shipping-addrs .edited span#line1').text($('#awc_ship__line1').val());
                 $('#shipping-addrs .edited span#line2').text($('#awc_ship__line2').val());
                 $('#shipping-addrs .edited span#city').text($('#awc_ship__city').val());
@@ -412,7 +410,6 @@ awc_checkout = {
                 e.stopPropagation();
                 $('#awc-shipping-form.awc-form').attr('data-name', $(this).closest('div').attr('data-name'));
                 $('#awc_ship__phone').val($(this).siblings('span#phone').text());
-								$('#awc_ship__building').val($(this).siblings('span#building').text());
                 $('#awc_ship__line1').val($(this).siblings('span#line1').text());
                 $('#awc_ship__line2').val($(this).siblings('span#line2').text());
                 $('#awc_ship__city').val($(this).siblings('span#city').text());
