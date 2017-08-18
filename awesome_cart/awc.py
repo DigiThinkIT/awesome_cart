@@ -821,13 +821,6 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 	if not address:
 		address = awc_session.get("shipping_address")
 
-	if rate_name == "PICK UP":
-		hq_address = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
-		address = frappe.get_doc("Address", hq_address).as_dict()
-		quotation.shipping_address_name = hq_address
-
-		#log(pretty_json(awc_session))
-
 	if address and awc_session.get("shipping_address") and \
 		len(address.items()) > 0 and len(awc_session["shipping_address"].items()) > 0:
 
@@ -853,6 +846,17 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 		awc_session["shipping_method"] = rate
 	elif "shipping_method" in awc_session:
 		del awc_session["shipping_method"]
+
+	if rate_name == "PICK UP":
+		hq_address = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
+		#address = frappe.get_doc("Address", hq_address).as_dict()
+		if quotation and quotation.shipping_address_name:
+			awc_session["last_shipping_address_name"] = quotation.shipping_address_name
+
+		quotation.shipping_address_name = hq_address
+	else:
+		if quotation and awc_session.get("last_shipping_address_name"):
+			quotation.shipping_address_name = awc_session["last_shipping_address_name"]
 
 	shipping_address_name = None
 
