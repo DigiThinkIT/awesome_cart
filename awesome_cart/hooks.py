@@ -11,15 +11,6 @@ app_color = "grey"
 app_email = "forellana@digithinkit.com"
 app_license = "GPL-v3"
 
-fixtures = [
-	{
-		"dt": "Custom Field",
-		"filters": [
-			["dt", "=", "Quotation Item"],
-			["fieldname", "in", ("awc_custom_sb1", "awc_custom_cb1", "awc_custom", "awc_group", "awc_subgroup", "awc_group_label")]
-		]
-	}
-]
 
 integration_services = ["Credit Gateway"]
 #update_website_context = "awesome_cart.utils.update_context"
