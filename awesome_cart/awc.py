@@ -88,7 +88,7 @@ def get_price(item_code, price_list=None, qty=1, find_price_list=False, customer
 			price_list_rate = price[0].price_list_rate
 
 			if pricing_rule:
-				if pricing_rule.pricing_rule_for == "Discount Percentage":
+				if pricing_rule.pricing_rule_for == "Discount Percentage" and pricing_rule.discount_percentage:
 					price[0].price_list_rate = flt(price[0].price_list_rate * (1.0 - (pricing_rule.discount_percentage / 100.0)))
 
 				if pricing_rule.pricing_rule_for == "Price":
@@ -609,6 +609,8 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False):
 		if qitem.name not in awc_items_matched]:
 
 		product = get_product_by_sku(item.get("item_code"))
+		print product, "PRODUCT"
+		print item, "ITEM"
 		if product.get("success"):
 			product = product.get("data")
 			awc_item = {
