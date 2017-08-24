@@ -727,32 +727,42 @@ cart.scan_forms = function() {
         var $input = $(this).find('input:first, select:first, textarea:first');
         $field.addClass(".awc-form-bound");
 
+				var validate_phone = function(value) {
+					// simple validation for phone numbers, just remove all non numeric values
+					return value.replace(/\D/g,'');
+				}
+
+				var validate_value = function(value, $field) {
+					if (value) {
+							$field.addClass('hasvalue');
+					} else {
+							$field.removeClass('hasvalue');
+					}
+				}
+
         $input
             .change(function() {
                 var is_select = $(this).is('select');
                 if ( $(this).is('[data-auto-titlecase]') ) {
                   $(this).val(toTitleCase($(this).val()))
                 }
+								if ( $(this).is('[data-validate-phone]') ) {
+									$(this).val(validate_phone($(this).val()));
+								}
                 var value = is_select ? $(this).find(':selected').attr('value') : $(this).val();
-
-                if (value) {
-                    $field.addClass('hasvalue');
-                } else {
-                    $field.removeClass('hasvalue');
-                }
+								validate_value(value, $field);
             })
             .keyup(function() {
-                if ($(this).val()) {
-                    $field.addClass('hasvalue');
-                } else {
-                    $field.removeClass('hasvalue');
-                }
+								validate_value($(this).val(), $field);
             })
             .blur(function() {
                 $field.removeClass('focus');
                 if ( $(this).is('[data-auto-titlecase]') ) {
                   $(this).val(toTitleCase($(this).val()))
                 }
+								if ( $(this).is('[data-validate-phone]') ) {
+									$(this).val(validate_phone($(this).val()));
+								}
             })
             .focus(function() {
                 $field.addClass('focus');
