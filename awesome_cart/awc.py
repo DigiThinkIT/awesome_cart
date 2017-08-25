@@ -233,13 +233,10 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 	if is_logged_in():
 		if not quotation:
 			quotation = _get_cart_quotation()
-
 		price_list = quotation.get("selling_price_list")
 
 	# fetch item by its sku/item_code
-	item = frappe.db.get_list("Item", fields=["name", "variant_of", "item_code", "disabled"], filters = {"item_code": sku})#, ignore_permissions=1)
-	#items = frappe.get_list("Item", fields="name", filters = {"item_code": sku}, ignore_permissions=1)
-	#item = frappe.get_doc("Item", items[0].name)
+	item = frappe.get_all("Item", fields=["name", "item_name" ,"variant_of", "item_code", "disabled", "default_warehouse", "net_weight"], filters = {"item_code": sku}, ignore_permissions=1)
 
 	if not item or len(item) == 0:
 		return { "success": False, "data": None }
@@ -250,15 +247,15 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		return { "success": False, "data": None }
 
 	# get awc item name by its item link
-	awc_item_name = frappe.db.get_value("AWC Item", filters = {"product_name": item.name})#, ignore_permissions=1)
+	awc_item_name = frappe.db.get_value("AWC Item", filters = {"product_name": item.name})
 
 	missing_awc_item = False
 	# lets check if we have an AWC Item for this Item
-	if not awc_item_name:# or len(awc_item) == 0:
+	if not awc_item_name:
 		# if not, lets check if we have an AWC Item for its variant_of value if set
 		if item.get('variant_of'):
-			awc_item_name = frappe.db.get_value("AWC Item", filters = {"product_name": item.variant_of})#, ignore_permissions=1)
-			if not awc_item_name:# or len(awc_item) == 0:
+			awc_item_name = frappe.db.get_value("AWC Item", filters = {"product_name": item.variant_of})
+			if not awc_item_name:
 				missing_awc_item = "{0}(Parent), {1}(Variant)".format(item.variant_of, item.name)
 		else:
 			missing_awc_item = item.name
@@ -274,8 +271,7 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 	price_info = get_price(item.get("item_code"), price_list)
 	price = price_info.get("rate")
 
-	#variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name")})
-	variants = frappe.db.get_values("Item", fieldname=["name", "item_code"], filters={"variant_of": item.get("name")})
+	variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name")})
 	for vitem in variants:
 		vprice = get_price(vitem.get("item_code"), price_list).get("rate")
 		if vprice < price:
@@ -670,7 +666,6 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False):
 		update_cart_settings(quotation, awc_session)
 		quotation.flags.ignore_permissions = True
 		quotation.save()
-
 		frappe.db.commit()
 
 	collect_totals(quotation, awc, awc_session)
