@@ -237,20 +237,16 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		price_list = quotation.get("selling_price_list")
 
 	# fetch item by its sku/item_code
-	item = frappe.db.get_list("Item", fields=["name", "variant_of", "item_code", "disabled"], filters = {"item_code": sku})#, ignore_permissions=1)
-	#items = frappe.get_list("Item", fields="name", filters = {"item_code": sku}, ignore_permissions=1)
-	#item = frappe.get_doc("Item", items[0].name)
+	item = frappe.db.get_value("Item", fieldname=["name", "variant_of", "item_code", "disabled", "default_warehouse"], filters = {"item_code": sku}, as_dict=True)
 
-	if not item or len(item) == 0:
+	if not item:
 		return { "success": False, "data": None }
 
-	item = item[0]
-
-	if item.disabled:
+	if item.get("disabled"):
 		return { "success": False, "data": None }
 
 	# get awc item name by its item link
-	awc_item_name = frappe.db.get_value("AWC Item", filters = {"product_name": item.name})#, ignore_permissions=1)
+	awc_item_name = frappe.db.get_value("AWC Item", filters = {"product_name": item.get("name")})#, ignore_permissions=1)
 
 	missing_awc_item = False
 	# lets check if we have an AWC Item for this Item
@@ -259,23 +255,23 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		if item.get('variant_of'):
 			awc_item_name = frappe.db.get_value("AWC Item", filters = {"product_name": item.variant_of})#, ignore_permissions=1)
 			if not awc_item_name:# or len(awc_item) == 0:
-				missing_awc_item = "{0}(Parent), {1}(Variant)".format(item.variant_of, item.name)
+				missing_awc_item = "{0}(Parent), {1}(Variant)".format(item.variant_of, item.get("name"))
 		else:
-			missing_awc_item = item.name
+			missing_awc_item = item.get("name")
 
 	if missing_awc_item:
 		return { "success": False, "data": None, "error": "Missing AWC Item for {0}".format(missing_awc_item) }
 
 	# finally get awc_item doctype instance
 	awc_item = frappe.get_doc("AWC Item", awc_item_name)
+
 	# get awc_item custom data as dictionary
 	custom_data = get_awc_item_custom_data(awc_item)
 
 	price_info = get_price(item.get("item_code"), price_list)
 	price = price_info.get("rate")
 
-	#variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name")})
-	variants = frappe.db.get_values("Item", fieldname=["name", "item_code"], filters={"variant_of": item.get("name")})
+	variants = frappe.db.get_values("Item", fieldname=["name", "item_code"], filters={"variant_of": item.get("name")}, as_dict=True)
 	for vitem in variants:
 		vprice = get_price(vitem.get("item_code"), price_list).get("rate")
 		if vprice < price:
@@ -283,8 +279,8 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 
 	# format product for awcjs
 	product = dict(
-		sku=item.item_code,
-		name=item.item_name,
+		sku=item.get("item_code"),
+		name=item.get("item_name"),
 		custom=custom_data,
 		weight=item.get("net_weight", 0),
 		warehouse=item.get("default_warehouse"),
@@ -921,8 +917,6 @@ def cart(data=None, action=None):
 	if quotation:
 		sync_awc_and_quotation(awc_session, quotation)
 
-	#log(pretty_json(awc))
-
 	if not action:
 		return { "data": awc, "success": True}
 
@@ -1082,13 +1076,6 @@ def cart(data=None, action=None):
 					set_quotation_item_rate(quotation_item, product.get("price"), product)
 					item_data['total'] = product.get("price") * cint(item.get("qty"))
 
-					#quotation_item.discount_percentage = 100 - flt(item["options"]["custom"]["rate"] * 100) / flt(product.get("price"))
-					#quotation_item.rate = flt(item["options"]["custom"]["rate"])
-					#quotation_item.price_list_rate = flt(product.get("price"))
-					#quotation_item.amount = flt(item["options"]["custom"]["rate"])
-					#quotation_item.base_price_list_rate = flt(product.get("price"))
-					#quotation_item.base_rate = flt(product.get("price"))
-
 				quotation_item.save()
 
 				item["old_id"] = item["id"]
@@ -1101,18 +1088,13 @@ def cart(data=None, action=None):
 			quotation.flags.ignore_permissions = True
 			quotation.save()
 
-			#log("Quotation after add to cart: \n{0}", pretty_json(quotation.as_dict()))
-
 			frappe.db.commit()
 
 			collect_totals(quotation, awc, awc_session)
-			#log("Quotation after collecting totals: \n{0}", pretty_json(quotation.as_dict()))
 		else:
 			collect_totals(None, awc, awc_session)
 
 		set_awc_session(awc_session)
-
-		#log("Awc session after add to cart: \n{0}", pretty_json(awc_session))
 
 		return { "success": True, "data": data, "totals": awc.get("totals") }
 

@@ -72,3 +72,5 @@ def clear_awc_session():
 	if awc_session.get("selected_customer_image"):
 		del awc_session["selected_customer_image"]
 	awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
+
+	return awc_session
