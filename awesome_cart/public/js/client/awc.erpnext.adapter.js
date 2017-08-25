@@ -417,6 +417,7 @@ var AwcShippingProvider = Class.extend({
 
         $form.find('input[name="address_1"]').change(on_update);
         $form.find('input[name="address_2"]').change(on_update);
+        $form.find('input[name="address_3"]').change(on_update);
         $form.find('input[name="city"]').change(on_update);
         $form.find('input[name="state"]').change(on_update);
         $form.find('input[name="pincode"]').change(on_update);
@@ -552,9 +553,11 @@ var AwcShippingProvider = Class.extend({
 
         if ($("#checkout-shipping").attr('data-select') == 'true') {
             address_data.shipping_address = $('#awc-shipping-form').attr('data-name');
+            address_data.recipient = $form.find('input[name="recipient"]').val();
             address_data.phone = $form.find('input[name="phone"]').val();
             address_data.address_1 = $form.find('input[name="address_1"]').val();
             address_data.address_2 = $form.find('input[name="address_2"]').val();
+            address_data.address_3 = $form.find('input[name="address_3"]').val();
             address_data.city = $form.find('input[name="city"]').val();
             address_data.state = $form.find('input[name="state"]').val();
             address_data.pincode = $form.find('input[name="pincode"]').val();
@@ -563,9 +566,11 @@ var AwcShippingProvider = Class.extend({
             address_data.address_type = "Shipping";
         } else {
             address_data.shipping_address = $('#shipping-addrs div.selected').attr('data-name');
+            address_data.recipient = $('#shipping-addrs .selected span#recipient').text();
             address_data.phone = $('#shipping-addrs .selected span#phone').text();
             address_data.address_1 = $('#shipping-addrs .selected span#line1').text();
             address_data.address_2 = $('#shipping-addrs .selected span#line2').text();
+            address_data.address_3 = $('#shipping-addrs .selected span#line3').text();
             address_data.city = $('#shipping-addrs .selected span#city').text();
             address_data.state = $('#shipping-addrs .selected span#state').text();
             address_data.pincode = $('#shipping-addrs .selected span#postal_code').text();
@@ -576,9 +581,11 @@ var AwcShippingProvider = Class.extend({
 
         current_address_data = {
             shipping_address: this.data.shipping_address,
+            recipient: this.data.recipient,
             phone: this.data.phone,
             address_1: this.data.address_1,
             address_2: this.data.address_2,
+            address_3: this.data.address_3,
             city: this.data.city,
             state: this.data.state,
             pincode: this.data.pincode,

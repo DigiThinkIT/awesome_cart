@@ -12,8 +12,11 @@
                         <p>
                             <button title="Delete" class="pull-right delete"><span class="fa fa-trash" aria-hidden="true"></span></button>
                             <button title="Edit" data-type="ship" class="pull-right edit" style="margin:0 15px;"><span class="fa fa-pencil" aria-hidden="true"></span></button>
+                            {% if address.recipient %}
+                            <span id="recipient">{{ address.recipient }}</span><br> {% endif %}
                             <span id="line1">{{ address.address_line1 }}</span>, {% if address.address_line2 %}
-                            <span id="line2">{{ address.address_line2 }}</span>, {% endif %}
+                            <span id="line2">{{ address.address_line2 }}</span>, {% endif %} {% if address.address_line3 %}
+                            <span id="line3">{{ address.address_line3 }}</span>, {% endif %}
                             <span id="city">{{ address.city }}</span>,
                             <span id="state">{{ address.state }}</span>,
                             <span id="country">{{ address.country }}</span>,
