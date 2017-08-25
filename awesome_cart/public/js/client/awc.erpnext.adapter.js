@@ -725,7 +725,7 @@ cart.scan_forms = function() {
 
 				var validate_phone = function(value) {
 					// simple validation for phone numbers, just remove all non numeric values
-					return value.replace(/\D/g,'');
+                    return value.replace(/[^\d\(\)\+\-\s]/g,'');
 				}
 
 				var validate_value = function(value, $field) {
