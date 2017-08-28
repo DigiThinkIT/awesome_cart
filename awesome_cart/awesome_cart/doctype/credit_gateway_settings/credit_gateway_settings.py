@@ -56,25 +56,24 @@ from urllib import urlencode
 from datetime import datetime
 import urllib
 from frappe import _, _dict
+from frappe.model.document import Document
 from frappe.utils import get_url, call_hook_method, cint, flt
-from frappe.integration_broker.doctype.integration_service.integration_service import IntegrationService, get_integration_controller
+from frappe.integrations.utils import create_request_log, create_payment_gateway
 from awesome_cart import awc
 from awesome_cart.compat.customer import get_current_customer
 from dti_devtools.debug import log, pretty_json
 
-class CreditGatewaySettings(IntegrationService):
+class CreditGatewaySettings(Document):
 	service_name = "Credit Gateway Settings"
 	supported_currencies = ["USD"]
 	is_embedable = True
 
 	def validate(self):
-		pass
+		create_payment_gateway("Credit Gateway")
+		call_hook_method("payment_gateway_enabled", gateway=self.service_name)
 
 	def on_update(self):
 		pass
-
-	def enable(self):
-		call_hook_method("payment_gateway_enabled", gateway=self.service_name)
 
 	def validate_transaction_currency(self, currency):
 		if currency not in self.supported_currencies:
@@ -170,9 +169,7 @@ class CreditGatewaySettings(IntegrationService):
 		status = "Completed"
 
 		if not self.process_data.get("unittest"):
-			self.integration_request = super(CreditGatewaySettings, self)\
-				.create_request(self.process_data, "Host", self.service_name)
-
+			self.integration_request = create_request_log(self.process_data, "Host", self.service_name)
 			self.integration_request.status = status
 			self.integration_request.save()
 
