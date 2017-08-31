@@ -125,16 +125,21 @@ class AWCTransaction(Document):
 				frappe.db.set_value("Sales Order", self.order_id, "fedex_shipping_method", self.get("shipping_method"))
 
 			if self.get("gateway_service"):
+				has_universals = False
+				for item in frappe.get_doc("Sales Order", self.order_id).items:
+					if frappe.db.get_value("Item", item.item_code, "item_group") == "Universal":
+						has_universals = True
 				if self.get("gateway_service") == "credit_gateway":
 					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Bill Me")
-				elif self.get("gateway_service") == "authorizenet":
-					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Card")
-					frappe.db.set_value("Sales Order", self.order_id, "authorize_production", 1)
-					frappe.db.set_value("Sales Order", self.order_id, "authorize_delivery", 1)
 				else:
-					frappe.db.set_value("Sales Order", self.order_id, "payment_method", self.get("gateway_service"))
-					frappe.db.set_value("Sales Order", self.order_id, "authorize_production", 1)
-					frappe.db.set_value("Sales Order", self.order_id, "authorize_delivery", 1)
+					if self.get("gateway_service") == "authorizenet":
+						frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Card")
+					else:
+						frappe.db.set_value("Sales Order", self.order_id, "payment_method", self.get("gateway_service"))
+
+					if not has_universals:
+						frappe.db.set_value("Sales Order", self.order_id, "authorize_production", True)
+						frappe.db.set_value("Sales Order", self.order_id, "authorize_delivery", True)
 
 			# override redirection to orders page
 			if result:

@@ -7,7 +7,7 @@
 {% endblock %}
 
 {%- block page_content -%}
-<p class="lead">{{ _("Your credit request was successfully accepted") }}</p>
+<p class="lead">{{ _("Thank you for your order with Jerry Harvey Audio. Please watch for an email with a copy of your Order and a Payment Request soon.") }}</p>
 <p><a href="{{ frappe.form_dict.redirect_to or "/" }}"
 	class="btn btn-primary">{{ _("Continue") }}</a></p>
 {% endblock %}
@@ -17,6 +17,9 @@
 #page-credit_success {
 	max-width: 1024px;
 	margin: auto;
+}
+#page-credit_success p {
+	margin-left: 15px;
 }
 </style>
 {% endblock %}
