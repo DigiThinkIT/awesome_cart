@@ -20,14 +20,13 @@ def create_address(parent_dt, parent,
 	}
 
 	if parent_dt == "Customer":
-		data["customer"] = parent
+		data["links"] = [{"link_doctype" : "Customer", "link_name" : parent}]
 
 	doc = frappe.get_doc(data)
 
 	if flags:
 		for key, value in flags.iteritems():
 			doc.flags[key] = value
-		
 	doc.insert()
 
 	if return_name:
