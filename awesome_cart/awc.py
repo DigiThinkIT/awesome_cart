@@ -935,10 +935,9 @@ def cart(data=None, action=None):
 					"country": data[0].get("address").get("country"),
 					"phone": data[0].get("address").get("phone"),
 					"email_id": frappe.session.user,
-					"pincode": data[0].get("address").get("pincode")
+					"pincode": data[0].get("address").get("pincode"),
+					"links": [{"link_doctype" : "Customer", "link_name" : quotation.customer}]
 				})
-				new_address.append("links", {"link_doctype" : "Customer",
-									"link_name" : quotation.customer })
 				new_address.flags.ignore_permissions= True
 				new_address.save()
 				address_name = new_address.name
