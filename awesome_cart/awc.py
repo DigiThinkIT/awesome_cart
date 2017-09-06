@@ -928,7 +928,6 @@ def cart(data=None, action=None):
 				new_address.update({
 					#"address_title": data[0].get("address").get("title"),
 					"address_type": data[0].get("address").get("address_type", "Shipping"),
-					"customer": quotation.customer,
 					"address_line1": data[0].get("address").get("address_1"),
 					"address_line2": data[0].get("address").get("address_2"),
 					"city": data[0].get("address").get("city"),
@@ -938,6 +937,8 @@ def cart(data=None, action=None):
 					"email_id": frappe.session.user,
 					"pincode": data[0].get("address").get("pincode")
 				})
+				new_address.append("links", {"link_doctype" : "Customer",
+									"link_name" : quotation.customer })
 				new_address.flags.ignore_permissions= True
 				new_address.save()
 				address_name = new_address.name
