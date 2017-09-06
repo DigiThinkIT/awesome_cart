@@ -34,7 +34,7 @@ def get_context(context):
 		address_links = frappe.get_all("Dynamic Link", filters={"link_name" : get_current_customer().name}, fields=["parent"])
 		addresses = []
 		for address in address_links:
-			addresses.extend(frappe.get_all("Address" filters={"name" : address.parent, "disabled" : False}, fields="*"))
+			addresses.extend(frappe.get_all("Address", filters={"name" : address.parent, "disabled" : False}, fields="*"))
 
 		context['addresses'] = addresses
 
