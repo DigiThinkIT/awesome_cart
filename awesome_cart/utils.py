@@ -87,7 +87,7 @@ def quotation_validate(doc, method):
 
 	# find all parent items(not sub groups)
 	for item in sorted(doc.items, key=lambda x: x.idx):
-		if not item.get("awc_sub_group"):
+		if not item.get("awc_subgroup"):
 			main_items.append(item)
 			if item.get("awc_group") and not item.get("awc_group") in groups:
 				groups[item.get("awc_group")] = []
@@ -106,5 +106,7 @@ def quotation_validate(doc, method):
 			for sub_item in groups[item.get("awc_group")]:
 				sub_item.set("idx", idx)
 				idx = idx + 1
+
+	doc.items = sorted(doc.items, key=lambda x: x.idx)
 
 	return True
