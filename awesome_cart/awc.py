@@ -609,13 +609,7 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False):
 	for item in [qitem for qitem in quotation.get("items", []) \
 		if qitem.name not in awc_items_matched]:
 
-<<<<<<< HEAD
-		product = get_product_by_sku(item.get("item_code"))
-		print product, "PRODUCT"
-		print item, "ITEM"
-=======
 		product = get_product_by_sku(item.get("item_code"), quotation=quotation)
->>>>>>> master
 		if product.get("success"):
 			product = product.get("data")
 			awc_item = {
