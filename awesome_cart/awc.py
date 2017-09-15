@@ -848,17 +848,6 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 	elif "shipping_method" in awc_session:
 		del awc_session["shipping_method"]
 
-	if rate_name == "PICK UP":
-		hq_address = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
-		#address = frappe.get_doc("Address", hq_address).as_dict()
-		if quotation and quotation.shipping_address_name:
-			awc_session["last_shipping_address_name"] = quotation.shipping_address_name
-
-		quotation.shipping_address_name = hq_address
-	else:
-		if quotation and awc_session.get("last_shipping_address_name"):
-			quotation.shipping_address_name = awc_session["last_shipping_address_name"]
-
 	shipping_address_name = None
 
 	if quotation:
