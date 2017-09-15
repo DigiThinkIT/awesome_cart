@@ -7,6 +7,13 @@
 		"public/css/awc_cart.css",
 		"public/css/checkout.css"
 	],
+	"css/awc.ui.desk.css": [
+		"public/css/awc.ui.css",
+		"public/css/awc.ui.tags.css"
+	],
+	"js/awc.ui.desk.js": [
+		"public/js/ui/tags.js"
+	],
 	"js/credit_gateway_embed.js": [
 		"public/js/credit_gateway/credit_gateway_summary.html",
 		"public/js/credit_gateway/process.js",
