@@ -27,9 +27,11 @@ web_include_css = [
 ]
 
 app_include_css = [
+	"/assets/css/awc.ui.desk.css",
 	"/assets/css/awc_cart.css"
 ]
 app_include_js = [
+	"/assets/js/awc.ui.desk.js",
 	"/assets/js/credit_gateway_settings.js"
 ]
 
