@@ -799,7 +799,7 @@ def reset_shipping():
 	set_awc_session(awc_session)
 	frappe.db.commit()
 
-def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
+def calculate_shipping(rate_name, address, awc_session, quotation, save=True, force=False):
 	awc = awc_session.get("cart")
 
 	# clean up for old test data
@@ -814,9 +814,6 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 		rate_changed = True
 	else:
 		rate_changed = False
-
-	# rate selection
-	rate = awc_session.get("shipping_rates", {}).get(rate_name, None)
 
 	# if no address provided get last provided address
 	if not address:
@@ -835,8 +832,11 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True):
 	if address:
 		address_changed = len(address.items()) != len(awc_session.get("shipping_address", {})) or not address_field_equal
 
-	if address and address_changed:
+	if (address and address_changed) or (address and force):
 		awc_session["shipping_rates_list"] = update_shipping_rate(address, awc_session)
+
+	# rate selection
+	rate = awc_session.get("shipping_rates", {}).get(rate_name, None)
 
 	# if we have no selection but we have shipping rates, pick first option
 	if not rate and len(awc_session.get("shipping_rates_list", [])) > 0:
@@ -1009,7 +1009,7 @@ def cart(data=None, action=None):
 
 					quotation.set("items", quotation_items)
 
-		shipping_info = calculate_shipping(None, None, awc_session, quotation, save=0)
+		shipping_info = calculate_shipping(None, None, awc_session, quotation, save=0, force=True)
 
 		if quotation:
 			update_cart_settings(quotation, awc_session)
