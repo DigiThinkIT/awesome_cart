@@ -107,13 +107,13 @@ awc_checkout = {
                 if ($('#form-bill-addr').attr('data-select') == 'true') {
                     e.preventDefault();
                     awc_checkout.showPage('#checkout-billing');
-                    $('#select-bill-addr').css('display', 'none');
+                    $('#awc-select-bill-addr').css('display', 'none');
                     $('#form-bill-addr').css('display', 'block');
                 } else {
                     e.preventDefault();
                     awc_checkout.showPage('#checkout-billing');
                     $('#form-bill-addr').css('display', 'none');
-                    $('#select-bill-addr').css('display', 'block');
+                    $('#awc-select-bill-addr').css('display', 'block');
                 }
             })
 
@@ -143,13 +143,13 @@ awc_checkout = {
             if ($('#form-bill-addr').attr('data-select') == 'true') {
                 e.preventDefault();
                 awc_checkout.showPage('#checkout-billing');
-                $('#select-bill-addr').css('display', 'none');
+                $('#awc-select-bill-addr').css('display', 'none');
                 $('#form-bill-addr').css('display', 'block');
             } else {
                 e.preventDefault();
                 awc_checkout.showPage('#checkout-billing');
                 $('#form-bill-addr').css('display', 'none');
-                $('#select-bill-addr').css('display', 'block');
+                $('#awc-select-bill-addr').css('display', 'block');
             }
         });
 
@@ -186,30 +186,30 @@ awc_checkout = {
         }
 
         $('#checkout-shipping-address .btn-primary').click(function(e) {
-            $('#checkout-shipping-address .addr').removeClass('selected');
+            $('#checkout-shipping-address .awc-addr').removeClass('awc-selected');
             $('#checkout-shipping').attr('data-select', 'true');
             awc_checkout.showPage('#checkout-shipping');
             $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
         })
 
-        $('#select-bill-addr .btn-add-bill-addr').click(function(e) {
+        $('#awc-select-bill-addr .btn-add-bill-addr').click(function(e) {
                 $('#form-bill-addr').attr('data-select', 'true');
-                $('#select-bill-addr').css('display', 'none');
+                $('#awc-select-bill-addr').css('display', 'none');
                 $('#form-bill-addr').css('display', 'block');
             })
             //clicking ship addr
-        $('#checkout-shipping-address .addr').click(function(e) {
+        $('#checkout-shipping-address .awc-addr').click(function(e) {
                 e.stopPropagation();
-                $('#shipping-addrs .selected').removeClass('selected');
-                $(this).addClass('selected');
+                $('#awc-shipping-addrs .awc-selected').removeClass('awc-selected');
+                $(this).addClass('awc-selected');
                 awc_checkout.showPage('#checkout-shipping-method');
                 $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
             })
             //clicking bill addr
-        $('#billing-addrs .addr').click(function(e) {
+        $('#awc-billing-addrs .awc-addr').click(function(e) {
             e.stopPropagation();
-            $('#billing-addrs .selected').removeClass('selected');
-            $(this).addClass('selected');
+            $('#awc-billing-addrs .awc-selected').removeClass('awc-selected');
+            $(this).addClass('awc-selected');
             awc_checkout.showPage('#checkout-confirmation');
             $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
         })
@@ -217,7 +217,7 @@ awc_checkout = {
         $("#awc-shipping-form .btn-back").click(function(e) {
             e.preventDefault();
             $('#checkout-shipping').attr('data-select', 'false');
-            $('#checkout-shipping-address .addr').removeClass('selected');
+            $('#checkout-shipping-address .awc-addr').removeClass('awc-selected');
             awc_checkout.showPage('#checkout-shipping-address');
             $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
         })
@@ -225,8 +225,8 @@ awc_checkout = {
         $("#form-bill-addr .btn-back").click(function(e) {
                 e.preventDefault();
                 $('#form-bill-addr').attr('data-select', 'false');
-                $('#select-bill-addr .addr').removeClass('selected');
-                $('#select-bill-addr').css('display', 'block');
+                $('#awc-select-bill-addr .awc-addr').removeClass('awc-selected');
+                $('#awc-select-bill-addr').css('display', 'block');
                 $('#form-bill-addr').css('display', 'none');
             })
             //valiadation for shipping addr form fields
@@ -292,20 +292,20 @@ awc_checkout = {
                     address_zip: $('#billing_pincode').val(),
                     address_country: $('#billing_country').val()
                 };
-                $('#billing-addrs .edited span#phone').text($('#billing_phone').val());
-                $('#billing-addrs .edited span#line1').text($('#billing_line1').val());
-                $('#billing-addrs .edited span#line2').text($('#billing_line2').val());
-                $('#billing-addrs .edited span#city').text($('#billing_city').val());
-                $('#billing-addrs .edited span#state').text($('#billing_state').val());
-                $('#billing-addrs .edited span#postal_code').text($('#billing_pincode').val());
-                $('#billing-addrs .edited span#country').text($('#billing_country').val());
-                $('#billing-addrs .addr .edited').removeClass('edited');
+                $('#awc-billing-addrs .edited span#phone').text($('#billing_phone').val());
+                $('#awc-billing-addrs .edited span#line1').text($('#billing_line1').val());
+                $('#awc-billing-addrs .edited span#line2').text($('#billing_line2').val());
+                $('#awc-billing-addrs .edited span#city').text($('#billing_city').val());
+                $('#awc-billing-addrs .edited span#state').text($('#billing_state').val());
+                $('#awc-billing-addrs .edited span#postal_code').text($('#billing_pincode').val());
+                $('#awc-billing-addrs .edited span#country').text($('#billing_country').val());
+                $('#awc-billing-addrs .awc-addr .edited').removeClass('edited');
                 $('#form-bill-addr .btn-nextbtn').text('Next');
                 frappe.call({
                     method: "awesome_cart.utils.edit_address",
                     args: { address: address }
                 });
-                $('#select-bill-addr').css('display', 'block');
+                $('#awc-select-bill-addr').css('display', 'block');
                 $('#form-bill-addr').css('display', 'none');
                 $('#form-bill-addr.awc-form').removeAttr('data-name');
             }
@@ -331,7 +331,7 @@ awc_checkout = {
                         statestr = "";
                     }
                     str = "<div class='well'>\
-							<div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
+							<div id='same-as-ship-addr' class='awc-addr' style='cursor: pointer'>\
 								<p>\
 									<span id='line1'>" + $('#awc_ship__line1').val() + "</span>,\
 									" + line2str + "\
@@ -344,14 +344,14 @@ awc_checkout = {
 							</div>\
 						</div>";
                     div.innerHTML = str;
-                    if (!$('#billing-addrs #same-as-ship-addr.addr.selected')) {
-                        $('#billing-addrs #same-as-ship-addr.addr').parent().remove();
+                    if (!$('#awc-billing-addrs #same-as-ship-addr.awc-addr.awc-selected')) {
+                        $('#awc-billing-addrs #same-as-ship-addr.awc-addr').parent().remove();
                     }
-                    $('#billing-addrs div.row .addresses-container').prepend(div);
-                    $('#billing-addrs #same-as-ship-addr.addr').click(function(e) {
+                    $('#awc-billing-addrs div.row .awc-addresses-container').prepend(div);
+                    $('#awc-billing-addrs #same-as-ship-addr.awc-addr').click(function(e) {
                         e.stopPropagation();
-                        $('#billing-addrs .selected').removeClass('selected');
-                        $(this).addClass('selected');
+                        $('#awc-billing-addrs .awc-selected').removeClass('awc-selected');
+                        $(this).addClass('awc-selected');
                         awc_checkout.showPage('#checkout-confirmation');
                         $('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
                     })
@@ -375,15 +375,15 @@ awc_checkout = {
                     address_zip: $('#awc_ship__zip').val(),
                     address_country: $('#awc_ship__country').val()
                 };
-                $('#shipping-addrs .edited span#phone').text($('#awc_ship__phone').val());
-                $('#shipping-addrs .edited span#line1').text($('#awc_ship__line1').val());
-                $('#shipping-addrs .edited span#line2').text($('#awc_ship__line2').val());
-                $('#shipping-addrs .edited span#city').text($('#awc_ship__city').val());
-                $('#shipping-addrs .edited span#state').text($('#awc_ship__state').val());
-                $('#shipping-addrs .edited span#postal_code').text($('#awc_ship__zip').val());
-                $('#shipping-addrs .edited span#country').text($('#awc_ship__country').val());
-                $('#shipping-addrs .addr.edited').attr('data-is-residential', $('#awc_ship__is_residential').val());
-                $('#shipping-addrs .addr.edited').removeClass('edited');
+                $('#awc-shipping-addrs .edited span#phone').text($('#awc_ship__phone').val());
+                $('#awc-shipping-addrs .edited span#line1').text($('#awc_ship__line1').val());
+                $('#awc-shipping-addrs .edited span#line2').text($('#awc_ship__line2').val());
+                $('#awc-shipping-addrs .edited span#city').text($('#awc_ship__city').val());
+                $('#awc-shipping-addrs .edited span#state').text($('#awc_ship__state').val());
+                $('#awc-shipping-addrs .edited span#postal_code').text($('#awc_ship__zip').val());
+                $('#awc-shipping-addrs .edited span#country').text($('#awc_ship__country').val());
+                $('#awc-shipping-addrs .awc-addr.edited').attr('data-is-residential', $('#awc_ship__is_residential').val());
+                $('#awc-shipping-addrs .awc-addr.edited').removeClass('edited');
                 $('#awc-shipping-form .btn-nextbtn').text('Next');
                 frappe.call({
                     method: "awesome_cart.utils.edit_address",
@@ -395,17 +395,17 @@ awc_checkout = {
             }
         })
 
-        $('.addresses-container .delete').click(function(e) {
+        $('.awc-addresses-container .awc-delete').click(function(e) {
             e.stopPropagation();
             frappe.call({
                 method: "awesome_cart.utils.delete_address",
                 args: { "address_name": $(this).closest('div').attr('data-name') }
             });
-            $(this).closest('div.address-item').remove();
-            $('#billing-addrs .addresses-container div.addr[data-name=' + $(this).closest('div').attr('data-name') + ']').parent().remove();
+            $(this).closest('div.awc-address-item').remove();
+            $('#awc-billing-addrs .awc-addresses-container div.awc-addr[data-name=' + $(this).closest('div').attr('data-name') + ']').parent().remove();
         });
 
-        $('.addresses-container .edit').click(function(e) {
+        $('.awc-addresses-container .awc-edit').click(function(e) {
             if ($(this).attr('data-type') == "ship") {
                 e.stopPropagation();
                 $('#awc-shipping-form.awc-form').attr('data-name', $(this).closest('div').attr('data-name'));
@@ -435,7 +435,7 @@ awc_checkout = {
                 $(this).closest('div').addClass('edited');
                 $('#form-bill-addr .btn-nextbtn').text('Save');
                 $('#form-bill-addr .field.required').removeClass('required');
-                $('#select-bill-addr').css('display', 'none');
+                $('#awc-select-bill-addr').css('display', 'none');
                 $('#form-bill-addr').css('display', 'block');
 
             }

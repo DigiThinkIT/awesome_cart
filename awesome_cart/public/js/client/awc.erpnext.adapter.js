@@ -570,16 +570,16 @@ var AwcShippingProvider = Class.extend({
 			address_data.is_residential = $form.find('select[name="is_residential"] option:checked').attr('value') == 1 ? 1 : 0;
 			address_data.address_type = "Shipping";
 		} else {
-			address_data.shipping_address = $('#shipping-addrs div.selected').attr('data-name');
-			address_data.phone = $('#shipping-addrs .selected span#phone').text();
-			address_data.address_1 = $('#shipping-addrs .selected span#line1').text();
-			address_data.address_2 = $('#shipping-addrs .selected span#line2').text();
-			address_data.city = $('#shipping-addrs .selected span#city').text();
-			address_data.state = $('#shipping-addrs .selected span#state').text();
-			address_data.pincode = $('#shipping-addrs .selected span#postal_code').text();
-			address_data.country = $('#shipping-addrs .selected span#country').text();
-			address_data.is_residential = $('#shipping-addrs div.selected').attr('data-is-residential');
-			address_data.address_type = $('#shipping-addrs div.selected').attr('data-address-type');
+			address_data.shipping_address = $('#awc-shipping-addrs div.awc-selected').attr('data-name');
+			address_data.phone = $('#awc-shipping-addrs .awc-selected span#phone').text();
+			address_data.address_1 = $('#awc-shipping-addrs .awc-selected span#line1').text();
+			address_data.address_2 = $('#awc-shipping-addrs .awc-selected span#line2').text();
+			address_data.city = $('#awc-shipping-addrs .awc-selected span#city').text();
+			address_data.state = $('#awc-shipping-addrs .awc-selected span#state').text();
+			address_data.pincode = $('#awc-shipping-addrs .awc-selected span#postal_code').text();
+			address_data.country = $('#awc-shipping-addrs .awc-selected span#country').text();
+			address_data.is_residential = $('#awc-shipping-addrs div.awc-selected').attr('data-is-residential');
+			address_data.address_type = $('#awc-shipping-addrs div.awc-selected').attr('data-address-type');
 		}
 
 		current_address_data = {
