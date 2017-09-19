@@ -1,17 +1,17 @@
-<div id="shipping-addrs">
+<div id="awc-shipping-addrs">
     <h4>Select Shipping Address</h4>
     <div class="row">
         {% if not addresses %}
         <p>No address registered, add a new one.</p>
         {% else %}
-        <div class="addresses-container">
+        <div class="awc-addresses-container">
             {% for address in addresses%}
-            <div class="col-md-12 col-sm-12 address-item">
+            <div class="col-md-12 col-sm-12 awc-address-item">
                 <div class="well">
-                    <div data-is-residential="{{ address.is_residential }}" data-name="{{ address.name }}" class="addr" style="cursor: pointer" data-address-type="{{ address.address_type }}">
+                    <div data-is-residential="{{ address.is_residential }}" data-name="{{ address.name }}" class="awc-addr" style="cursor: pointer" data-address-type="{{ address.address_type }}">
                         <p>
-                            <button title="Delete" class="pull-right delete"><span class="fa fa-trash" aria-hidden="true"></span></button>
-                            <button title="Edit" data-type="ship" class="pull-right edit" style="margin:0 15px;"><span class="fa fa-pencil" aria-hidden="true"></span></button>
+                            <button title="Delete" class="pull-right awc-delete"><span class="fa fa-trash" aria-hidden="true"></span></button>
+                            <button title="Edit" data-type="ship" class="pull-right awc-edit" style="margin:0 15px;"><span class="fa fa-pencil" aria-hidden="true"></span></button>
                             <span id="line1">{{ address.address_line1 }}</span>, {% if address.address_line2 %}
                             <span id="line2">{{ address.address_line2 }}</span>, {% endif %}
                             <span id="city">{{ address.city }}</span>,
