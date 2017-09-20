@@ -43,24 +43,26 @@ window.awc_utils = {
 		$container.find(".addr").click(function(e) {
 			e.stopPropagation();
 
-			$container.find(".addr.selected").removeClass("selected");
-			$(this).addClass('selected');
+			$container.find(".addr.awc-selected").removeClass("awc-selected");
+			$(this).addClass("awc-selected");
 			if ( typeof options.on_address_click === "function" ) {
 				options.on_address_click($(this), e);
 			}
 		});
 
 		$container.find(".addr .edit").click(function(e) {
-			if ( typeof options.on_address_edit === "function" ) {
-				options.on_address_edit($(this), e);
+			e.stopPropagation();
+			if ( typeof options.on_edit_click === "function" ) {
+				options.on_edit_click($(this).closest(".addr"), e);
 			}
-		})
+		});
 
 		$container.find(".addr .delete").click(function(e) {
-			if ( typeof options.on_address_delete === "function" ) {
-				options.on_address_delete($(this), e);
+			e.stopPropagation();
+			if ( typeof options.on_delete_click === "function" ) {
+				options.on_delete_click($(this).closest(".addr"), e);
 			}
-		})
+		});
 
 		if ( typeof options.on_init === "function" ) {
 			options.on_init($widget);

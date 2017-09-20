@@ -112,7 +112,7 @@ def quotation_validate(doc, method):
 
 	return True
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=1)
 def get_addresses():
 	if frappe.session.user != "Guest":
 		customer = get_current_customer().name
