@@ -803,8 +803,8 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 	awc = awc_session.get("cart")
 
 	# clean up for old test data
-	if "shipping_method" in awc_session and awc_session.get("shipping_method") == None:
-		del awc_session["shipping_method"]
+	#if "shipping_method" in awc_session and awc_session.get("shipping_method") == None:
+	#	del awc_session["shipping_method"]
 
 	# if no rate_name provided get last method selected
 	if not rate_name:
@@ -832,6 +832,23 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 	if address:
 		address_changed = len(address.items()) != len(awc_session.get("shipping_address", {})) or not address_field_equal
 
+		if quotation.shipping_address_name == "":
+			address_changed = True
+
+	if rate_name == "PICK UP":
+		#hq_address = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
+		#address = frappe.get_doc("Address", hq_address).as_dict()
+		#if quotation and quotation.shipping_address_name:
+		#	awc_session["last_shipping_address_name"] = quotation.shipping_address_name
+
+		if quotation:
+			quotation.shipping_address_name = ""
+		force=True
+		address = ""
+	#else:
+		#if quotation and awc_session.get("last_shipping_address_name"):
+		#	quotation.shipping_address_name = awc_session["last_shipping_address_name"]
+
 	if (address and address_changed) or (address and force):
 		awc_session["shipping_rates_list"] = update_shipping_rate(address, awc_session)
 
@@ -847,17 +864,6 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 		awc_session["shipping_method"] = rate
 	elif "shipping_method" in awc_session:
 		del awc_session["shipping_method"]
-
-	if rate_name == "PICK UP":
-		hq_address = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
-		#address = frappe.get_doc("Address", hq_address).as_dict()
-		if quotation and quotation.shipping_address_name:
-			awc_session["last_shipping_address_name"] = quotation.shipping_address_name
-
-		quotation.shipping_address_name = hq_address
-	else:
-		if quotation and awc_session.get("last_shipping_address_name"):
-			quotation.shipping_address_name = awc_session["last_shipping_address_name"]
 
 	shipping_address_name = None
 
@@ -944,8 +950,14 @@ def cart(data=None, action=None):
 				new_address.flags.ignore_permissions= True
 				new_address.save()
 				address_name = new_address.name
-			quotation.shipping_address_name = address_name
-			quotation.save()
+			if quotation:
+				quotation.shipping_address_name = address_name
+
+		else:
+			if quotation:
+				quotation.shipping_address_name = ""
+
+		quotation.save()
 
 		return calculate_shipping(rate_name, address, awc_session, quotation)
 
@@ -1076,13 +1088,6 @@ def cart(data=None, action=None):
 					set_quotation_item_rate(quotation_item, product.get("price"), product)
 					item_data['total'] = product.get("price") * cint(item.get("qty"))
 
-					#quotation_item.discount_percentage = 100 - flt(item["options"]["custom"]["rate"] * 100) / flt(product.get("price"))
-					#quotation_item.rate = flt(item["options"]["custom"]["rate"])
-					#quotation_item.price_list_rate = flt(product.get("price"))
-					#quotation_item.amount = flt(item["options"]["custom"]["rate"])
-					#quotation_item.base_price_list_rate = flt(product.get("price"))
-					#quotation_item.base_rate = flt(product.get("price"))
-
 				quotation_item.save()
 
 				item["old_id"] = item["id"]
@@ -1151,6 +1156,7 @@ def get_shipping_rate(address):
 	try:
 		address = json.loads(address)
 	except Exception as ex:
+		print(ex)
 		return []
 
 	awc_session = get_awc_session()
@@ -1180,6 +1186,7 @@ def update_shipping_rate(address, awc_session):
 	try:
 		rates = frappe.call(shipping_rate_api["module"], from_address=from_address, to_address=address, items=package_items)
 		if rates:
+			rates.append({u'fee': 0, u'name': u'PICK UP', u'label': u'FLORIDA HQ PICK UP'})
 			# cache quoted rates to reference later on checkout
 			awc_session["shipping_address"] = address
 			awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
@@ -1196,10 +1203,12 @@ def update_shipping_rate(address, awc_session):
 @frappe.whitelist()
 def create_transaction(gateway_service, billing_address, shipping_address, instructions=""):
 
-	if isinstance(billing_address, basestring):
+	print(shipping_address)
+
+	if billing_address and isinstance(billing_address, basestring):
 		billing_address = json.loads(billing_address)
 
-	if isinstance(shipping_address, basestring):
+	if shipping_address and isinstance(shipping_address, basestring):
 		shipping_address = json.loads(shipping_address)
 
 	result = {
@@ -1235,6 +1244,8 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 
 	# create awc transaction to process payments first
 	# sales order and friends will be generated from this data
+
+	print(shipping_address)
 	data = {
 		"doctype": "AWC Transaction",
 		"title": "Web Order",

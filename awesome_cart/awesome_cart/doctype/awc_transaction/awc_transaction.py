@@ -62,8 +62,12 @@ class AWCTransaction(Document):
 			# 	})
 
 			# assign formatted address text
+			if not quotation.shipping_address_name:
+				quotation.shipping_address_name = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
+				
 			quotation.address_display = get_address_display(frappe.get_doc("Address", quotation.customer_address).as_dict())
 			quotation.shipping_address = get_address_display(frappe.get_doc("Address", quotation.shipping_address_name).as_dict())
+
 			quotation.flags.ignore_permissions = 1
 			quotation.save()
 

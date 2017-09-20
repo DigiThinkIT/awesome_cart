@@ -10,6 +10,7 @@ from frappe import _
 from frappe.utils import random_string
 
 from .session import clear_awc_session
+from .compat.customer import get_current_customer
 
 from dti_devtools.debug import pretty_json, log
 
@@ -110,3 +111,13 @@ def quotation_validate(doc, method):
 	doc.items = sorted(doc.items, key=lambda x: x.idx)
 
 	return True
+
+@frappe.whitelist()
+def get_addresses():
+	if frappe.session.user != "Guest":
+		customer = get_current_customer().name
+		print(customer)
+		frappe.local.response["addresses"] = frappe.get_all("Address", filters={"customer" : get_current_customer().name, "disabled": False}, fields="*")
+		return True
+
+	return False

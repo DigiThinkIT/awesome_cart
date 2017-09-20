@@ -444,6 +444,11 @@ var AwcShippingProvider = Class.extend({
 		this.data = data || {};
 	},
 
+	set_method: function(method) {
+		this.data.ship_method = method;
+		return this.calculate_shipping(method);
+	},
+
 	calculate_shipping: function (method, address) {
 		var base = this;
 		var $form = $('#awc-shipping-form');
@@ -484,6 +489,11 @@ var AwcShippingProvider = Class.extend({
 			base.data.ship_method = null;
 
 			$.each(rates, function (i, method) {
+
+				if ( method.name === "PICK UP" ) {
+					return;
+				}
+
 				var checked = "";
 				var is_default = false;
 				if (last_selected_method && last_selected_method == method.name) {
@@ -595,6 +605,20 @@ var AwcShippingProvider = Class.extend({
 			is_residential: this.data.is_residential
 		}
 
+		if ( this.data.ship_method == "PICK UP" ) {
+			this.address_valid = true;
+			this.method_valid = true;
+			this.result = {
+				valid: true,
+				address: {
+					shipping_address: null,
+					ship_method: "PICK UP"
+				},
+			}
+			$form.trigger("address_change", {});
+			return this.result;
+		}
+
 		if (awc._.isEqual(current_address_data, address_data) && this.result) {
 			$form.trigger('address_change', this.data);
 			this.result.valid = this.address_valid && base.method_valid
@@ -679,12 +703,21 @@ var AwcShippingProvider = Class.extend({
 			return txt;
 		}
 
+
+		console.log("ship_method", this.data.ship_method);
+
+		if ( this.data.ship_method == "PICK UP" ) {
+			return '<div class="row">' +
+				'<p>Pick Up at our Orlando, FL Facility</p>';
+		}
+
 		if (this.result.valid) {
+
 			// find shipping method label data
 			var ship_method = "";
 			for (var i in this._shipping_methods) {
 				var method = this._shipping_methods[i];
-				if (base.data.ship_method == method.name) {
+				if (base.data.ship_method === method.name) {
 					ship_method = '<div class="row"><div class="col-sm-6 shipping_method label">Shipping method</div>' +
 						'<div class="col-sm-6 shipping_method value">' + method.label + ' + $' + method.fee + '</div>' +
 						'</div>';
