@@ -15,7 +15,6 @@ window.awc_utils = {
 					done(null, awc_utils.user_addresses);
 				})
 				.catch(function(err) {
-					console.error(err);
 					done(err, []);
 				});
 

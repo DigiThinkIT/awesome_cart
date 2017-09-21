@@ -116,8 +116,13 @@ def quotation_validate(doc, method):
 def get_addresses():
 	if frappe.session.user != "Guest":
 		customer = get_current_customer().name
-		print(customer)
-		frappe.local.response["addresses"] = frappe.get_all("Address", filters={"customer" : get_current_customer().name, "disabled": False}, fields="*")
+
+		address_links = frappe.get_all("Dynamic Link", filters={"link_name" : customer.name}, fields=["parent"])
+		addresses = []
+		for address in address_links:
+			addresses.extend(frappe.get_all("Address", filters={"name" : address.parent, "disabled" : False}, fields="*"))
+
+		frappe.local.response["addresses"] = addresses
 		return True
 
 	return False

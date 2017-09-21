@@ -802,10 +802,6 @@ def reset_shipping():
 def calculate_shipping(rate_name, address, awc_session, quotation, save=True, force=False):
 	awc = awc_session.get("cart")
 
-	# clean up for old test data
-	#if "shipping_method" in awc_session and awc_session.get("shipping_method") == None:
-	#	del awc_session["shipping_method"]
-
 	# if no rate_name provided get last method selected
 	if not rate_name:
 		rate_name = awc_session.get("shipping_method", {}).get("name")
@@ -1156,7 +1152,7 @@ def get_shipping_rate(address):
 	try:
 		address = json.loads(address)
 	except Exception as ex:
-		print(ex)
+		log(ex)
 		return []
 
 	awc_session = get_awc_session()
@@ -1203,8 +1199,6 @@ def update_shipping_rate(address, awc_session):
 @frappe.whitelist()
 def create_transaction(gateway_service, billing_address, shipping_address, instructions=""):
 
-	print(shipping_address)
-
 	if billing_address and isinstance(billing_address, basestring):
 		billing_address = json.loads(billing_address)
 
@@ -1245,7 +1239,6 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	# create awc transaction to process payments first
 	# sales order and friends will be generated from this data
 
-	print(shipping_address)
 	data = {
 		"doctype": "AWC Transaction",
 		"title": "Web Order",

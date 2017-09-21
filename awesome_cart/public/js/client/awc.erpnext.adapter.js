@@ -352,7 +352,6 @@ awc.ErpnextAdapter.prototype.validate = function (gateway_request, gateway_servi
 
 				awc.debug.log("Preparing for checkout!", gateway_request);
 				awc_checkout.gateway_provider.process(gateway_request, function (err, data) {
-					console.log(data)
 					if (err) {
 						if ((!err.errors || err.errors.length == 0) || err.status == 500) {
 							$('#checkout-error .msg').text("There was an internal server error while processing your order. Please contact us or try again later");
@@ -702,9 +701,6 @@ var AwcShippingProvider = Class.extend({
 
 			return txt;
 		}
-
-
-		console.log("ship_method", this.data.ship_method);
 
 		if ( this.data.ship_method == "PICK UP" ) {
 			return '<div class="row">' +
