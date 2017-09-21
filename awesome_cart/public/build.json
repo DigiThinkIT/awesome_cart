@@ -1,4 +1,9 @@
 {
+	"js/awc_utils.js": [
+		"public/js/templates/awc_address_form.html",
+		"public/js/templates/awc_pickup_option.html",
+		"public/js/awc_utils.js"
+	],
 	"js/awc_cart.js": [
 		"public/js/jquery/jquery.helpers.js",
 		"public/js/awc_cart.js"

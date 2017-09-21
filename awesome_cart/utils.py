@@ -10,6 +10,7 @@ from frappe import _
 from frappe.utils import random_string
 
 from .session import clear_awc_session
+from .compat.customer import get_current_customer
 
 from dti_devtools.debug import pretty_json, log
 
@@ -110,3 +111,18 @@ def quotation_validate(doc, method):
 	doc.items = sorted(doc.items, key=lambda x: x.idx)
 
 	return True
+
+@frappe.whitelist(allow_guest=1)
+def get_addresses():
+	if frappe.session.user != "Guest":
+		customer = get_current_customer().name
+
+		address_links = frappe.get_all("Dynamic Link", filters={"link_name" : customer.name}, fields=["parent"])
+		addresses = []
+		for address in address_links:
+			addresses.extend(frappe.get_all("Address", filters={"name" : address.parent, "disabled" : False}, fields="*"))
+
+		frappe.local.response["addresses"] = addresses
+		return True
+
+	return False

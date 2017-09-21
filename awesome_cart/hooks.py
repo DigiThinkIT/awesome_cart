@@ -15,6 +15,7 @@ app_license = "GPL-v3"
 integration_services = ["Credit Gateway"]
 #update_website_context = "awesome_cart.utils.update_context"
 web_include_js = [
+	"/assets/js/awc_utils.js",
 	# polyfills for browser compatibility
 	"https://www.promisejs.org/polyfills/promise-7.0.4.min.js",
 	"/assets/awesome_cart/js/jquery/jquery.helpers.js",
@@ -32,6 +33,7 @@ app_include_css = [
 ]
 app_include_js = [
 	"/assets/js/awc.ui.desk.js",
+	"/assets/js/awc_utils.js",
 	"/assets/js/credit_gateway_settings.js"
 ]
 
