@@ -117,7 +117,7 @@ def get_addresses():
 	if frappe.session.user != "Guest":
 		customer = get_current_customer().name
 
-		address_links = frappe.get_all("Dynamic Link", filters={"link_name" : customer.name}, fields=["parent"])
+		address_links = frappe.get_all("Dynamic Link", filters={"link_name" : customer}, fields=["parent"])
 		addresses = []
 		for address in address_links:
 			addresses.extend(frappe.get_all("Address", filters={"name" : address.parent, "disabled" : False}, fields="*"))
