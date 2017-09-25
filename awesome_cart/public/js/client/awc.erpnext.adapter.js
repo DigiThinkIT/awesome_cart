@@ -81,7 +81,7 @@ awc.call = function (method, args, freeze, freeze_message) {
 					data = JSON.parse(data);
 				} catch (ex) {
 					parse_error = ex;
-					console.error(ex);
+					awc.debug.error(ex);
 				}
 			}
 			var status = xhr.statusCode().status;
@@ -443,8 +443,40 @@ var AwcShippingProvider = Class.extend({
 		this.data = data || {};
 	},
 
+	reset_method: function() {
+		this.data.ship_method = null;
+		var $method_form = $('#awc-shipping-method');
+		$method_form.empty();
+	},
+
 	set_method: function(method) {
 		this.data.ship_method = method;
+		if ( method == "PICK UP" ) {
+			this._shipping_methods = null;
+			this.address_valid = true;
+			this.method_valid = true;
+			this.result = {
+				valid: true,
+				address: {
+					shipping_address: null,
+					ship_method: method
+				},
+				errors: []
+			}
+
+			// invalidate cached address
+			this.data.shipping_address = null;
+			this.data.phone = null;
+			this.data.address_1 = null;
+			this.data.address_2 = null;
+			this.data.city = null;
+			this.data.state = null;
+			this.data.pincode = null;
+			this.data.country = null;
+			this.data.address_type = null;
+			this.data.is_residential = null;
+		}
+
 		return this.calculate_shipping(method);
 	},
 
@@ -467,11 +499,15 @@ var AwcShippingProvider = Class.extend({
 			});
 	},
 
-	update_shipping_rates: function (rates) {
+	update_shipping_rates: function (rates, validate) {
+		if ( validate === undefined ) {
+			validate = true;
+		}
 		var base = this;
 		var $form = $('#awc-shipping-form');
 		var $method_form = $('#awc-shipping-method');
 		var update = true;
+
 		if (base._shipping_methods) {
 			if (awc._.isEqual(base._shipping_methods, rates)) {
 				$method_form.fadeIn('fast');
@@ -485,10 +521,11 @@ var AwcShippingProvider = Class.extend({
 
 		if (rates.length > 0) {
 			var last_selected_method = base.data.ship_method;
-			base.data.ship_method = null;
+			//base.data.ship_method = null;
 
 			$.each(rates, function (i, method) {
 
+				// don't list pickup option on method list
 				if ( method.name === "PICK UP" ) {
 					return;
 				}
@@ -529,11 +566,14 @@ var AwcShippingProvider = Class.extend({
 						base.data.ship_method = method.name;
 						base.fee = method.fee;
 						base.label = method.label;
-						base.calculate_shipping(base.data.ship_method);
-						base.validate();
+						base.calculate_shipping(base.data.ship_method).then(function(r) {
+							base.validate();
+							return r;
+						});
 					}
 				})
 			});
+
 
 			if (!$method_form.find('input[type="radio"]').is(':checked')) {
 				// if there was nothing selected by default, go back and select
@@ -546,8 +586,10 @@ var AwcShippingProvider = Class.extend({
 			$method_form.parent().find('.error').fadeOut('fast');
 			$method_form.parent().find('.spinner').fadeOut('fast');
 
-			// finally trigger validation once more to update ui with default selections
-			awc_checkout.validate();
+			if ( validate ) {
+				// finally trigger validation once more to update ui with default selections
+				awc_checkout.validate();
+			}
 		} else {
 			base.method_valid = false;
 			$("#bc-shipping-method").removeClass("valid");
@@ -579,7 +621,7 @@ var AwcShippingProvider = Class.extend({
 			address_data.is_residential = $form.find('select[name="is_residential"] option:checked').attr('value') == 1 ? 1 : 0;
 			address_data.address_type = "Shipping";
 		} else {
-			address_data.shipping_address = $('#awc-shipping-addrs div.awc-selected').attr('data-name');
+			address_data.shipping_address = $('#awc-shipping-addrs .addr.awc-selected').attr('data-name');
 			address_data.phone = $('#awc-shipping-addrs .awc-selected span#phone').text();
 			address_data.address_1 = $('#awc-shipping-addrs .awc-selected span#line1').text();
 			address_data.address_2 = $('#awc-shipping-addrs .awc-selected span#line2').text();
@@ -604,23 +646,19 @@ var AwcShippingProvider = Class.extend({
 			is_residential: this.data.is_residential
 		}
 
-		if ( this.data.ship_method == "PICK UP" ) {
-			this.address_valid = true;
-			this.method_valid = true;
-			this.result = {
-				valid: true,
-				address: {
-					shipping_address: null,
-					ship_method: "PICK UP"
-				},
+		if (awc._.isEqual(current_address_data, address_data) && this.result) {
+			$form.trigger('address_change', this.data);
+
+			if ( this.data.ship_method == "PICK UP" ) {
+				return this.result;
+			} else {
+				this.result.valid = this.address_valid && base.method_valid
 			}
-			$form.trigger("address_change", {});
 			return this.result;
 		}
 
-		if (awc._.isEqual(current_address_data, address_data) && this.result) {
-			$form.trigger('address_change', this.data);
-			this.result.valid = this.address_valid && base.method_valid
+		if ( this.data.ship_method == "PICK UP" ) {
+			$form.trigger("address_change", {});
 			return this.result;
 		}
 
@@ -632,23 +670,29 @@ var AwcShippingProvider = Class.extend({
 
 		var result = {
 			valid: true,
-			address: this.data
+			address: this.data,
+			errors: []
 		}
 
 		if (!this.data.address_1) {
 			result.valid = false;
+			result.errors.push("Missing Address 1 line")
 		}
 		if (!this.data.city) {
 			result.valid = false;
+			result.errors.push("Missing City Line");
 		}
 		if (!this.data.pincode) {
 			result.valid = false;
+			result.errors.push("Missing Zip Code");
 		}
 		if (!this.data.country) {
 			result.valid = false;
+			result.errors.push("Missing Country");
 		}
 		if (!this.data.phone) {
 			result.valid = false;
+			result.errors.push("Missing Phone");
 		}
 
 		var update_shipping_method = false;

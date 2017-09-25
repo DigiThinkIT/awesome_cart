@@ -67,8 +67,6 @@ def set_cart_customer(customer_name):
 		awc_session["selected_customer"] = customer_name
 		set_awc_session(awc_session)
 
-		print("Switching power user: {0}".format(pretty_json(awc_session)))
-
 		frappe.db.commit()
 
 		return "Success"

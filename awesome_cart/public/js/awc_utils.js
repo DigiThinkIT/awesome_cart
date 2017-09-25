@@ -39,11 +39,15 @@ window.awc_utils = {
 		var $widget = $(tpl);
 		$container.append($widget);
 
-		$container.find(".addr").click(function(e) {
+		$container.find(".addr").not(".no-click").click(function(e) {
 			e.stopPropagation();
 
-			$container.find(".addr.awc-selected").removeClass("awc-selected");
+			$container.find(".addr")
+				.not($(this))
+				.removeClass("awc-selected");
+
 			$(this).addClass("awc-selected");
+
 			if ( typeof options.on_address_click === "function" ) {
 				options.on_address_click($(this), e);
 			}
@@ -51,6 +55,7 @@ window.awc_utils = {
 
 		$container.find(".addr .edit").click(function(e) {
 			e.stopPropagation();
+
 			if ( typeof options.on_edit_click === "function" ) {
 				options.on_edit_click($(this).closest(".addr"), e);
 			}
@@ -58,6 +63,7 @@ window.awc_utils = {
 
 		$container.find(".addr .delete").click(function(e) {
 			e.stopPropagation();
+
 			if ( typeof options.on_delete_click === "function" ) {
 				options.on_delete_click($(this).closest(".addr"), e);
 			}
