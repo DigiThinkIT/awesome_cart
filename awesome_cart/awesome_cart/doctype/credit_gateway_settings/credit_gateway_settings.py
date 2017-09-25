@@ -59,7 +59,7 @@ from frappe.utils import get_url, call_hook_method
 from frappe.integrations.utils import create_request_log, create_payment_gateway
 from awesome_cart import awc
 from awesome_cart.compat.customer import get_current_customer
-from dti_devtools.debug import pretty_json, log
+from dti_devtools.debug import log
 
 class CreditGatewaySettings(Document):
 	service_name = "Credit Gateway Settings"
