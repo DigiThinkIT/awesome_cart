@@ -63,7 +63,6 @@ def set_cart_customer(customer_name):
 			"link_doctype": "Customer",
 			"parenttype": "Contact"},
 			fields=["parent"])
-		contacts = frappe.get_all("Contact", filters={"customer": customer_name})
 		contacts = []
 		for contact in contact_links:
 			contacts.extend(frappe.get_all("Contact", filters={"name" : contact.parent}, fields="name"))
