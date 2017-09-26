@@ -113,10 +113,14 @@ awc_checkout = {
 						$pickup_option.click(function() {
 							$("#checkout-shipping-method").hide();
 							$("#bc-shipping-method").hide();
+
+							$shipping_container.find('.addr').not($(this).find('.addr')).removeClass('awc-selected');
 							$(this).find('.addr').addClass("awc-selected");
-							awc_checkout.showPage("#checkout-billing");
+
+							awc_checkout.shipping_provider.reset_method();
 							awc_checkout.shipping_provider.set_method("PICK UP").then(function(r) {
 								onCartChanges();
+								awc_checkout.showPage("#checkout-billing");
 								return r;
 							})
 						});
@@ -126,6 +130,7 @@ awc_checkout = {
 					on_address_click: function($addr) {
 						$("#checkout-shipping-method").show();
 						$("#bc-shipping-method").show();
+						awc_checkout.shipping_provider.reset_method();
 						awc_checkout.showPage('#checkout-shipping-method');
 						$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
 					},
@@ -143,8 +148,6 @@ awc_checkout = {
 
 						$('#awc-shipping-form.awc-form')
 							.attr('data-name', $addr.attr('data-name'));
-
-						console.log($addr.find("span#line1"));
 
 						$('#awc_ship__phone').val($addr.find('span#phone').text());
 						$('#awc_ship__line1').val($addr.find('span#line1').text());

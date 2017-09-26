@@ -800,11 +800,16 @@ def reset_shipping():
 	frappe.db.commit()
 
 def calculate_shipping(rate_name, address, awc_session, quotation, save=True, force=False):
+	log("calculate shipping")
+
 	awc = awc_session.get("cart")
 
 	# if no rate_name provided get last method selected
 	if not rate_name:
 		rate_name = awc_session.get("shipping_method", {}).get("name")
+		# always require passing pick up rate
+		if rate_name == "PICK UP":
+			rate_name = None
 
 	if rate_name != awc_session.get("shipping_method", {}).get("name"):
 		rate_changed = True
@@ -826,27 +831,22 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 		address_field_equal = False
 
 	if address:
-		address_changed = len(address.items()) != len(awc_session.get("shipping_address", {})) or not address_field_equal
+		address_changed = len(address.items()) != len(awc_session.get("shipping_address", {}).items()) or not address_field_equal
 
 		if quotation.shipping_address_name == "":
 			address_changed = True
 
+	is_pickup = False
 	if rate_name == "PICK UP":
-		#hq_address = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
-		#address = frappe.get_doc("Address", hq_address).as_dict()
-		#if quotation and quotation.shipping_address_name:
-		#	awc_session["last_shipping_address_name"] = quotation.shipping_address_name
-
 		if quotation:
 			quotation.shipping_address_name = ""
-		force=True
+		force = True
+		is_pickup = True
 		address = ""
-	#else:
-		#if quotation and awc_session.get("last_shipping_address_name"):
-		#	quotation.shipping_address_name = awc_session["last_shipping_address_name"]
+		awc_session["shipping_rates_list"] = update_shipping_rate(None, awc_session, True)
 
 	if (address and address_changed) or (address and force):
-		awc_session["shipping_rates_list"] = update_shipping_rate(address, awc_session)
+		awc_session["shipping_rates_list"] = update_shipping_rate(address, awc_session, is_pickup=is_pickup)
 
 	# rate selection
 	rate = awc_session.get("shipping_rates", {}).get(rate_name, None)
@@ -917,8 +917,6 @@ def cart(data=None, action=None):
 
 	if quotation:
 		sync_awc_and_quotation(awc_session, quotation)
-
-	#log(pretty_json(awc))
 
 	if not action:
 		return { "data": awc, "success": True}
@@ -1096,18 +1094,13 @@ def cart(data=None, action=None):
 			quotation.flags.ignore_permissions = True
 			quotation.save()
 
-			#log("Quotation after add to cart: \n{0}", pretty_json(quotation.as_dict()))
-
 			frappe.db.commit()
 
 			collect_totals(quotation, awc, awc_session)
-			#log("Quotation after collecting totals: \n{0}", pretty_json(quotation.as_dict()))
 		else:
 			collect_totals(None, awc, awc_session)
 
 		set_awc_session(awc_session)
-
-		#log("Awc session after add to cart: \n{0}", pretty_json(awc_session))
 
 		return { "success": True, "data": data, "totals": awc.get("totals") }
 
@@ -1161,30 +1154,40 @@ def get_shipping_rate(address):
 	set_awc_session(awc_session)
 	return result
 
-def update_shipping_rate(address, awc_session):
+def update_shipping_rate(address, awc_session, is_pickup=False):
 
 	awc = awc_session.get("cart")
 
 	shipping_rate_api = frappe.get_hooks("shipping_rate_api")[0]
-	address_link = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
-	from_address = frappe.get_doc("Address", address_link)
+	if address:
+		address_link = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
+		from_address = frappe.get_doc("Address", address_link)
 
 	package_items=[]
 
-	for item in awc["items"]:
-		if not item.get("options", {}).get("subgroup"):
-			package_item = {
-				"item_code": item.get("sku"),
-				"qty": item.get("qty")
-			}
-			package_items.append(package_item)
+	if not is_pickup:
+		for item in awc["items"]:
+			if not item.get("options", {}).get("subgroup"):
+				package_item = {
+					"item_code": item.get("sku"),
+					"qty": item.get("qty")
+				}
+				package_items.append(package_item)
 
 	try:
-		rates = frappe.call(shipping_rate_api["module"], from_address=from_address, to_address=address, items=package_items)
-		if rates:
+		if address and not is_pickup:
+			rates = frappe.call(shipping_rate_api["module"], from_address=from_address, to_address=address, items=package_items)
+		else:
+			rates = []
+
+		if rates or is_pickup:
 			rates.append({u'fee': 0, u'name': u'PICK UP', u'label': u'FLORIDA HQ PICK UP'})
 			# cache quoted rates to reference later on checkout
-			awc_session["shipping_address"] = address
+			if address:
+				awc_session["shipping_address"] = address
+			else:
+				del awc_session["shipping_address"]
+
 			awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
 			awc_session["shipping_rates_list"] = rates
 		else:
@@ -1254,11 +1257,6 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		"shipping_address": shipping_address.get("shipping_address"),
 		"billing_address": billing_address.get("billing_address")
 	}
-
-	#log("Transaction Data")
-	#log(pretty_json(data))
-	#log("Quotation Data")
-	#log(pretty_json(quotation.as_dict()))
 
 	if shipping_address.get("ship_method"):
 		# retrieve quoted charges
