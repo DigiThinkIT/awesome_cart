@@ -58,7 +58,14 @@ def set_cart_customer(customer_name):
 	if user_doc.get("is_power_user") or user_doc.name == "Administrator":
 
 		# lets make sure we have a primary contact first
-		contacts = frappe.get_all("Contact", filters={"customer": customer_name})
+		contact_links = frappe.get_all("Dynamic Link", filters={
+			"link_name" : customer_name,
+			"link_doctype": "Customer",
+			"parenttype": "Contact"},
+			fields=["parent"])
+		contacts = []
+		for contact in contact_links:
+			contacts.extend(frappe.get_all("Contact", filters={"name" : contact.parent}, fields="name"))
 
 		if not contacts or len(contacts) == 0:
 			return "This Customer requires at least one Contact before placing an order!"
