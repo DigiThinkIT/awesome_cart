@@ -11,6 +11,7 @@ from erpnext.shopping_cart.product import get_product_info
 from compat.customer import get_current_customer
 from compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotation
 from compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing_rule_for_item
+from compat.addresses import get_address_display
 from .session import *
 from dti_devtools.debug import pretty_json, log
 
@@ -800,8 +801,6 @@ def reset_shipping():
 	frappe.db.commit()
 
 def calculate_shipping(rate_name, address, awc_session, quotation, save=True, force=False):
-	log("calculate shipping")
-
 	awc = awc_session.get("cart")
 
 	# if no rate_name provided get last method selected
@@ -840,10 +839,16 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 	if rate_name == "PICK UP":
 		if quotation:
 			quotation.shipping_address_name = ""
+			quotation.shipping_address = ""
+			save=True
+
 		force = True
 		is_pickup = True
 		address = ""
 		awc_session["shipping_rates_list"] = update_shipping_rate(None, awc_session, True)
+	elif awc_session.get("last_shipping_address") and not address:
+		address = awc_session["last_shipping_address"]
+		force = True
 
 	if (address and address_changed) or (address and force):
 		awc_session["shipping_rates_list"] = update_shipping_rate(address, awc_session, is_pickup=is_pickup)
@@ -865,7 +870,21 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 
 	if quotation:
 		update_cart_settings(quotation, awc_session)
-		shipping_address_name = quotation.get("shipping_address_name")
+
+		if address:
+			shipping_address_name = address.get("shipping_address")
+
+		if address and address.get("shipping_address") != quotation.shipping_address_name:
+			quotation.shipping_address_name = address.get("shipping_address")
+			save=True
+			if address:
+				quotation.shipping_address = get_address_display(quotation.shipping_address_name)
+		elif not address and quotation.shipping_address_name:
+			quotation.shipping_address_name = ""
+			quotation.shipping_address = ""
+			save=True
+
+
 		if save:
 			quotation.flags.ignore_permissions = True
 			quotation.save()
@@ -944,12 +963,14 @@ def cart(data=None, action=None):
 				new_address.flags.ignore_permissions= True
 				new_address.save()
 				address_name = new_address.name
+
 			if quotation:
 				quotation.shipping_address_name = address_name
+				awc_session["last_shipping_address"] = address_name
 
-		else:
-			if quotation:
-				quotation.shipping_address_name = ""
+		#else:
+			#if quotation:
+			#	quotation.shipping_address_name = ""
 
 		quotation.save()
 
@@ -1184,8 +1205,9 @@ def update_shipping_rate(address, awc_session, is_pickup=False):
 			rates.append({u'fee': 0, u'name': u'PICK UP', u'label': u'FLORIDA HQ PICK UP'})
 			# cache quoted rates to reference later on checkout
 			if address:
+				awc_session["last_shipping_address"] = address
 				awc_session["shipping_address"] = address
-			else:
+			elif "shipping_address" in awc_session:
 				del awc_session["shipping_address"]
 
 			awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
