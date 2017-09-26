@@ -53,17 +53,13 @@ class AWCTransaction(Document):
 			# check if we have a shipping address linked
 			quotation.shipping_address_name = self.shipping_address
 
-			#if self.get("shipping_method"):
-			#	quotation.append("taxes", {
-			#		"charge_type": "Actual",
-			#		"account_head": frappe.get_value("Awc Settings", "Awc Settings", "shipping_account"),
-			#		"description": self.get("shipping_method", "Shipping Charges"),
-			#		"tax_amount": self.get("shipping_fee", 0)
-			#	})
-
 			# assign formatted address text
+			if not quotation.shipping_address_name:
+				quotation.shipping_address_name = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
+
 			quotation.address_display = get_address_display(frappe.get_doc("Address", quotation.customer_address).as_dict())
 			quotation.shipping_address = get_address_display(frappe.get_doc("Address", quotation.shipping_address_name).as_dict())
+
 			quotation.flags.ignore_permissions = 1
 			quotation.save()
 
@@ -83,7 +79,7 @@ class AWCTransaction(Document):
 				req_type = frappe.local.response.get("type", None)
 				req_location = frappe.local.response.get("location", None)
 
-				preq = payment_request.make_payment_request(dt="Sales Order", dn=so.name, submit_doc=1, return_doc=0, mute_email=1)
+				preq = payment_request.make_payment_request(dt="Sales Order", dn=so.name, submit_doc=1, return_doc=1, mute_email=1)
 
 				#############################################################
 				# DIRTY FIX: payment request codebase redirects
@@ -100,10 +96,12 @@ class AWCTransaction(Document):
 				#############################################################
 
 				preq.flags.ignore_permissions=1
-				#preq.insert()
+				# preq.insert()
+
+				log(preq)
 
 				if preq.docstatus != 1:
-					preg.submit()
+					preq.submit()
 
 				# update transaction record to track payment request record
 				self.reference_doctype = "Payment Request"
@@ -120,7 +118,7 @@ class AWCTransaction(Document):
 			else:
 				result = None
 
-			#update shipping method in Sales Order
+			# update shipping method in Sales Order
 			if self.get("shipping_method"):
 				frappe.db.set_value("Sales Order", self.order_id, "fedex_shipping_method", self.get("shipping_method"))
 

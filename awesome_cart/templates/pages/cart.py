@@ -31,7 +31,12 @@ def get_context(context):
 	default_country_doc = next((x for x in context["countries"] if x.name == default_country), None)
 
 	if frappe.session.user != "Guest":
-		context["addresses"] = frappe.get_all("Address", filters={"customer" : get_current_customer().name, "disabled": False}, fields="*")
+		address_links = frappe.get_all("Dynamic Link", filters={"link_name" : get_current_customer().name}, fields=["parent"])
+		addresses = []
+		for address in address_links:
+			addresses.extend(frappe.get_all("Address", filters={"name" : address.parent, "disabled" : False}, fields="*"))
+
+		context['addresses'] = addresses
 
 	country_idx = context["countries"].index(default_country_doc)
 	context["countries"].pop(country_idx)

@@ -52,29 +52,26 @@ More Details:
 from __future__ import unicode_literals
 import frappe
 import json
-from urllib import urlencode
-from datetime import datetime
 import urllib
 from frappe import _, _dict
-from frappe.utils import get_url, call_hook_method, cint, flt
-from frappe.integration_broker.doctype.integration_service.integration_service import IntegrationService, get_integration_controller
+from frappe.model.document import Document
+from frappe.utils import get_url, call_hook_method
+from frappe.integrations.utils import create_request_log, create_payment_gateway
 from awesome_cart import awc
 from awesome_cart.compat.customer import get_current_customer
-from dti_devtools.debug import log, pretty_json
+from dti_devtools.debug import log
 
-class CreditGatewaySettings(IntegrationService):
+class CreditGatewaySettings(Document):
 	service_name = "Credit Gateway Settings"
 	supported_currencies = ["USD"]
 	is_embedable = True
 
 	def validate(self):
-		pass
+		create_payment_gateway("Credit Gateway")
+		call_hook_method("payment_gateway_enabled", gateway=self.service_name)
 
 	def on_update(self):
 		pass
-
-	def enable(self):
-		call_hook_method("payment_gateway_enabled", gateway=self.service_name)
 
 	def validate_transaction_currency(self, currency):
 		if currency not in self.supported_currencies:
@@ -86,18 +83,13 @@ class CreditGatewaySettings(IntegrationService):
 
 	def is_available(self, context={}, is_backend=0):
 
-		print("Credit gateway...{0}".format(is_backend))
-		print(pretty_json(context))
-
 		# never available to backend
 		if is_backend:
 			return False
 
 		customer = get_current_customer()
-		print("Customer: {0}".format(customer))
 
 		if customer:
-			print(pretty_json(customer.as_dict()))
 			# disabled until Eric figures out if JHA wants to check against credit
 			#return context["total_credit"] > 0
 			self.get_embed_context(context)
@@ -170,9 +162,7 @@ class CreditGatewaySettings(IntegrationService):
 		status = "Completed"
 
 		if not self.process_data.get("unittest"):
-			self.integration_request = super(CreditGatewaySettings, self)\
-				.create_request(self.process_data, "Host", self.service_name)
-
+			self.integration_request = create_request_log(self.process_data, "Host", self.service_name)
 			self.integration_request.status = status
 			self.integration_request.save()
 
@@ -187,7 +177,7 @@ class CreditGatewaySettings(IntegrationService):
 
 				custom_redirect_to = ref_doc.run_method("on_payment_authorized", status)
 		except Exception as ex:
-			print(frappe.get_traceback())
+			log(frappe.get_traceback())
 			raise ex
 
 		if custom_redirect_to:

@@ -1,0 +1,22 @@
+.awc-ui.awc-tags .taggle_list {
+	float: none;
+	display: flex;
+	flex-direction: row;
+}
+
+.awc-ui.awc-tags .taggle_list input {
+	padding-top: 0;
+	padding-bottom: 0;
+	width: 100% !important;
+	max-width: initial;
+}
+
+.awc-ui.awc-tags .taggle_list > li {
+	flex: 1 1;
+	float: none;
+	display: inline-block;
+}
+
+.awc-ui.awc-tags .taggle_list .taggle {
+	flex: 0 0;
+}

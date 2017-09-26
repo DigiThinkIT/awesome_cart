@@ -1,8 +1,8 @@
-.addresses-container {
+.awc-addresses-container {
 	max-height:50vh;
 	overflow-y:auto;
 }
 
-.addresses-container .address-item {
+.awc-addresses-container .awc-address-item {
 	padding: 0;
 }
