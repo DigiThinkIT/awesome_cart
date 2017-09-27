@@ -963,6 +963,7 @@ def cart(data=None, action=None):
 				new_address.flags.ignore_permissions= True
 				new_address.save()
 				address_name = new_address.name
+				address["shipping_address"] = address_name
 
 			if quotation:
 				quotation.shipping_address_name = address_name
