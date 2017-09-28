@@ -15,12 +15,12 @@ app_license = "GPL-v3"
 integration_services = ["Credit Gateway"]
 #update_website_context = "awesome_cart.utils.update_context"
 web_include_js = [
-	"/assets/js/awc_utils.js",
+	"/assets/js/awc_utils.js?v=%s" % app_version,
 	# polyfills for browser compatibility
 	"https://www.promisejs.org/polyfills/promise-7.0.4.min.js",
-	"/assets/awesome_cart/js/jquery/jquery.helpers.js",
-	"/assets/awesome_cart/js/client/awc.standalone.js",
-	"/assets/awesome_cart/js/client/awc.erpnext.adapter.js"
+	"/assets/awesome_cart/js/jquery/jquery.helpers.js?v=%s" % app_version,
+	"/assets/awesome_cart/js/client/awc.standalone.js?v=%s" % app_version,
+	"/assets/awesome_cart/js/client/awc.erpnext.adapter.js?v=%s" % app_version
 ]
 
 web_include_css = [
@@ -32,9 +32,9 @@ app_include_css = [
 	"/assets/css/awc_cart.css"
 ]
 app_include_js = [
-	"/assets/js/awc.ui.desk.js",
-	"/assets/js/awc_utils.js",
-	"/assets/js/credit_gateway_settings.js"
+	"/assets/js/awc.ui.desk.js?v=%s" % app_version,
+	"/assets/js/awc_utils.js?v=%s" % app_version,
+	"/assets/js/credit_gateway_settings.js?v=%s" % app_version
 ]
 
 website_route_rules = [
