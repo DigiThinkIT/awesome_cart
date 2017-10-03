@@ -465,10 +465,11 @@ def collect_totals(quotation, awc, awc_session):
 			product = get_product_by_sku(awc_item.get("sku"), quotation=quotation)
 			if product.get('success'):
 				product_total = product["data"].get("price") * cint(awc_item.get("qty"))
-				if awc_item.get("options", {}).get("custom", {}).get("rate"):
+				if "rate" in awc_item.get("options", {}).get("custom", {}):
 					product_total = flt(awc_item["options"]["custom"]["rate"]) * cint(awc_item.get("qty"))
 				awc["totals"]["sub_total"] = awc["totals"]["sub_total"] + product_total
 
+		awc["totals"]["other"] = []
 		awc["totals"]["grand_total"] = awc["totals"]["sub_total"] + awc["totals"].get("shipping_total", 0)
 
 def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False):
