@@ -11,6 +11,10 @@ awc.Errors.CallException = awc.Errors.customError("CallException", function (
 	this.textStatus = textStatus;
 });
 
+awc.Errors.SessionActionException = awc.Errors.customError("SessionActionException", function(message) {
+		this.message = message;
+});
+
 /* soft wrapper over frappe.call to improve error handling */
 awc.call = function (method, args, freeze, freeze_message) {
 	var last_error = null;
@@ -255,7 +259,11 @@ awc.ErpnextAdapter.prototype.sessionAction = function (action, data) {
 					}
 					resolve(result.message)
 				} else {
-					reject(result.message.data)
+					if ( result.message.data ) {
+						reject(result.message.data);
+					} else {
+						reject(new awc.Errors.SessionActionException(result.message));
+					}
 				}
 
 				return resp;
@@ -939,3 +947,9 @@ $(function () {
 	})
 	cart.bootstrap()
 });
+
+frappe.ready(function() {
+	if ( frappe.user_id !== "Guest" ) {
+		$("body").addClass("is_logged_in");
+	}
+})

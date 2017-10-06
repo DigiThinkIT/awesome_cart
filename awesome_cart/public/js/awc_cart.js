@@ -33,6 +33,10 @@ awc_checkout = {
 
 	},
 
+	coupon_reject:function(err) {
+		frappe.msgprint(err.message.message);
+	},
+
 	validate: function() {
 		var checkout_enabled = true;
 
@@ -507,6 +511,9 @@ awc_checkout = {
 
 			$('#checkout-confirm-totals .sub-total .value').text(cart.storeAdapter.formatCurrency(totals.sub_total));
 			$('#checkout-confirm-totals .grand-total .value').text(cart.storeAdapter.formatCurrency(totals.grand_total));
+			if ( totals.discount_total ) {
+				$('#checkout-confifm-discount .discount-total .value').text(cart.storeAdapter.formatCurrency(totals.discount_total))
+			}
 
 			// FIX: Babelfish issue, cart.totalItems getter not invoked in IF statement
 			var totalItems = cart.totalItems;
@@ -520,6 +527,11 @@ awc_checkout = {
 
 		cart.on('init', onCartChanges);
 		cart.on('update', onCartChanges);
+		cart.on("tpl-ready", function() {
+			$("#disabled-coupon-apply:not(.awc-bound)").addClass("awc-bound").click(function() {
+				frappe.msgprint("Please Log In or Signup to use Coupon Codes");
+			});
+		});
 
 	}
 }

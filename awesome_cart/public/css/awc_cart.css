@@ -478,3 +478,26 @@
 	background: #333;
 	color: #fff;
 }
+
+.coupon_input {
+	display: none;
+  padding: 1em 0;
+  background: ##E2E2E2;
+  border-radius: .5em;
+  margin-bottom: .5em;
+}
+
+.coupon_input .coupon-code-label {
+	margin-top: .3em;
+}
+
+body.is_logged_in .coupon_input {
+	display: block;
+}
+
+body .coupon_input.no-login {
+	display: block;
+}
+body.is_logged_in .coupon_input.no-login {
+	display: none;
+}
