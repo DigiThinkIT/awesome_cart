@@ -1,0 +1,27 @@
+[
+	{
+		"doctype": "AWC Coupon",
+		"coupon_code": "test-enabled-validation",
+		"label": "TEST Enabled Validation",
+		"enabled": 0
+	}, {
+		"doctype": "AWC Coupon",
+		"coupon_code": "test-enable-date-validation",
+		"label": "TEST Enable Datetime Validation",
+		"enabled": 1,
+		"enable_datetime": "2017/01/01 00:00:00"
+	}, {
+		"doctype": "AWC Coupon",
+		"coupon_code": "test-expire-date-validation",
+		"label": "TEST Expire Datetime Validation",
+		"enabled": 1,
+		"enable_datetime": "2017/01/10 00:00:00"
+	}, {
+		"doctype": "AWC Coupon",
+		"coupon_code": "test-enable-date-validation",
+		"label": "TEST Enable Datetime Validation",
+		"enabled": 1,
+		"enable_datetime": "2017/01/01 00:00:00",
+		"customer_groups": [{"doctype": "AWC Coupon Customer Groups Item", "customer_group": "All Customer Groups"}]
+	}
+]

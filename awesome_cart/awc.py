@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import json
 import traceback
 import frappe
-from frappe import _dict
+from frappe import _dict, _
 from frappe.utils import cint, cstr, random_string, flt
 from erpnext.stock.get_item_details import apply_price_list_on_item
 from erpnext.shopping_cart.product import get_product_info
@@ -13,6 +13,7 @@ from compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotat
 from compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing_rule_for_item
 from compat.addresses import get_address_display
 from .session import *
+from .utils import is_coupon_valid
 from dti_devtools.debug import pretty_json, log
 
 def get_user_quotation(awc_session):
@@ -443,6 +444,16 @@ def collect_totals(quotation, awc, awc_session):
 		quotation.run_method("calculate_taxes_and_totals")
 		awc["totals"]["sub_total"] = quotation.get("total")
 		awc["totals"]["grand_total"] = quotation.get("grand_total")
+		if quotation.get("discount_amount"):
+			awc["totals"]["coupon_total"] = -quotation.get("discount_amount")
+		elif "coupon_total" in awc["totals"]:
+			del awc["totals"]["coupon_total"]
+
+		if quotation and quotation.get("coupon_code"):
+			coupon_code = quotation.get("coupon_code")
+			coupon_label = frappe.get_value("AWC Coupon", quotation.get("coupon_code"), "coupon_label")
+			awc["totals"]["coupon"] = { "code": coupon_code, "label": coupon_label }
+
 		#if "other" not in awc["totals"]:
 		awc["totals"]["other"] = []
 
@@ -461,6 +472,12 @@ def collect_totals(quotation, awc, awc_session):
 	else:
 		awc["totals"]["sub_total"] = 0
 		awc["totals"]["grand_total"] = 0
+		if "coupon_total" in awc["totals"]:
+			del awc["totals"]["coupon_total"]
+
+		if "coupon" in awc["totals"]:
+			del awc["totals"]["coupon"]
+
 		for awc_item in awc["items"]:
 			product = get_product_by_sku(awc_item.get("sku"), quotation=quotation)
 			if product.get('success'):
@@ -899,14 +916,28 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 		#log("Saving session:\n{0}", pretty_json(awc_session))
 		set_awc_session(awc_session)
 
-	return {
+	return session_response({
 		"success": True,
+		"shipping_rates":  awc_session.get("shipping_rates_list",[]),
+		"shipping_address_name": shipping_address_name
+	}, awc_session, quotation)
+
+
+def session_response(response, awc_session, quotation):
+	awc = awc_session.get("cart")
+
+	if not response:
+		response = {}
+
+	data = {
 		"data": awc["items"],
 		"removed": [],
 		"totals": awc.get("totals"),
-		"shipping_rates":  awc_session.get("shipping_rates_list",[]),
-		"shipping_address_name": shipping_address_name
+		"shipping_rates":  awc_session.get("shipping_rates_list",[])
 	}
+
+	data.update(response)
+	return data
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def cart(data=None, action=None):
@@ -1052,13 +1083,11 @@ def cart(data=None, action=None):
 
 		set_awc_session(awc_session)
 
-		return {
+		return session_response({
 			"success": True,
-			"data": awc["items"],
 			"removed": removed_ids,
-			"totals": awc.get("totals"),
 			"shipping_rates": shipping_info.get("shipping_rates")
-		}
+		}, awc_session, quotation)
 
 	elif action == "addToCart":
 
@@ -1125,7 +1154,9 @@ def cart(data=None, action=None):
 
 		set_awc_session(awc_session)
 
-		return { "success": True, "data": data, "totals": awc.get("totals") }
+		return session_response({
+			"success": True,
+		}, awc_session, quotation)
 
 	elif action == "removeFromCart":
 
@@ -1155,12 +1186,76 @@ def cart(data=None, action=None):
 
 			set_awc_session(awc_session)
 
-			return { "success": True, "totals": awc.get("totals"), "data": awc["items"], "removed": removed_ids }
+			return session_response({
+				"success": True,
+				"removed": removed_ids
+			}, awc_session, quotation)
 
-		return { "success": False, "message": "Item not found."}
+		return session_response({
+			"success": False,
+			"message": "Item not found."
+		}, awc_session, quotation)
+
+	elif action == "applyCoupon" and len(data) > 0:
+		coupon = data[0]
+		success = False
+		msg = "Coupon not found"
+
+		if quotation:
+			# validate coupon
+			msg = is_coupon_valid(coupon)
+			is_valid = frappe.response.get("is_coupon_valid")
+
+			if is_valid:
+				quotation.coupon_code = coupon
+				update_cart_settings(quotation, awc_session)
+				quotation.flags.ignore_permissions = True
+				quotation.save()
+				frappe.db.commit()
+				collect_totals(quotation, awc, awc_session)
+				success = True
+		else:
+			# must be logged in to use cupon
+			collect_totals(None, awc, awc_session)
+			success = False
+			msg = "Please Login to Apply Coupon"
+
+		if success:
+			set_awc_session(awc_session)
+
+			return session_response({
+				"success": True
+			}, awc_session, quotation)
+
+		return session_response({
+			"success": False,
+			"message": _(msg)
+		}, awc_session, quotation)
+
+
+	elif action == "removeCoupon":
+		if quotation:
+			quotation.discount_amount = 0
+			quotation.coupon_code = None
+			update_cart_settings(quotation, awc_session)
+			quotation.flags.ignore_permissions = True
+			quotation.save()
+			frappe.db.commit()
+			collect_totals(quotation, awc, awc_session)
+		else:
+			collect_totals(None, awc, awc_session)
+
+		set_awc_session(awc_session)
+
+		return session_response({
+			"success": True
+		}, awc_session, quotation)
 
 	else:
-		return { "success": False, "message": "Unknown Command." }
+		return session_response({
+			"success": False,
+			"message": "Unknown Command."
+		}, awc_session, quotation)
 
 @frappe.whitelist()
 def get_shipping_rate(address):

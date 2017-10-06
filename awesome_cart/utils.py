@@ -11,9 +11,7 @@ from frappe.utils import random_string
 
 from .session import clear_awc_session
 from .compat.customer import get_current_customer
-
-from dti_devtools.debug import pretty_json, log
-
+from .awesome_cart.doctype.awc_coupon.awc_coupon import calculate_coupon_discount, is_coupon_valid as _is_coupon_valid
 
 def update_context(context):
 
@@ -86,6 +84,7 @@ def quotation_validate(doc, method):
 	main_items = []
 	groups = {}
 
+	# Organize items idx for groupping visually
 	# find all parent items(not sub groups)
 	for item in sorted(doc.items, key=lambda x: x.idx):
 		if not item.get("awc_subgroup"):
@@ -110,7 +109,28 @@ def quotation_validate(doc, method):
 
 	doc.items = sorted(doc.items, key=lambda x: x.idx)
 
+	# Apply coupon codes
+	if doc.coupon_code:
+		discount, msg, apply_discount_on = calculate_coupon_discount(doc.items, doc.coupon_code)
+		if discount is not False and discount != doc.discount_amount:
+			doc.discount_amount = discount
+			doc.apply_discount_on = apply_discount_on or "Net Total"
+		elif discount is False:
+			raise msg
+
 	return True
+
+@frappe.whitelist()
+def is_coupon_valid(coupon_code):
+	customer = get_current_customer()
+	result = _is_coupon_valid(coupon_code, customer)
+
+	frappe.response["is_coupon_valid"] = result.get("is_valid", False)
+
+	if not result.get("is_valid"):
+		return result.get("msg")
+
+	return result.get("label")
 
 @frappe.whitelist(allow_guest=1)
 def get_addresses():
