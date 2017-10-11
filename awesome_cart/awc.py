@@ -6,7 +6,6 @@ import frappe
 from frappe import _dict, _
 from frappe.utils import cint, cstr, random_string, flt
 from erpnext.stock.get_item_details import apply_price_list_on_item
-from erpnext.shopping_cart.product import get_product_info
 
 from compat.customer import get_current_customer
 from compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotation
@@ -900,6 +899,10 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 		elif not address and quotation.shipping_address_name:
 			quotation.shipping_address_name = ""
 			quotation.shipping_address = ""
+			save=True
+
+		if rate != quotation.fedex_shipping_method:
+			quotation.fedex_shipping_method = rate
 			save=True
 
 
