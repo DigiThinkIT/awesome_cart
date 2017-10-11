@@ -901,8 +901,9 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 			quotation.shipping_address = ""
 			save=True
 
-		if rate_name and rate_name != quotation.fedex_shipping_method:
-			quotation.fedex_shipping_method = rate_name
+		rate_name_corrected = rate_name.replace(" ", "_")
+		if rate_name_corrected and rate_name_corrected != quotation.fedex_shipping_method:
+			quotation.fedex_shipping_method = rate_name_corrected
 			save=True
 
 
@@ -1381,11 +1382,11 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	}
 
 	if shipping_address.get("ship_method"):
-		# retrieve quoted charges
+		# retrieve quoted chargesfee
 		rates = awc_session.get("shipping_rates")
-		data["shipping_method"] = shipping_address.get("ship_method")
-		if rates:
-			data["shipping_fee"] = rates.get(data["shipping_method"], {}).get("fee")
+		#data["shipping_method"] = shipping_address.get("ship_method")
+		#if rates:
+		#	data["shipping_fee"] = rates.get(data["shipping_method"], {}).get("fee")
 
 	data.update({ "billing_%s" % key: value for key, value in billing_address.iteritems() })
 	data.update({ "shipping_%s" % key: value for key, value in shipping_address.iteritems() })
