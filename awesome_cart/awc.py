@@ -901,8 +901,8 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 			quotation.shipping_address = ""
 			save=True
 
-		if rate != quotation.fedex_shipping_method:
-			quotation.fedex_shipping_method = rate
+		if rate_name and rate_name != quotation.fedex_shipping_method:
+			quotation.fedex_shipping_method = rate_name
 			save=True
 
 
