@@ -6,7 +6,6 @@ import frappe
 from frappe import _dict, _
 from frappe.utils import cint, cstr, random_string, flt
 from erpnext.stock.get_item_details import apply_price_list_on_item
-from erpnext.shopping_cart.product import get_product_info
 
 from compat.customer import get_current_customer
 from compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotation
@@ -902,6 +901,11 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 			quotation.shipping_address = ""
 			save=True
 
+		rate_name_corrected = rate_name.replace(" ", "_")
+		if rate_name_corrected and rate_name_corrected != quotation.fedex_shipping_method:
+			quotation.fedex_shipping_method = rate_name_corrected
+			save=True
+
 
 		if save:
 			quotation.flags.ignore_permissions = True
@@ -1378,11 +1382,11 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	}
 
 	if shipping_address.get("ship_method"):
-		# retrieve quoted charges
+		# retrieve quoted chargesfee
 		rates = awc_session.get("shipping_rates")
-		data["shipping_method"] = shipping_address.get("ship_method")
-		if rates:
-			data["shipping_fee"] = rates.get(data["shipping_method"], {}).get("fee")
+		#data["shipping_method"] = shipping_address.get("ship_method")
+		#if rates:
+		#	data["shipping_fee"] = rates.get(data["shipping_method"], {}).get("fee")
 
 	data.update({ "billing_%s" % key: value for key, value in billing_address.iteritems() })
 	data.update({ "shipping_%s" % key: value for key, value in shipping_address.iteritems() })
