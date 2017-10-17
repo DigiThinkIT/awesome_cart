@@ -901,11 +901,11 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 			quotation.shipping_address = ""
 			save=True
 
-		rate_name_corrected = rate_name.replace(" ", "_")
-		if rate_name_corrected and rate_name_corrected != quotation.fedex_shipping_method:
-			quotation.fedex_shipping_method = rate_name_corrected
-			save=True
-
+		if rate_name:
+			rate_name_corrected = rate_name.replace(" ", "_")
+			if rate_name_corrected and rate_name_corrected != quotation.fedex_shipping_method:
+				quotation.fedex_shipping_method = rate_name_corrected
+				save=True
 
 		if save:
 			quotation.flags.ignore_permissions = True
