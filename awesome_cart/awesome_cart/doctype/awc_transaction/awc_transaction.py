@@ -68,7 +68,8 @@ class AWCTransaction(Document):
 
 			if self.flags.get("skip_payment_request", False):
 				so.submit()
-				so.save()
+				# NOTE: TEST THIS!!!! WHY IS THERE A SAVE AFTER SUBMIT???????
+				#so.save()
 
 				self.reference_doctype = "Sales Order"
 				self.reference_docname = so.name
@@ -119,8 +120,8 @@ class AWCTransaction(Document):
 				result = None
 
 			# update shipping method in Sales Order
-			if self.get("shipping_method"):
-				frappe.db.set_value("Sales Order", self.order_id, "fedex_shipping_method", self.get("shipping_method"))
+			#if self.get("shipping_method"):
+			#	frappe.db.set_value("Sales Order", self.order_id, "fedex_shipping_method", self.get("shipping_method"))
 
 			if self.get("gateway_service"):
 				has_universals = False
@@ -129,6 +130,8 @@ class AWCTransaction(Document):
 						has_universals = True
 				if self.get("gateway_service") == "credit_gateway":
 					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Bill Me")
+				if self.get("gateway_service") == "paypal":
+					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "PayPal")
 				else:
 					if self.get("gateway_service") == "authorizenet":
 						frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Card")
