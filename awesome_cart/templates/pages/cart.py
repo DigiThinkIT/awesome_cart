@@ -35,7 +35,6 @@ def get_context(context):
 		addresses = []
 		for address in address_links:
 			addresses.extend(frappe.get_all("Address", filters={"name" : address.parent, "disabled" : False}, fields="*"))
-
 		context['addresses'] = addresses
 
 	country_idx = context["countries"].index(default_country_doc)
