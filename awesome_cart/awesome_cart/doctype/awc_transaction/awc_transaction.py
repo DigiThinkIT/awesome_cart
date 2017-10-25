@@ -130,7 +130,7 @@ class AWCTransaction(Document):
 						has_universals = True
 				if self.get("gateway_service") == "credit_gateway":
 					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Bill Me")
-				if self.get("gateway_service") == "paypal":
+				elif self.get("gateway_service") == "paypal":
 					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "PayPal")
 				else:
 					if self.get("gateway_service") == "authorizenet":
