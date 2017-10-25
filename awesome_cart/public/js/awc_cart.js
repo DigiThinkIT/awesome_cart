@@ -426,7 +426,6 @@ awc_checkout = {
 						//adding newly entered shipping address on billing address tab in awc
 						var div = document.createElement('div');
 						div.setAttribute('class', 'col-md-12 col-sm-12');
-						div.setAttribute('style', 'padding:0');
 						var line2str, statestr;
 						if ($('#awc_ship__line2').val()) {
 							line2str = "<span id='line2'>" + $('#awc_ship__line2').val() + "</span>,";
@@ -452,9 +451,9 @@ awc_checkout = {
 								</div>\
 							</div>";
 						div.innerHTML = str;
-						if (!$('#awc-billing-addrs #same-as-ship-addr.addr.awc-selected')) {
-							$('#awc-billing-addrs #same-as-ship-addr.addr').parent().remove();
-						}
+
+						$('#awc-billing-addrs #same-as-ship-addr.addr').parent().remove();
+
 						$('#awc-billing-addrs div.row .awc-addresses-container').prepend(div);
 						$('#awc-billing-addrs #same-as-ship-addr.addr').click(function(e) {
 							e.stopPropagation();
