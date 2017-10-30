@@ -94,7 +94,9 @@ class CreditGatewaySettings(Document):
 			#return context["total_credit"] > 0
 			self.get_embed_context(context)
 
-			return customer.get("allow_billme_later", False)
+			# test for either allow_billme_later or can_billme_later role
+
+			return customer.get("allow_billme_later", False) or "Bill Me Later User" in frappe.get_roles()
 
 		return False
 
