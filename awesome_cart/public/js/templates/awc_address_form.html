@@ -12,7 +12,8 @@
           <p>
             <button title="Delete" class="pull-right delete"><span class="fa fa-trash" aria-hidden="true"></span></button>
             <button title="Edit" data-type="{%= data_type %}" class="pull-right edit" style="margin:0 15px;"><span class="fa fa-pencil" aria-hidden="true"></span></button>
-            <span id="line1">{%= address.address_line1 %}</span>, {% if ( address.address_line2 ) { %}
+			<strong><span id="title">{%= address.address_title %}</span></strong><br>
+			<span id="line1">{%= address.address_line1 %}</span>, {% if ( address.address_line2 ) { %}
             <span id="line2">{%= address.address_line2 %}</span>, {% } %}
             <span id="city">{%= address.city %}</span>,
             <span id="state">{%= address.state %}</span>,
