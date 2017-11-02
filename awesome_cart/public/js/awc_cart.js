@@ -153,6 +153,7 @@ awc_checkout = {
 						$('#awc-shipping-form.awc-form')
 							.attr('data-name', $addr.attr('data-name'));
 
+						$('#awc_ship__contact').val($addr.find('span#contact').text());
 						$('#awc_ship__phone').val($addr.find('span#phone').text());
 						$('#awc_ship__line1').val($addr.find('span#line1').text());
 						$('#awc_ship__line2').val($addr.find('span#line2').text());
@@ -476,6 +477,7 @@ awc_checkout = {
 							address_name: $('#awc-shipping-form.awc-form').attr('data-name'),
 							address_is_residential: $('#awc_ship__is_residential').val(),
 							address_phone: $('#awc_ship__phone').val(),
+							address_contact: $('#awc_ship__contact').val(),
 							address_line1: $('#awc_ship__line1').val(),
 							address_line2: $('#awc_ship__line2').val(),
 							address_city: $('#awc_ship__city').val(),
@@ -484,6 +486,7 @@ awc_checkout = {
 							address_country: $('#awc_ship__country').val()
 						};
 						$('#awc-shipping-addrs .edited span#phone').text($('#awc_ship__phone').val());
+						$('#awc-shipping-addrs .edited span#contact').text($('#awc_ship__contact').val());
 						$('#awc-shipping-addrs .edited span#line1').text($('#awc_ship__line1').val());
 						$('#awc-shipping-addrs .edited span#line2').text($('#awc_ship__line2').val());
 						$('#awc-shipping-addrs .edited span#city').text($('#awc_ship__city').val());
