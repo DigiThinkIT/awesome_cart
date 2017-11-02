@@ -24,7 +24,7 @@ function updateProductDetails(sku) {
   }
 
   if ( sku ) {
-    cart.getProductBySKU(sku)
+    cart.getProductBySKU(sku, 1)
       .then(function(product) {
         if ( product.tags ) {
           $.each(product.tags, function(k,v) {

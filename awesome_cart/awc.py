@@ -144,7 +144,14 @@ def get_awc_item_custom_data(name):
 
 def build_awc_options_from_varients(item):
 
+	cache_key = "build_awc_options_from_varients-{}".format(item.name)
+	cache_data = get_cache(key=cache_key)
+
+	if cache_data:
+		return cache_data
+
 	item = frappe.get_doc("Item", item.name)
+	#item_data = frappe.get_all("Item", fields=["variant_of", "attributes", "has_variants"], filters={"name": item.name})
 
 	# early exit for items which are already variants to another item
 	if item.get('variant_of'):
@@ -181,6 +188,8 @@ def build_awc_options_from_varients(item):
 
 
 			options["hashes"][",".join(opt_hash)] = variant.get('name')
+
+	set_cache(key=cache_key, value=options)
 
 	return options
 
@@ -230,6 +239,15 @@ def _get_cart_quotation(awc_session=None):
 def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 	"""Get's product in awcjs format by its sku and optionally detailed data."""
 
+	if not awc_session:
+		awc_session = get_awc_session()
+
+	cache_key = "get_product_by_sku-{}-{}-{}".format(sku, "detailed" if detailed else "none", is_logged_in())
+	cache_data = get_cache(cache_key, session=awc_session)
+
+	if cache_data:
+		return cache_data
+
 	price_list = None
 	if is_logged_in():
 		if not quotation:
@@ -240,12 +258,16 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 	item = frappe.get_all("Item", fields=["name", "item_name" ,"variant_of", "item_code", "disabled", "default_warehouse", "net_weight"], filters = {"item_code": sku}, ignore_permissions=1)
 
 	if not item or len(item) == 0:
-		return { "success": False, "data": None }
+		data = { "success": False, "data": None }
+		set_cache(cache_key, data, session=awc_session)
+		return data
 
 	item = item[0]
 
 	if item.disabled:
-		return { "success": False, "data": None }
+		data = { "success": False, "data": None }
+		set_cache(cache_key, data, session=awc_session)
+		return data
 
 	# get awc item name by its item link
 	awc_item_name = frappe.db.get_value("AWC Item", filters = {"product_name": item.name})
@@ -262,7 +284,9 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 			missing_awc_item = item.name
 
 	if missing_awc_item:
-		return { "success": False, "data": None, "error": "Missing AWC Item for {0}".format(missing_awc_item) }
+		data = { "success": False, "data": None, "error": "Missing AWC Item for {0}".format(missing_awc_item) }
+		set_cache(cache_key, data, session=awc_session)
+		return data
 
 	# finally get awc_item doctype instance
 	awc_item = frappe.get_doc("AWC Item", awc_item_name)
@@ -305,11 +329,22 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 			sections=get_content_sections(awc_item)
 		)
 
-	return { "success": True, "data": product }
+	data = { "success": True, "data": product }
+
+	set_cache(cache_key, data, session=awc_session)
+
+	return data
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", start=0, limit=None):
 	"""Fetches a list of products filtered by tags"""
+
+	awc_session = get_awc_session()
+
+	cache_key = "fetch_products-{}-{}-{}-{}-{}-{}-{}".format(tags, terms, order_by, order_dir, start, limit, is_logged_in())
+	cache_data = get_cache(cache_key, session=awc_session)
+	if cache_data:
+		return cache_data
 
 	payload = {
 		"success": False
@@ -435,6 +470,8 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 		payload["success"] = False
 		payload["message"] = traceback.format_exc(ex)
 		log(payload["message"])
+
+	set_cache(cache_key, payload, session=awc_session)
 
 	return payload
 
