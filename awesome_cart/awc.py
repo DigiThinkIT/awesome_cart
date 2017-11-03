@@ -706,16 +706,7 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False):
 		del quotation.items[idx]
 		quotation_is_dirty = True
 
-	hooks = frappe.get_hooks("awc_sync_with_quotation") or []
-	if hooks:
-		for awc_item in awc["items"]:
-			quotation_item = None
-			if awc_item.get("id"):
-				quotation_item = next((itm for itm in quotation.get("items", []) if itm.get("name") == awc_item.get("id")), None)
-
-			for method in hooks:
-				frappe.call(method, awc_item=awc_item, quotation_item=quotation_item, quotation=quotation, awc_session=awc_session)
-
+	call_awc_sync_hook(awc_session, quotation)
 
 	if quotation_is_dirty:
 		update_cart_settings(quotation, awc_session)
@@ -812,6 +803,31 @@ def update_cart_settings(quotation, awc_session):
 	#quotation.run_method("calculate_taxes_and_totals")
 	update_shipping_quotation(quotation, awc_session)
 
+def call_awc_sync_hook(awc_session, quotation):
+	awc = awc_session.get("cart")
+
+	hooks = frappe.get_hooks("awc_sync_prepare") or []
+	if hooks:
+		for awc_item in awc["items"]:
+			quotation_item = None
+
+			if quotation and awc_item.get("id"):
+				quotation_item = next((itm for itm in quotation.get("items", []) if itm.get("name") == awc_item.get("id")), None)
+
+			for method in hooks:
+				frappe.call(method, awc_item=awc_item, quotation_item=quotation_item, quotation=quotation, awc_session=awc_session)
+
+	hooks = frappe.get_hooks("awc_sync_with_quotation") or []
+	if hooks:
+		for awc_item in awc["items"]:
+			quotation_item = None
+
+			if quotation and awc_item.get("id"):
+				quotation_item = next((itm for itm in quotation.get("items", []) if itm.get("name") == awc_item.get("id")), None)
+
+			for method in hooks:
+				frappe.call(method, awc_item=awc_item, quotation_item=quotation_item, quotation=quotation, awc_session=awc_session)
+
 def reset_shipping():
 	customer = get_current_customer()
 	awc_session = get_awc_session()
@@ -831,7 +847,8 @@ def reset_shipping():
 
 	if quotation:
 		sync_awc_and_quotation(awc_session, quotation)
-
+	else:
+		call_awc_sync_hook(awc_session, quotation)
 
 	if "shipping_method" in awc_session:
 		del awc_session["shipping_method"]
@@ -1009,6 +1026,8 @@ def cart(data=None, action=None):
 
 	if quotation:
 		sync_awc_and_quotation(awc_session, quotation)
+	else:
+		call_awc_sync_hook(awc_session, quotation)
 
 	if not action:
 		return { "data": awc, "success": True}
@@ -1133,6 +1152,8 @@ def cart(data=None, action=None):
 
 	elif action == "addToCart":
 
+		to_remove = []
+
 		for item in data:
 			# need basic data validation here
 			if not item.get("sku"):
@@ -1142,6 +1163,10 @@ def cart(data=None, action=None):
 				return { "success": False, "message": "Invalid Data" }
 
 			product = get_product_by_sku(item.get("sku"), quotation=quotation).get("data")
+
+			if item.get("replaces"):
+				to_remove.append(item.get("replaces"))
+				del item["replaces"]
 
 			if item.get("options", {}).get("custom", {}).get("rate", None) != None:
 				item["total"] = flt(item["options"]["custom"]["rate"]) * item.get("qty")
@@ -1183,7 +1208,21 @@ def cart(data=None, action=None):
 
 			awc["items"].append(item)
 
+		removed_ids = []
+		if len(to_remove) > 0:
+			remove_success, removed_ids, awc_items = remove_from_cart([{ "id": x} for x in to_remove], awc["items"])
+			if remove_success:
+				awc["items"] = awc_items
+
 		if quotation:
+
+			if len(removed_ids) > 0:
+				# remove item and related grouped items from quote
+				quotation_items = [ itm for itm in quotation.get("items", []) \
+					if itm.name not in removed_ids ]
+
+				quotation.set("items", quotation_items)
+
 			update_cart_settings(quotation, awc_session)
 			quotation.flags.ignore_permissions = True
 			quotation.save()
@@ -1198,6 +1237,7 @@ def cart(data=None, action=None):
 
 		return session_response({
 			"success": True,
+			"removed": removed_ids
 		}, awc_session, quotation)
 
 	elif action == "removeFromCart":
