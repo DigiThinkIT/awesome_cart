@@ -820,11 +820,6 @@ def reset_shipping():
 def calculate_shipping(rate_name, address, awc_session, quotation, save=True, force=False):
 	awc = awc_session.get("cart")
 
-	print("CALCULATE SHIPPING...");
-	print("Rate Name: {}".format(rate_name))
-	print("Address: \n\t{}".format(pretty_json(address)))
-	print("Session: \n\t{}".format(pretty_json(awc_session)))
-
 	# if no rate_name provided get last method selected
 	if not rate_name:
 		rate_name = awc_session.get("shipping_method", {}).get("name")
@@ -844,15 +839,10 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 	if address and awc_session.get("shipping_address") and \
 		len(address.items()) > 0 and len(awc_session["shipping_address"].items()) > 0:
 
-		print(pretty_json(address))
-		print("--------------------")
-		print(pretty_json(awc_session.get("shipping_address")))
-
 		address_field_equal = reduce((lambda x, y: x and y), [ \
 			address.get(k, None) == v \
 			for k,v in awc_session.get("shipping_address", {}).items() \
 		])
-		print("MATCH: {}".format(address_field_equal))
 	else:
 		address_field_equal = False
 
