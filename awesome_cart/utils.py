@@ -70,6 +70,7 @@ def edit_address(address):
 	add_doc = frappe.get_doc("Address", address.get('address_name'))
 	add_doc.address_title = address.get('address_title')
 	add_doc.is_residential = address.get('address_is_residential')
+	add_doc.address_contact = address.get('address_contact')
 	add_doc.address_line1 = address.get('address_line1')
 	add_doc.address_line2 = address.get('address_line2')
 	add_doc.phone = address.get('address_phone')

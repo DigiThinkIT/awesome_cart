@@ -622,6 +622,7 @@ var AwcShippingProvider = Class.extend({
 			address_data.shipping_address = $('#awc-shipping-form').attr('data-name');
 			address_data.title = $form.find('input[name="title"]').val();
 			address_data.phone = $form.find('input[name="phone"]').val();
+			address_data.address_contact = $form.find('input[name="address_contact"]').val();
 			address_data.address_1 = $form.find('input[name="address_1"]').val();
 			address_data.address_2 = $form.find('input[name="address_2"]').val();
 			address_data.city = $form.find('input[name="city"]').val();
@@ -634,6 +635,7 @@ var AwcShippingProvider = Class.extend({
 			address_data.shipping_address = $('#awc-shipping-addrs .addr.awc-selected').attr('data-name');
 			address_data.title = $('#awc-shipping-addrs .awc-selected span#title').text();
 			address_data.phone = $('#awc-shipping-addrs .awc-selected span#phone').text();
+			address_data.address_contact = $('#awc-shipping-addrs .awc-selected span#contact').text();
 			address_data.address_1 = $('#awc-shipping-addrs .awc-selected span#line1').text();
 			address_data.address_2 = $('#awc-shipping-addrs .awc-selected span#line2').text();
 			address_data.city = $('#awc-shipping-addrs .awc-selected span#city').text();
@@ -647,6 +649,7 @@ var AwcShippingProvider = Class.extend({
 		current_address_data = {
 			shipping_address: this.data.shipping_address,
 			phone: this.data.phone,
+			address_contact: this.data.address_contact,
 			address_1: this.data.address_1,
 			address_2: this.data.address_2,
 			city: this.data.city,
@@ -778,6 +781,8 @@ var AwcShippingProvider = Class.extend({
 
 			return '<div class="row">' +
 				'<address class="col-sm-12">' +
+				ln("address_title") +
+				ln("address_contact") +
 				ln("address_1") +
 				ln("address_2") +
 				ln("city", 0) + ", " + ln("state", 0) + " " + ln("pincode") +

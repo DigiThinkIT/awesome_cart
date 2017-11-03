@@ -9,17 +9,25 @@
     <div class="col-md-12 col-sm-12 address-item">
       <div class="well">
         <div data-is-residential="{%= address.is_residential %}" data-name="{%= address.name %}" class="addr" style="cursor: pointer" data-address-type="{%= address.address_type %}">
+          <span class="actions pull-right">
+            <button title="Delete" class="delete"><span class="fa fa-trash" aria-hidden="true"></span></button>
+            <button title="Edit" data-type="{%= data_type %}" class="edit" style="margin:0 15px;"><span class="fa fa-pencil" aria-hidden="true"></span></button>
+          </span>
           <p>
             <button title="Delete" class="pull-right delete"><span class="fa fa-trash" aria-hidden="true"></span></button>
             <button title="Edit" data-type="{%= data_type %}" class="pull-right edit" style="margin:0 15px;"><span class="fa fa-pencil" aria-hidden="true"></span></button>
-			<strong><span id="title">{%= address.address_title %}</span></strong><br>
-			<span id="line1">{%= address.address_line1 %}</span>, {% if ( address.address_line2 ) { %}
+			      <strong><span id="title">{%= address.address_title %}</span></strong><br>
+			      <span id="line1">{%= address.address_line1 %}</span>, {% if ( address.address_line2 ) { %}
             <span id="line2">{%= address.address_line2 %}</span>, {% } %}
+            {% if ( address.address_title ) { %}<span id="title" class="line">{%= address.adddress_title %}</span>{% } %}
+            {% if ( address.address_contact ) { %}<span class="glyphicon glyphicon-user"></span><span id="contact">{%= address.address_contact %}</span><br>{% } %}
+            <span id="line1" class="line">{%= address.address_line1 %}</span>
+            {% if ( address.address_line2 ) { %}<span id="line2" class="line">{%= address.address_line2 %}</span>{% } %}
             <span id="city">{%= address.city %}</span>,
-            <span id="state">{%= address.state %}</span>,
-            <span id="country">{%= address.country %}</span>,
-            <span id="postal_code">{%= address.pincode %}</span>.<br>
-            <span id="phone">{%= address.phone %}</span>
+            <span id="state">{%= address.state %}</span>
+            <span id="postal_code">{%= address.pincode %}</span><br>
+            <span id="country" class="line">{%= address.country %}</span>
+            <span class="glyphicon glyphicon-phone-alt"></span><span id="phone">{%= address.phone %}</span><br>
           </p>
         </div>
       </div>
@@ -30,3 +38,23 @@
   <button class="btn-primary">Add a New {%= label %}</button>
 
 </div>
+<style>
+.line {
+  display: block;
+}
+.address-item p {
+  display: block;
+}
+.address-item #title {
+  display: block;
+  background: #fff;
+  color: black;
+}
+.address-item .glyphicon {
+	margin-right: .5em;
+}
+.address-item .well {
+  padding: .5em 1em;
+  margin-bottom: 1em;
+}
+</style>

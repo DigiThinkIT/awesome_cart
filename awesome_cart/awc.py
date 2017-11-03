@@ -986,6 +986,7 @@ def cart(data=None, action=None):
 				new_address.update({
 					"address_title": data[0].get("address").get("title"),
 					"address_type": data[0].get("address").get("address_type", "Shipping"),
+					"address_contact": data[0].get("address").get("address_contact", ""),
 					"address_line1": data[0].get("address").get("address_1"),
 					"address_line2": data[0].get("address").get("address_2"),
 					"city": data[0].get("address").get("city"),
