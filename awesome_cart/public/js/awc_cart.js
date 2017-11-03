@@ -26,8 +26,10 @@ awc_checkout = {
 				var $bc = $(bcSelector);
 				$('#checkout-breadcrumb .breadcrumb')
 					.not($bc)
-					.removeClass('active');
+					.removeClass('active')
+					.trigger('page_hide');
 				$bc.addClass('active');
+				$bc.trigger('page_show');
 			}
 		}).bind(awc_checkout, page), 100);
 
@@ -134,7 +136,6 @@ awc_checkout = {
 					on_address_click: function($addr) {
 						$("#checkout-shipping-method").show();
 						$("#bc-shipping-method").show();
-						awc_checkout.shipping_provider.reset_method();
 						awc_checkout.showPage('#checkout-shipping-method');
 						$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
 					},
