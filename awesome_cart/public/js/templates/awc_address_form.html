@@ -13,22 +13,20 @@
             <button title="Delete" class="delete"><span class="fa fa-trash" aria-hidden="true"></span></button>
             <button title="Edit" data-type="{%= data_type %}" class="edit" style="margin:0 15px;"><span class="fa fa-pencil" aria-hidden="true"></span></button>
           </span>
-          <p>
-            <button title="Delete" class="pull-right delete"><span class="fa fa-trash" aria-hidden="true"></span></button>
-            <button title="Edit" data-type="{%= data_type %}" class="pull-right edit" style="margin:0 15px;"><span class="fa fa-pencil" aria-hidden="true"></span></button>
-			      <strong><span id="title">{%= address.address_title %}</span></strong><br>
-			      <span id="line1">{%= address.address_line1 %}</span>, {% if ( address.address_line2 ) { %}
-            <span id="line2">{%= address.address_line2 %}</span>, {% } %}
-            {% if ( address.address_title ) { %}<span id="title" class="line">{%= address.adddress_title %}</span>{% } %}
+          <div class="address">
+            {% if ( address.address_title ) { %}<span class="glyphicon glyphicon-tag"></span><span id="title">{%= address.address_title %}</span><br>{% } %}
             {% if ( address.address_contact ) { %}<span class="glyphicon glyphicon-user"></span><span id="contact">{%= address.address_contact %}</span><br>{% } %}
-            <span id="line1" class="line">{%= address.address_line1 %}</span>
-            {% if ( address.address_line2 ) { %}<span id="line2" class="line">{%= address.address_line2 %}</span>{% } %}
-            <span id="city">{%= address.city %}</span>,
-            <span id="state">{%= address.state %}</span>
-            <span id="postal_code">{%= address.pincode %}</span><br>
-            <span id="country" class="line">{%= address.country %}</span>
-            <span class="glyphicon glyphicon-phone-alt"></span><span id="phone">{%= address.phone %}</span><br>
-          </p>
+			<span class="glyphicon glyphicon-map-marker pull-left"></span>
+			<div style="padding-left: 1.5em;">
+				<span id="line1" class="line">{%= address.address_line1 %}</span>
+				{% if ( address.address_line2 ) { %}<span id="line2" class="line">{%= address.address_line2 %}</span>{% } %}
+				<span id="city">{%= address.city %}</span>,
+				<span id="state">{%= address.state %}</span>
+				<span id="postal_code">{%= address.pincode %}</span><br>
+				<span id="country" class="line">{%= address.country %}</span><br>
+			</div>
+			<span class="glyphicon glyphicon-phone-alt"></span><span id="phone">{%= address.phone %}</span><br>
+		</div>
         </div>
       </div>
     </div>
@@ -39,16 +37,8 @@
 
 </div>
 <style>
-.line {
-  display: block;
-}
-.address-item p {
-  display: block;
-}
-.address-item #title {
-  display: block;
-  background: #fff;
-  color: black;
+.address {
+	padding-bottom: 15px;
 }
 .address-item .glyphicon {
 	margin-right: .5em;

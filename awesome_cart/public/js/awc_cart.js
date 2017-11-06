@@ -149,6 +149,7 @@ awc_checkout = {
 					},
 
 					on_edit_click: function($addr, e) {
+						$("#awc-shipping-form .awc-form").trigger("reset");
 						$('#awc-shipping-form.awc-form')
 							.attr('data-name', $addr.attr('data-name'));
 
@@ -201,6 +202,7 @@ awc_checkout = {
 
 					on_edit_click: function($addr, e) {
 						console.log("Edit address", $addr);
+						$("#gateway-selector-billing-form").trigger("reset")
 						$('#gateway-selector-billing-form.awc-form')
 							.attr('data-name', $addr.attr('data-name'));
 
@@ -312,6 +314,7 @@ awc_checkout = {
 				$shipping_container.find(".btn-primary").click(function(e) {
 					$('#checkout-shipping-address .addr').removeClass('awc-selected');
 					$('#checkout-shipping').attr('data-select', 'true');
+					$("#awc-shipping-form .awc-form").trigger("reset");
 					awc_checkout.showPage('#checkout-shipping');
 					$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
 				});
@@ -445,13 +448,15 @@ awc_checkout = {
 						str = "<div class='well'>\
 								<div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
 									<p>\
+										<span class='glyphicon glyphicon-tag'></span><span id='title'> " + $('#awc_ship__title').val() + "</span><br>\
+										<span class='glyphicon glyphicon-user'></span><span id='contact'> " + $('#awc_ship__contact').val() + "</span><br>\
 										<span id='line1'>" + $('#awc_ship__line1').val() + "</span>,\
 										" + line2str + "\
 										<span id='city'>" + $('#awc_ship__city').val() + "</span>,\
 										" + statestr + "\
 										<span id='country'>" + $('#awc_ship__country').val() + "</span>,\
 										<span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>\
-										<span id='phone'>" + $('#awc_ship__phone').val() + "</span>\
+										<span class='glyphicon glyphicon-phone-alt'></span><span id='phone'> " + $('#awc_ship__phone').val() + "</span>\
 									</p>\
 								</div>\
 							</div>";
