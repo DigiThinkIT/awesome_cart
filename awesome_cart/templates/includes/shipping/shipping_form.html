@@ -2,7 +2,13 @@
     <div id="awc-shipping-form" class="awc-form">
 			<form class="awc-form">
         <div class="row no-gutter">
-            <div class="col-sm-6">
+				<div class="col-sm-5">
+						<div class="field required">
+							<label for="awc_ship__title">Address Label</label>
+							<input id="awc_ship__title" name="title" placeholder="Address Label" data-type="title" maxlength="35" />
+						</div>
+					</div>
+				<div class="col-sm-3">
 							<div class="field">
 									<label for="awc_ship__is_residential">Is Residential</label>
 									<select id="awc_ship__is_residential" name="is_residential" data-type="is_residential">
@@ -12,12 +18,12 @@
 									<span class="select-arrow glyphicon glyphicon-triangle-bottom"></span>
 							</div>
 						</div>
-            <div class="col-sm-6">
+            <div class="col-sm-4">
                 <div class="field required">
                     <label for="awc_ship__phone">Phone</label>
                     <input id="awc_ship__phone" name="phone" placeholder="Contact Number" data-validate-phone="1" data-type="phone" maxlength="35" />
                 </div>
-            </div>
+			</div>
         </div>
         <div class="row no-gutter">
             <div class="col-sm-12">
