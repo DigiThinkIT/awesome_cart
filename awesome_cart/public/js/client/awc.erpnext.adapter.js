@@ -648,6 +648,7 @@ var AwcShippingProvider = Class.extend({
 
 		current_address_data = {
 			shipping_address: this.data.shipping_address,
+			title: this.data.title,
 			phone: this.data.phone,
 			address_contact: this.data.address_contact,
 			address_1: this.data.address_1,
