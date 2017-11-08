@@ -286,6 +286,7 @@ function dispalyAddr(shipaddr) {
 awc.ErpnextAdapter.prototype.getProductBySKU = function (sku, detailed) {
 	var base = this;
 	var skuHash = detailed + ":" + sku;
+
 	if (base.itemCache[skuHash] !== undefined) {
 		// return promise if curretly fetching
 		if (base.itemCache[skuHash].constructor == awc.Promise) {
