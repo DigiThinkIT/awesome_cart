@@ -488,7 +488,7 @@ def collect_totals(quotation, awc, awc_session):
 		awc["totals"]["other"] = []
 		awc["totals"]["grand_total"] = awc["totals"]["sub_total"] + awc["totals"].get("shipping_total", 0)
 
-def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False):
+def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, save_quotation=False):
 	# convert quotation to awc object
 	# and merge items in the case where items are added before logging in.
 
@@ -498,6 +498,11 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False):
 	# 3) loop over remaining unmatched quotation items and create awc items
 	# 4) remove invalid quotation items who's skus do not match any products(awc items)
 	awc = awc_session.get("cart")
+
+	# fixes issue where new quotation items require a parent to be inserted
+	# and we require a quotation item name to reference in awc
+	if quotation and quotation.name == None:
+		save_quotation(quotation, True, commit=False)
 
 	if not awc:
 		# abnormal, there should be a cart instance on the session
@@ -598,6 +603,9 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False):
 					awc_item["total"] = new_quotation_item.amount
 
 					# BUGFIX: makes sure this item gets a name during login
+					new_quotation_item.parent = quotation.name
+					new_quotation_item.parenttype = "Quotation"
+					new_quotation_item.parentfield = "items"
 					new_quotation_item.save()
 
 					awc_item["id"] = new_quotation_item.name
@@ -683,13 +691,19 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False):
 	if quotation_is_dirty:
 		update_cart_settings(quotation, awc_session)
 		quotation.flags.ignore_permissions = True
-		quotation.save()
-		frappe.db.commit()
+		if save_quotation:
+			try:
+				quotation.save()
+				frappe.db.commit()
+			except Exception as ex:
+				log(traceback.format_exc())
 
 	collect_totals(quotation, awc, awc_session)
 
 	if awc_is_dirty:
 		set_awc_session(awc_session)
+
+	return quotation_is_dirty
 
 def update_shipping_quotation(quotation, awc_session):
 	"""NOTE: this method has to be called after calling apply_cart_settings()
@@ -792,8 +806,9 @@ def reset_shipping():
 			apply_cart_settings(quotation=quotation)
 		quotation.flags.ignore_permissions=True
 
+	quotation_dirty=False
 	if quotation:
-		sync_awc_and_quotation(awc_session, quotation)
+		quotation_dirty = sync_awc_and_quotation(awc_session, quotation, save_quotation=False)
 
 
 	if "shipping_method" in awc_session:
@@ -805,17 +820,14 @@ def reset_shipping():
 	if "shipping_rates_list" in awc_session:
 		awc_session["shipping_rates_list"] = []
 
-	if quotation:
+	if quotation and quotation_dirty:
 		update_cart_settings(quotation, awc_session)
-		quotation.flags.ignore_permissions = True
-		quotation.save()
-
 		collect_totals(quotation, awc, awc_session)
 	else:
 		collect_totals(None, awc, awc_session)
 
 	set_awc_session(awc_session)
-	frappe.db.commit()
+	save_quotation(quotation, quotation_dirty, commit=True)
 
 def calculate_shipping(rate_name, address, awc_session, quotation, save=True, force=False):
 	awc = awc_session.get("cart")
@@ -908,9 +920,7 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 				save=True
 
 		if save:
-			quotation.flags.ignore_permissions = True
-			quotation.save()
-			frappe.db.commit()
+			save_quotation(quotation, True, commit=True)
 
 		collect_totals(quotation, awc, awc_session)
 	else:
@@ -943,6 +953,23 @@ def session_response(response, awc_session, quotation):
 	data.update(response)
 	return data
 
+def save_quotation(quotation, is_dirty, commit=False):
+	result=(False, None)
+
+	if quotation and is_dirty:
+		try:
+			quotation.flags.ignore_permissions = True
+			quotation.save()
+			result = (True, None)
+		except Exception as ex:
+			log(traceback.format_exc())
+			result = (False, ex)
+
+	if commit:
+		frappe.db.commit()
+
+	return result
+
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def cart(data=None, action=None):
 	if data and isinstance(data, basestring):
@@ -956,14 +983,13 @@ def cart(data=None, action=None):
 	quotation = None
 	awc_session = get_awc_session()
 
+	quotation_is_dirty = False
 	if customer:
 		cart_info = get_user_quotation(awc_session)
 		quotation = cart_info.get('doc')
 
 		if len(quotation.items) == 0:
 			apply_cart_settings(quotation=quotation)
-		quotation.flags.ignore_permissions=True
-		quotation.save()
 
 	awc = awc_session.get("cart")
 
@@ -971,9 +997,10 @@ def cart(data=None, action=None):
 		awc = clear_awc_session()
 
 	if quotation:
-		sync_awc_and_quotation(awc_session, quotation)
+		quotation_is_dirty = sync_awc_and_quotation(awc_session, quotation)
 
 	if not action:
+		save_quotation(quotation, quotation_is_dirty, commit=True)
 		return { "data": awc, "success": True}
 
 	elif action == "calculate_shipping":
@@ -1004,15 +1031,14 @@ def cart(data=None, action=None):
 
 			if quotation:
 				quotation.shipping_address_name = address_name
+				quotation_is_dirty = True
 				awc_session["last_shipping_address"] = address_name
 
-		#else:
-			#if quotation:
-			#	quotation.shipping_address_name = ""
+		result = calculate_shipping(rate_name, address, awc_session, quotation, save=False)
+		quotation_is_dirty=True
+		save_quotation(quotation, quotation_is_dirty, commit=True)
 
-		quotation.save()
-
-		return calculate_shipping(rate_name, address, awc_session, quotation)
+		return result
 
 	elif action == "updateItem":
 
@@ -1078,15 +1104,15 @@ def cart(data=None, action=None):
 
 		if quotation:
 			update_cart_settings(quotation, awc_session)
-			quotation.flags.ignore_permissions = True
-			quotation.save()
-			frappe.db.commit()
+			quotation_is_dirty=True
 
 			collect_totals(quotation, awc, awc_session)
 		else:
 			collect_totals(None, awc, awc_session)
 
 		set_awc_session(awc_session)
+
+		save_quotation(quotation, quotation_is_dirty, commit=True)
 
 		return session_response({
 			"success": True,
@@ -1148,16 +1174,14 @@ def cart(data=None, action=None):
 
 		if quotation:
 			update_cart_settings(quotation, awc_session)
-			quotation.flags.ignore_permissions = True
-			quotation.save()
-
-			frappe.db.commit()
+			quotation_is_dirty = True
 
 			collect_totals(quotation, awc, awc_session)
 		else:
 			collect_totals(None, awc, awc_session)
 
 		set_awc_session(awc_session)
+		save_quotation(quotation, quotation_is_dirty, commit=True)
 
 		return session_response({
 			"success": True,
@@ -1182,14 +1206,14 @@ def cart(data=None, action=None):
 				quotation.set("items", quotation_items)
 
 				update_cart_settings(quotation, awc_session)
-				quotation.flags.ignore_permissions = True
-				quotation.save()
-				frappe.db.commit()
+				quotation_is_dirty = True
+
 				collect_totals(quotation, awc, awc_session)
 			else:
 				collect_totals(None, awc, awc_session)
 
 			set_awc_session(awc_session)
+			save_quotation(quotation, quotation_is_dirty, commit=True)
 
 			return session_response({
 				"success": True,
@@ -1214,9 +1238,8 @@ def cart(data=None, action=None):
 			if is_valid:
 				quotation.coupon_code = coupon
 				update_cart_settings(quotation, awc_session)
-				quotation.flags.ignore_permissions = True
-				quotation.save()
-				frappe.db.commit()
+				quotation_is_dirty = True
+
 				collect_totals(quotation, awc, awc_session)
 				success = True
 		else:
@@ -1228,10 +1251,12 @@ def cart(data=None, action=None):
 		if success:
 			set_awc_session(awc_session)
 
+			save_quotation(quotation, quotation_is_dirty, commit=True)
 			return session_response({
 				"success": True
 			}, awc_session, quotation)
 
+		save_quotation(quotation, quotation_is_dirty, commit=True)
 		return session_response({
 			"success": False,
 			"message": _(msg)
@@ -1243,14 +1268,14 @@ def cart(data=None, action=None):
 			quotation.discount_amount = 0
 			quotation.coupon_code = None
 			update_cart_settings(quotation, awc_session)
-			quotation.flags.ignore_permissions = True
-			quotation.save()
-			frappe.db.commit()
+			quotation_is_dirty = True
+
 			collect_totals(quotation, awc, awc_session)
 		else:
 			collect_totals(None, awc, awc_session)
 
 		set_awc_session(awc_session)
+		save_quotation(quotation, quotation_is_dirty, commit=True)
 
 		return session_response({
 			"success": True
@@ -1356,7 +1381,7 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		quotation_is_dirty = False
 
 	# make sure quotation email is contact person if we are a power user
-	sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty)
+	quotation_is_dirty = sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty, save_quotation=False)
 
 	if awc_session.get("selected_customer") and quotation.contact_person:
 		email = frappe.get_value("Contact", quotation.contact_person, "email_id")
@@ -1398,8 +1423,7 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	transaction.save()
 
 	set_awc_session(awc_session)
-
-	frappe.db.commit()
+	save_quotation(quotation, quotation_is_dirty, commit=True)
 
 	# check AWCTransaction.on_payment_authorized implementation which is
 	# where this transaction continues when payment processing kicks in
