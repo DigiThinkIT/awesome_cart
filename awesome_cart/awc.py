@@ -808,7 +808,7 @@ def reset_shipping():
 
 	quotation_dirty=False
 	if quotation:
-		quotation_dirty = sync_awc_and_quotation(awc_session, quotation, save_and_commit_quotation=False)
+		quotation_dirty = sync_awc_and_quotation(awc_session, quotation, save_quotation=False)
 
 
 	if "shipping_method" in awc_session:
@@ -1381,7 +1381,7 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		quotation_is_dirty = False
 
 	# make sure quotation email is contact person if we are a power user
-	quotation_is_dirty = sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty, save_and_commit_quotation=False)
+	quotation_is_dirty = sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty, save_quotation=False)
 
 	if awc_session.get("selected_customer") and quotation.contact_person:
 		email = frappe.get_value("Contact", quotation.contact_person, "email_id")
