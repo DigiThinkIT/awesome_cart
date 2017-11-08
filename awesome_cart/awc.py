@@ -926,9 +926,7 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 	else:
 		collect_totals(None, awc, awc_session)
 
-	if save:
-		#log("Saving session:\n{0}", pretty_json(awc_session))
-		set_awc_session(awc_session)
+	set_awc_session(awc_session)
 
 	return session_response({
 		"success": True,
