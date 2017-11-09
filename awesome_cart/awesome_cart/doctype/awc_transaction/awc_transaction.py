@@ -132,6 +132,8 @@ class AWCTransaction(Document):
 					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Bill Me")
 				elif self.get("gateway_service") == "paypal":
 					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "PayPal")
+					frappe.db.set_value("Sales Order", self.order_id, "authorize_production", False)
+					frappe.db.set_value("Sales Order", self.order_id, "authorize_delivery", False)
 				else:
 					if self.get("gateway_service") == "authorizenet":
 						frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Card")

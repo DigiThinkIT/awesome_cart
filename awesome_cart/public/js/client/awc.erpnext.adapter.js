@@ -411,6 +411,7 @@ awc.ErpnextAdapter.prototype.validate = function (gateway_request, gateway_servi
 
 var AwcShippingProvider = Class.extend({
 	init: function (cart) {
+		var base = this;
 		this._last_values = "";
 		this._packages = [];
 		this._cart = cart;
@@ -440,7 +441,13 @@ var AwcShippingProvider = Class.extend({
 		$form.find('select[name="country"]').change(on_update);
 
 		cart.on("shipping_rates", this.update_shipping_rates.bind(this));
+
+		// only redraw retes when rates page appears
+		$('#checkout-shipping-method').on('page_show', function() {
+			base.on_display_shipping_rates_page();
+		});
 	},
+
 	_on_cart_update: function () {
 		var base = this;
 		this._packages = [];
@@ -449,6 +456,7 @@ var AwcShippingProvider = Class.extend({
 				//base._last_values = "#invalid";
 			});
 	},
+
 	form: function (data) {
 		this.data = data || {};
 	},
@@ -457,6 +465,9 @@ var AwcShippingProvider = Class.extend({
 		this.data.ship_method = null;
 		var $method_form = $('#awc-shipping-method');
 		$method_form.empty();
+		$method_form.fadeOut('fast');
+		$method_form.parent().find('.error').fadeOut('fast');
+		$method_form.parent().find('.spinner').fadeIn('fast');
 	},
 
 	set_method: function(method) {
@@ -498,7 +509,6 @@ var AwcShippingProvider = Class.extend({
 			.catch(awc.Errors.CallException, function (err) {
 				awc.debug.error(err);
 
-
 				$("#bc-shipping").removeClass("valid");
 				$method_form.fadeOut('fast');
 				$method_form.parent().find('.error .error-invalid-address').hide();
@@ -509,29 +519,18 @@ var AwcShippingProvider = Class.extend({
 			});
 	},
 
-	update_shipping_rates: function (rates, validate) {
-		if ( validate === undefined ) {
-			validate = true;
-		}
+	on_display_shipping_rates_page: function() {
 		var base = this;
+		var rates = base._shipping_methods;
+
 		var $form = $('#awc-shipping-form');
 		var $method_form = $('#awc-shipping-method');
-		var update = true;
-
-		if (base._shipping_methods) {
-			if (awc._.isEqual(base._shipping_methods, rates)) {
-				$method_form.fadeIn('fast');
-				$method_form.parent().find('.error').fadeOut('fast');
-				$method_form.parent().find('.spinner').fadeOut('fast');
-				return;
-			}
-		}
-		base._shipping_methods = rates;
 		$method_form.empty();
+
+		console.log("Update shipping rates display", rates);
 
 		if (rates.length > 0) {
 			var last_selected_method = base.data.ship_method;
-			//base.data.ship_method = null;
 
 			$.each(rates, function (i, method) {
 
@@ -541,25 +540,12 @@ var AwcShippingProvider = Class.extend({
 				}
 
 				var checked = "";
-				var is_default = false;
-				if (last_selected_method && last_selected_method == method.name) {
-					is_default = true; // auto select last ship method selection if available
-					base.data.ship_method = method.name;
-				} else if (!last_selected_method) {
-					is_default = i == 0; // select first item by default
-					if (is_default) {
-						base.data.ship_method = method.name;
-					}
-				}
+				var is_default = base.data.ship_method == method.name;
 
 				if (is_default) {
 					checked = "checked='checked'";
-					base.data.ship_method = method.name;
-					base.method_valid = true;
-					base.fee = method.fee;
-					base.label = method.label;
-					$("#bc-shipping-method").addClass("valid");
 				}
+
 				var $method = $(
 					'<li>' +
 					'<label>' +
@@ -584,17 +570,79 @@ var AwcShippingProvider = Class.extend({
 				})
 			});
 
-
-			if (!$method_form.find('input[type="radio"]').is(':checked')) {
-				// if there was nothing selected by default, go back and select
-				// first item. This can occur if address method was removed due
-				// to a change of address from a previous selection
-				$method_form.find('input[type="radio"]:first').click();
-			}
-
 			$method_form.fadeIn('fast');
 			$method_form.parent().find('.error').fadeOut('fast');
 			$method_form.parent().find('.spinner').fadeOut('fast');
+		} else {
+			$method_form.fadeOut('fast');
+			$method_form.parent().find('.error .error-invalid-address').show();
+			$method_form.parent().find('.error .error-other').empty();
+			$method_form.parent().find('.error .error-other').hide();
+			$method_form.parent().find('.error').fadeIn('fast');
+			$method_form.parent().find('.spinner').fadeOut('fast');
+		}
+
+	},
+
+	update_shipping_rates: function (rates, validate) {
+		if ( validate === undefined ) {
+			validate = true;
+		}
+		var base = this;
+
+		console.log("update_shipping_rates", rates);
+
+		if (base._shipping_methods) {
+			if (awc._.isEqual(base._shipping_methods, rates)) {
+				this.on_display_shipping_rates_page();
+				return;
+			}
+		}
+
+		base._shipping_methods = rates;
+
+		if (rates.length > 0) {
+			var last_selected_method = base.data.ship_method;
+			base.data.ship_method = null;
+			//base.data.ship_method = null;
+
+			$.each(rates, function (i, method) {
+
+				// don't list pickup option on method list
+				if ( method.name === "PICK UP" ) {
+					return;
+				}
+
+				var checked = "";
+				var is_default = false;
+				if (last_selected_method && last_selected_method == method.name) {
+					is_default = true; // auto select last ship method selection if available
+					base.data.ship_method = method.name;
+				} else if (!last_selected_method) {
+					is_default = i == 0; // select first item by default
+					if (is_default) {
+						base.data.ship_method = method.name;
+					}
+				}
+
+			});
+
+			// if no method was selected either because a rate dissapeared or there was no
+			// default, then select first rate in the list.
+			if ( base.data.ship_method == null ) {
+				var method = rates[0];
+				base.method_valid = true;
+				base.data.ship_method = method.name;
+				base.fee = method.fee;
+				base.label = method.label;
+				base.calculate_shipping(base.data.ship_method).then(function(r) {
+					base.validate();
+					return r;
+				});
+			} else {
+				base.method_valid = true;
+				$("#bc-shipping-method").addClass("valid");
+			}
 
 			if ( validate ) {
 				// finally trigger validation once more to update ui with default selections
@@ -603,13 +651,9 @@ var AwcShippingProvider = Class.extend({
 		} else {
 			base.method_valid = false;
 			$("#bc-shipping-method").removeClass("valid");
-			$method_form.fadeOut('fast');
-			$method_form.parent().find('.error .error-invalid-address').show();
-			$method_form.parent().find('.error .error-other').empty();
-			$method_form.parent().find('.error .error-other').hide();
-			$method_form.parent().find('.error').fadeIn('fast');
-			$method_form.parent().find('.spinner').fadeOut('fast');
 		}
+
+		this.on_display_shipping_rates_page();
 	},
 
 	validate: function () {
@@ -649,6 +693,7 @@ var AwcShippingProvider = Class.extend({
 
 		current_address_data = {
 			shipping_address: this.data.shipping_address,
+			title: this.data.title,
 			phone: this.data.phone,
 			address_contact: this.data.address_contact,
 			address_1: this.data.address_1,

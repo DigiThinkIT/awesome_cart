@@ -24,12 +24,12 @@ web_include_js = [
 ]
 
 web_include_css = [
-	"/assets/css/awc_cart.css"
+	"/assets/css/awc_cart.css?v=%s" % app_version
 ]
 
 app_include_css = [
-	"/assets/css/awc.ui.desk.css",
-	"/assets/css/awc_cart.css"
+	"/assets/css/awc.ui.desk.css?v=%s" % app_version,
+	"/assets/css/awc_cart.css?v=%s" % app_version
 ]
 app_include_js = [
 	"/assets/js/awc.ui.desk.js?v=%s" % app_version,
