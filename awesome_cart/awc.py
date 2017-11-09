@@ -1328,21 +1328,22 @@ def update_shipping_rate(address, awc_session, is_pickup=False):
 
 		if rates or is_pickup:
 			rates.append({u'fee': 0, u'name': u'PICK UP', u'label': u'FLORIDA HQ PICK UP'})
-			# cache quoted rates to reference later on checkout
-			if address:
-				awc_session["last_shipping_address"] = address
-				awc_session["shipping_address"] = address
-			elif "shipping_address" in awc_session:
-				del awc_session["shipping_address"]
-
-			awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
-			awc_session["shipping_rates_list"] = rates
 		else:
 			rates = []
 
 	except Exception as ex:
 		log(traceback.format_exc())
-		return []
+		rates = []
+
+
+	if address:
+		awc_session["last_shipping_address"] = address
+		awc_session["shipping_address"] = address
+	elif "shipping_address" in awc_session:
+		del awc_session["shipping_address"]
+
+	awc_session["shipping_rates"] = { rate.get("name"): rate for rate in rates }
+	awc_session["shipping_rates_list"] = rates
 
 	return rates
 
