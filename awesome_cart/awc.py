@@ -860,9 +860,11 @@ def reset_shipping():
 		quotation.flags.ignore_permissions=True
 
 	quotation_dirty=False
+
 	if quotation:
 		quotation_dirty = sync_awc_and_quotation(awc_session, quotation, save_quotation=False)
-
+	else:
+		call_awc_sync_hook(awn_session, quotation)
 
 	if "shipping_method" in awc_session:
 		del awc_session["shipping_method"]
@@ -1049,6 +1051,8 @@ def cart(data=None, action=None):
 
 	if quotation:
 		quotation_is_dirty = sync_awc_and_quotation(awc_session, quotation)
+	else:
+		call_awc_sync_hook(awc_session, quotation)
 
 	if not action:
 		save_and_commit_quotation(quotation, quotation_is_dirty, commit=True)
