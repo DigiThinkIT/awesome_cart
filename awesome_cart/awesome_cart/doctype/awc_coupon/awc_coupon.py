@@ -71,8 +71,6 @@ def is_coupon_valid(coupon_code, customer, now=None):
 				if group.customer_group in (customer.customer_group, "All Customer Groups")
 		]
 
-		print(matched_groups)
-
 		if len(matched_groups) == 0:
 			return {
 				"is_valid": False,
