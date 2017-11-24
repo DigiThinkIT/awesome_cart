@@ -37,6 +37,13 @@ def get_context(context):
 			addresses.extend(frappe.get_all("Address", filters={"name" : address.parent, "disabled" : False}, fields="*"))
 		context['addresses'] = addresses
 
+	if frappe.session.user != "Guest":
+		customer_info = frappe.db.get_values("Customer", get_current_customer().name, ["has_shipping_account", "fedex_account_number"])[0]
+		context["customer_info"] = {
+			"has_shipping_acc": customer_info[0],
+			"fedex_acc_number": customer_info[1]
+		}
+
 	country_idx = context["countries"].index(default_country_doc)
 	context["countries"].pop(country_idx)
 	context["countries"] = [default_country_doc] + context["countries"]

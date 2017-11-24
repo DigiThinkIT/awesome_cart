@@ -60,6 +60,15 @@
 					</div>
 
 					<div id="checkout-shipping-method" data-bc="#bc-shipping-method" class="panel">
+						{% if customer_info.has_shipping_acc != 0 %}
+						<div id="use-customer-fedex-acc">
+							<label class="switch pull-right">
+								<input type="checkbox" data-toggle=false>
+								<span class="slide round"></span>
+							</label>
+							<h4 class="pull-right">Use my Fedex Account No</h4>
+						</div>
+						{% endif %}
 						<h2>Shipping Method</h2>
 						<ul class="content list-unstyled" id="awc-shipping-method"></ul>
 						<div class="error">
