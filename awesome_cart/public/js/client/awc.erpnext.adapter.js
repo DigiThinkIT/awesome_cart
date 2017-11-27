@@ -259,7 +259,9 @@ awc.ErpnextAdapter.prototype.sessionAction = function (action, data) {
 					}
 					resolve(result.message)
 				} else {
-					if ( result.message.data ) {
+					if ( typeof result.message.message === "string" ) {
+						reject(new awc.Errors.SessionActionException(result.message.message));
+					} else if ( result.message.data ) {
 						reject(result.message.data);
 					} else {
 						reject(new awc.Errors.SessionActionException(result.message));
