@@ -36,7 +36,7 @@ awc_checkout = {
 	},
 
 	coupon_reject:function(err) {
-		frappe.msgprint(err.message.message);
+		frappe.msgprint(err.message);
 	},
 
 	validate: function() {
