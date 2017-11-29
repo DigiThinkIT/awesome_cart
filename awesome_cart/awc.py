@@ -400,7 +400,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 			price_info = get_price(item.get("item_code"), price_list)
 			price = price_info.get("rate")
 
-			variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name")})
+			variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name"), "disabled": 0})
 			for vitem in variants:
 				vprice = get_price(vitem.get("item_code"), price_list).get("rate")
 				if vprice < price:
