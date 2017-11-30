@@ -255,7 +255,7 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 			awc_item_name = frappe.db.get_value("AWC Item", {"product_name": item.variant_of}, "name")
 
 			if not awc_item_name:
-				missing_awc_item = "{0.variant_of} (Parent), {0.name} (Variant)".format(item)
+				missing_awc_item = "{0} (Parent), {1} (Variant)".format(item.variant_of, item.name)
 		else:
 			missing_awc_item = item.name
 
