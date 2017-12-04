@@ -39,8 +39,8 @@ def find_indexes(arr, fn):
 def get_template(tpl_name):
 	"""Get the template by name"""
 	if tpl_name and frappe.db.exists("AWC Template", tpl_name):
-	   tpl = frappe.get_doc("AWC Template", tpl_name)
-	   return tpl.get("template_body", "")
+		tpl = frappe.get_doc("AWC Template", tpl_name)
+		return tpl.get("template_body", "")
 
 	return ""
 
@@ -249,37 +249,34 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		return cache_data
 
 	price_list = None
+
 	if is_logged_in():
 		if not quotation:
 			quotation = _get_cart_quotation()
 		price_list = quotation.get("selling_price_list")
 
-	# fetch item by its sku/item_code
-	item = frappe.get_all("Item", fields=["name", "item_name" ,"variant_of", "item_code", "disabled", "default_warehouse", "net_weight"], filters = {"item_code": sku}, ignore_permissions=1)
-
-	if not item or len(item) == 0:
+	try:
+		item = frappe.get_doc("Item", sku)
+	except frappe.DoesNotExistError:
 		data = { "success": False, "data": None }
 		set_cache(cache_key, data, session=awc_session)
 		return data
-
-	item = item[0]
 
 	if item.disabled:
 		data = { "success": False, "data": None }
 		set_cache(cache_key, data, session=awc_session)
 		return data
 
-	# get awc item name by its item link
-	awc_item_name = frappe.db.get_value("AWC Item", filters = {"product_name": item.name})
+	awc_item_name = frappe.db.get_value("AWC Item", {"product_name": item.name}, "name")
 
 	missing_awc_item = False
-	# lets check if we have an AWC Item for this Item
 	if not awc_item_name:
-		# if not, lets check if we have an AWC Item for its variant_of value if set
-		if item.get('variant_of'):
-			awc_item_name = frappe.db.get_value("AWC Item", filters = {"product_name": item.variant_of})
+		# let's check if item is a variant, and if we have an AWC Item for the parent item
+		if item.variant_of:
+			awc_item_name = frappe.db.get_value("AWC Item", {"product_name": item.variant_of}, "name")
+
 			if not awc_item_name:
-				missing_awc_item = "{0}(Parent), {1}(Variant)".format(item.variant_of, item.name)
+				missing_awc_item = "{0} (Parent), {1} (Variant)".format(item.variant_of, item.name)
 		else:
 			missing_awc_item = item.name
 
@@ -288,15 +285,14 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		set_cache(cache_key, data, session=awc_session)
 		return data
 
-	# finally get awc_item doctype instance
 	awc_item = frappe.get_doc("AWC Item", awc_item_name)
 	# get awc_item custom data as dictionary
 	custom_data = get_awc_item_custom_data(awc_item)
 
-	price_info = get_price(item.get("item_code"), price_list)
+	price_info = get_price(item.item_code, price_list)
 	price = price_info.get("rate")
 
-	variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name")})
+	variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.name, "disabled": 0})
 	for vitem in variants:
 		vprice = get_price(vitem.get("item_code"), price_list).get("rate")
 		if vprice < price:
@@ -330,9 +326,7 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		)
 
 	data = { "success": True, "data": product }
-
 	set_cache(cache_key, data, session=awc_session)
-
 	return data
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
@@ -438,7 +432,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 			price_info = get_price(item.get("item_code"), price_list)
 			price = price_info.get("rate")
 
-			variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name")})
+			variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name"), "disabled": 0})
 			for vitem in variants:
 				vprice = get_price(vitem.get("item_code"), price_list).get("rate")
 				if vprice < price:
