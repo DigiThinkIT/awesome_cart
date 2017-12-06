@@ -739,7 +739,7 @@ def update_shipping_quotation(quotation, awc_session):
 		rate = awc_session.get("shipping_method")
 		if rate:
 			shipping_tax = {
-				"tax_amount": rate.get("fee"),
+				"tax_amount": 0 if quotation.use_customer_fedex_account else rate.get("fee"),
 				"description": "Shipping ("+rate.get("name")+")",
 				"charge_type": "Actual",
 				"account_head": frappe.get_value("Awc Settings", "Awc Settings", "shipping_account"),
@@ -908,6 +908,8 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 
 		if quotation.shipping_address_name == "":
 			address_changed = True
+	else:
+		address_changed = False
 
 	is_pickup = False
 	if rate_name == "PICK UP":
@@ -1080,6 +1082,13 @@ def cart(data=None, action=None):
 			if quotation:
 				quotation.shipping_address_name = address_name
 				awc_session["last_shipping_address"] = address_name
+
+		# check and update use_customer_fedex_account field in quotation
+		customer_fedex_acc = data[0].get("address").get("use_customer_fedex_account")
+		if quotation:
+			quotation.use_customer_fedex_account = 1 if customer_fedex_acc else 0
+			quotation.save()
+			frappe.db.commit()
 
 		result = calculate_shipping(rate_name, address, awc_session, quotation, save=True)
 
