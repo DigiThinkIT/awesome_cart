@@ -134,6 +134,9 @@ awc_checkout = {
 					},
 
 					on_address_click: function($addr) {
+						if ( awc_checkout.shipping_provider.data.ship_method == "PICK UP") {
+							awc_checkout.shipping_provider.reset_method();
+						}
 						$("#checkout-shipping-method").show();
 						$("#bc-shipping-method").show();
 						awc_checkout.showPage('#checkout-shipping-method');
