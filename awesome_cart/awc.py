@@ -861,7 +861,7 @@ def reset_shipping():
 	if quotation:
 		quotation_dirty = sync_awc_and_quotation(awc_session, quotation, save_quotation=False)
 	else:
-		call_awc_sync_hook(awn_session, quotation)
+		call_awc_sync_hook(awc_session, quotation)
 
 	if "shipping_method" in awc_session:
 		del awc_session["shipping_method"]
