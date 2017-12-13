@@ -1346,12 +1346,12 @@ def get_shipping_rate(address):
 	return result
 
 def update_shipping_rate(address, awc_session, is_pickup=False):
-	tax_api = frappe.get_hooks("tax_api") or []
+	validation_hooks = frappe.get_hooks("awc_address_validation") or []
 	quotation = get_user_quotation(awc_session).get('doc')
 
 	if quotation:
-		for method in tax_api:
-			frappe.call(method, quotation, None)
+		for fn in validation_hooks:
+			frappe.call(fn, doc=quotation, address=address)
 
 	if address:
 		address_link = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
