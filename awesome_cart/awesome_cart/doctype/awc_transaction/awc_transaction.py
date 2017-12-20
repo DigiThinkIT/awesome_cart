@@ -184,7 +184,7 @@ class AWCTransaction(Document):
 				"doctype": "AWC Transaction Log",
 				"log": data,
 				"level": level,
-				"timestamp": datetime.now().strftime("%Y-%d-%m %H:%M:%S")
+				"timestamp": frappe.utils.now_datetime()
 			})
 			self.flags.ignore_permissions=1
 			self.save()
