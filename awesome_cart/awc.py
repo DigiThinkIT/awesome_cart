@@ -1215,7 +1215,7 @@ def cart(data=None, action=None):
 			is_valid = frappe.response.get("is_coupon_valid")
 
 			if is_valid:
-				discount, msg, apply_discount_on = calculate_coupon_discount(quotation.items, coupon)
+				discount, msg = calculate_coupon_discount(quotation.items, coupon)[0:2]
 				if discount == 0:
 					is_valid = False
 					success = False
