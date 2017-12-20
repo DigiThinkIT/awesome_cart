@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
-from datetime import datetime
 from awesome_cart.compat.shopping_cart import convert_quotation_to_sales_order
 from awesome_cart.compat.accounts import payment_request
 from awesome_cart.compat.addresses import get_address_display, create_address
