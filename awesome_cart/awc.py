@@ -13,6 +13,8 @@ from compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing
 from compat.addresses import get_address_display
 from .session import *
 from .utils import is_coupon_valid
+from .awesome_cart.doctype.awc_coupon.awc_coupon import calculate_coupon_discount
+
 from dti_devtools.debug import pretty_json, log
 
 def get_user_quotation(awc_session):
@@ -1205,7 +1207,6 @@ def cart(data=None, action=None):
 
 	elif action == "applyCoupon" and len(data) > 0:
 		coupon = data[0]
-		success = False
 		msg = "Coupon not found"
 
 		if quotation:
@@ -1214,9 +1215,15 @@ def cart(data=None, action=None):
 			is_valid = frappe.response.get("is_coupon_valid")
 
 			if is_valid:
-				quotation.coupon_code = coupon
-				quotation_is_dirty = True
-				success = True
+				discount, msg = calculate_coupon_discount(quotation.items, coupon)[0:2]
+				if discount == 0:
+					is_valid = False
+					success = False
+					msg = "Coupon is invalid for the current cart."
+				else:
+					quotation.coupon_code = coupon
+					quotation_is_dirty = True
+					success = True
 		else:
 			# must be logged in to use cupon
 			success = False
