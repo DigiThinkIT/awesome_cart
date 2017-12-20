@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
-from datetime import datetime
 from awesome_cart.compat.shopping_cart import convert_quotation_to_sales_order
 from awesome_cart.compat.accounts import payment_request
 from awesome_cart.compat.addresses import get_address_display, create_address
@@ -184,7 +183,7 @@ class AWCTransaction(Document):
 				"doctype": "AWC Transaction Log",
 				"log": data,
 				"level": level,
-				"timestamp": datetime.now().strftime("%Y-%d-%m %H:%M:%S")
+				"timestamp": frappe.utils.now_datetime()
 			})
 			self.flags.ignore_permissions=1
 			self.save()
