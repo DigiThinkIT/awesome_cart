@@ -9,7 +9,6 @@ from frappe import _
 from frappe.model.document import Document
 from time import time
 from datetime import datetime
-from dti_devtools.debug import pretty_json
 
 class AWCCoupon(Document):
 	def validate(self):
