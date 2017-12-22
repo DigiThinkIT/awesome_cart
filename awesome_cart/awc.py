@@ -1207,6 +1207,7 @@ def cart(data=None, action=None):
 
 	elif action == "applyCoupon" and len(data) > 0:
 		coupon = data[0]
+		success = False
 		msg = "Coupon not found"
 
 		if quotation:

@@ -85,8 +85,10 @@ def calculate_coupon_discount(items, coupon_code):
 		return (False, "Coupon Code Not Found")
 
 	# make quick list of items which this coupon applies to
-	coupon_items = { frappe.get_value("Item", item.item_name, "item_code"): item \
-		for item in coupon_doc.items }
+	coupon_items = [ {
+		"item_code": frappe.get_value("Item", item.item_name, "item_code"),
+		"item": item
+		} for item in coupon_doc.items ]
 
 	coupon_state = { "item_codes": {} }
 
@@ -107,10 +109,15 @@ def calculate_coupon_discount(items, coupon_code):
 
 	# find all items in doc which coupon applies to
 	# then sum their collective discounts and apply to doc
-	discount_amount = sum( \
-		calculate_item_discount(item, coupon_items[item.get("item_code")], item_names, coupon_state) \
-			for item in items \
-				if coupon_items.get(item.get("item_code")) )
+	discount_amount = 0
+	for coupon_item in coupon_items:
+		discount_amount += sum(
+				calculate_item_discount(
+					item, coupon_item["item"],
+					item_names, coupon_state
+				) for item in items \
+					if coupon_item["item_code"] == item.get("item_code")
+			)
 
 	return (discount_amount,
 		"Coupon Discount Total: {0}".format(discount_amount),
