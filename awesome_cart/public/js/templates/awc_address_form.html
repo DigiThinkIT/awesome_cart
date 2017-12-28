@@ -22,7 +22,7 @@
 				{% if ( address.address_line2 ) { %}<span id="line2" class="line">{%= address.address_line2 %}</span>{% } %}
 				<span id="city">{%= address.city %}</span>,
 				<span id="state">{%= address.state %}</span>
-				<span id="postal_code">{%= address.pincode %}</span><br>
+				{% if ( address.pincode ) { %}<span id="postal_code">{%= address.pincode %}</span>{% } %}<br>
 				<span id="country" class="line">{%= address.country %}</span><br>
 			</div>
 			<span class="glyphicon glyphicon-phone-alt"></span><span id="phone">{%= address.phone %}</span><br>

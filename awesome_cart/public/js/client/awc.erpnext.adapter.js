@@ -673,7 +673,7 @@ var AwcShippingProvider = Class.extend({
 			address_data.address_2 = $form.find('input[name="address_2"]').val();
 			address_data.city = $form.find('input[name="city"]').val();
 			address_data.state = $form.find('input[name="state"]').val();
-			address_data.pincode = $form.find('input[name="pincode"]').val();
+			address_data.pincode = $form.find('input[name="pincode"]').val() || "00000";
 			address_data.country = $form.find('select[name="country"] option:checked').attr('value');
 			address_data.is_residential = $form.find('select[name="is_residential"] option:checked').attr('value') == 1 ? 1 : 0;
 			address_data.address_type = "Shipping";
@@ -686,7 +686,7 @@ var AwcShippingProvider = Class.extend({
 			address_data.address_2 = $('#awc-shipping-addrs .awc-selected span#line2').text();
 			address_data.city = $('#awc-shipping-addrs .awc-selected span#city').text();
 			address_data.state = $('#awc-shipping-addrs .awc-selected span#state').text();
-			address_data.pincode = $('#awc-shipping-addrs .awc-selected span#postal_code').text();
+			address_data.pincode = $('#awc-shipping-addrs .awc-selected span#postal_code').text() || "00000";
 			address_data.country = $('#awc-shipping-addrs .awc-selected span#country').text();
 			address_data.is_residential = $('#awc-shipping-addrs div.awc-selected').attr('data-is-residential');
 			address_data.address_type = $('#awc-shipping-addrs div.awc-selected').attr('data-address-type');
@@ -742,10 +742,6 @@ var AwcShippingProvider = Class.extend({
 		if (!this.data.city) {
 			result.valid = false;
 			result.errors.push("Missing City Line");
-		}
-		if (!this.data.pincode) {
-			result.valid = false;
-			result.errors.push("Missing Zip Code");
 		}
 		if (!this.data.country) {
 			result.valid = false;
