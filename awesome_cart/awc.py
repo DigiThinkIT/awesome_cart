@@ -1347,15 +1347,19 @@ def get_shipping_rate(address):
 	return result
 
 def update_shipping_rate(address, awc_session, is_pickup=False):
+	validation_hooks = frappe.get_hooks("awc_address_validation") or []
+	quotation = get_user_quotation(awc_session).get('doc')
 
-	awc = awc_session.get("cart")
+	if quotation:
+		for fn in validation_hooks:
+			frappe.call(fn, doc=quotation, address=address)
 
-	shipping_rate_api = frappe.get_hooks("shipping_rate_api")[0]
 	if address:
 		address_link = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
 		from_address = frappe.get_doc("Address", address_link)
 
-	package_items=[]
+	package_items = []
+	awc = awc_session.get("cart")
 
 	if not is_pickup:
 		for item in awc["items"]:
@@ -1366,6 +1370,7 @@ def update_shipping_rate(address, awc_session, is_pickup=False):
 				}
 				package_items.append(package_item)
 
+	shipping_rate_api = frappe.get_hooks("shipping_rate_api")[0]
 	try:
 		if address and not is_pickup:
 			rates = frappe.call(shipping_rate_api["module"], from_address=from_address, to_address=address, items=package_items)
@@ -1380,7 +1385,6 @@ def update_shipping_rate(address, awc_session, is_pickup=False):
 	except Exception as ex:
 		log(traceback.format_exc())
 		rates = []
-
 
 	if address:
 		awc_session["last_shipping_address"] = address
