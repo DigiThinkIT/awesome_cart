@@ -13,6 +13,8 @@ from compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing
 from compat.addresses import get_address_display
 from .session import *
 from .utils import is_coupon_valid
+from .awesome_cart.doctype.awc_coupon.awc_coupon import calculate_coupon_discount
+
 from dti_devtools.debug import pretty_json, log
 
 def get_user_quotation(awc_session):
@@ -259,12 +261,12 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		else:
 			missing_awc_item = item.name
 
-	if missing_awc_item:
-		return {"success": False, "data": None, "error": "Missing AWC Item for {0}".format(missing_awc_item)}
-
-	awc_item = frappe.get_doc("AWC Item", awc_item_name)
-	# get awc_item custom data as dictionary
-	custom_data = get_awc_item_custom_data(awc_item)
+	if not missing_awc_item:
+		awc_item = frappe.get_doc("AWC Item", awc_item_name)
+		# get awc_item custom data as dictionary
+		custom_data = get_awc_item_custom_data(awc_item)
+	else:
+		custom_data = {}
 
 	price_info = get_price(item.item_code, price_list)
 	price = price_info.get("rate")
@@ -282,20 +284,27 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		custom=custom_data,
 		weight=item.get("net_weight", 0),
 		warehouse=item.get("default_warehouse"),
-		description=awc_item.description_short,
-		imageUrl=awc_item.product_thumbnail,
-		productUrl="/p/%s" % awc_item.product_route,
+		description="",
+		imageUrl=None,
+		productUrl=None,
 		base_price=price_info.get("base_price_rate"),
 		price=price,
-		listing_widget=awc_item.listing_widget,
-		product_widget=awc_item.product_widget,
-		product_template=awc_item.product_template,
-		options=build_awc_options_from_varients(item),
-		tags=awc_item.tags.split(',') if awc_item.tags else []
+		options=build_awc_options_from_varients(item)
 	)
 
+	if not missing_awc_item:
+		product.update(dict(
+			imageUrl=awc_item.product_thumbnail,
+			productUrl="/p/%s" % awc_item.product_route,
+			description=awc_item.description_short,
+			listing_widget=awc_item.listing_widget,
+			product_widget=awc_item.product_widget,
+			product_template=awc_item.product_template,
+			tags=awc_item.tags.split(',') if awc_item.tags else []
+		))
+
 	# append detailed information only if required
-	if detailed:
+	if detailed and not missing_awc_item:
 		product["detail"] = dict(
 			description_short=awc_item.description_short,
 			description_long=awc_item.description_long,
@@ -1207,9 +1216,15 @@ def cart(data=None, action=None):
 			is_valid = frappe.response.get("is_coupon_valid")
 
 			if is_valid:
-				quotation.coupon_code = coupon
-				quotation_is_dirty = True
-				success = True
+				discount, msg = calculate_coupon_discount(quotation.items, coupon)[0:2]
+				if discount == 0:
+					is_valid = False
+					success = False
+					msg = "Coupon is invalid for the current cart."
+				else:
+					quotation.coupon_code = coupon
+					quotation_is_dirty = True
+					success = True
 		else:
 			# must be logged in to use cupon
 			success = False
