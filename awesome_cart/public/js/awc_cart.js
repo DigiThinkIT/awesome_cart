@@ -367,7 +367,6 @@ awc_checkout = {
 				"phone": false,
 				"address_1": false,
 				"city": false,
-				"pincode": false,
 				"country": false,
 			};
 
@@ -377,7 +376,6 @@ awc_checkout = {
 				"phone": false,
 				"address_1": false,
 				"city": false,
-				"pincode": false,
 				"country": false,
 			};
 
@@ -399,7 +397,7 @@ awc_checkout = {
 
 			$('#form-bill-addr .btn-nextbtn').click(function() {
 				if ($('#form-bill-addr .btn-nextbtn').text() == 'Next') {
-					if (billform.title == true && billform.phone == true && billform.address_1 == true && billform.city == true && billform.pincode == true && billform.country == true) {
+					if (billform.title == true && billform.phone == true && billform.address_1 == true && billform.city == true && billform.country == true) {
 						awc_checkout.showPage('#checkout-confirmation');
 						$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
 						$('#ship-form-err-msg').remove();
@@ -408,7 +406,7 @@ awc_checkout = {
 						$(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
 					}
 				} else if ($('#form-bill-addr .btn-nextbtn').text() == 'Save') {
-					if (billform.title == true && billform.phone == true && billform.address_1 == true && billform.city == true && billform.pincode == true && billform.country == true) {
+					if (billform.title == true && billform.phone == true && billform.address_1 == true && billform.city == true && billform.country == true) {
 							var address = {
 							address_name: $('#gateway-selector-billing-form.awc-form').attr('data-name'),
 							address_title: $('#billing_title').val(),
@@ -417,7 +415,6 @@ awc_checkout = {
 							address_line2: $('#billing_line2').val(),
 							address_city: $('#billing_city').val(),
 							address_state: $('#billing_state').val(),
-							address_zip: $('#billing_pincode').val(),
 							address_country: $('#billing_country').val()
 						};
 						$('#awc-billing-addrs .edited span#phone').text($('#billing_phone').val());
@@ -445,11 +442,11 @@ awc_checkout = {
 
 			$('#awc-shipping-form .btn-nextbtn').click(function() {
 				if ($('#awc-shipping-form .btn-nextbtn').text() == 'Next') {
-					if (shipform.title == true && shipform.phone == true && shipform.address_1 == true && shipform.city == true && shipform.pincode == true && shipform.country == true) {
+					if (shipform.title == true && shipform.phone == true && shipform.address_1 == true && shipform.city == true && shipform.country == true) {
 						//adding newly entered shipping address on billing address tab in awc
 						var div = document.createElement('div');
 						div.setAttribute('class', 'col-md-12 col-sm-12');
-						var line2str, statestr;
+						var line2str, statestr, zipstr;
 						if ($('#awc_ship__line2').val()) {
 							line2str = "<span id='line2'>" + $('#awc_ship__line2').val() + "</span>,";
 						} else {
@@ -459,6 +456,11 @@ awc_checkout = {
 							statestr = "<span id='stste'>" + $('#awc_ship__state').val() + "</span>,";
 						} else {
 							statestr = "";
+						}
+						if ($('#awc_ship__zip').val()) {
+							zipstr = ",<span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>";
+						} else {
+							zipstr = "<br>";
 						}
 						str = "<div class='well'>\
 								<div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
@@ -470,7 +472,7 @@ awc_checkout = {
 										<span id='city'>" + $('#awc_ship__city').val() + "</span>,\
 										" + statestr + "\
 										<span id='country'>" + $('#awc_ship__country').val() + "</span>,\
-										<span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>\
+										" + zipstr + "\
 										<span class='glyphicon glyphicon-phone-alt'></span><span id='phone'> " + $('#awc_ship__phone').val() + "</span>\
 									</p>\
 								</div>\
@@ -496,7 +498,7 @@ awc_checkout = {
 						$(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
 					}
 				} else if ($('#awc-shipping-form .btn-nextbtn').text() == 'Save') {
-					if (shipform.title == true && shipform.phone == true && shipform.address_1 == true && shipform.city == true && shipform.pincode == true && shipform.country == true) {
+					if (shipform.title == true && shipform.phone == true && shipform.address_1 == true && shipform.city == true && shipform.country == true) {
 							var address = {
 							address_name: $('#awc-shipping-form.awc-form').attr('data-name'),
 							address_title: $('#awc_ship__title').val(),
