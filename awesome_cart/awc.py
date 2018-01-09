@@ -1093,9 +1093,9 @@ def cart(data=None, action=None):
 				awc_session["last_shipping_address"] = address_name
 
 		# check and update use_customer_fedex_account field in quotation
-		customer_fedex_acc = data[0].get("address").get("use_customer_fedex_account")
 		if quotation:
-			quotation.use_customer_fedex_account = 1 if customer_fedex_acc else 0
+			quotation.use_customer_fedex_account = 1 if data[0].get(
+				"address", {}).get("use_customer_fedex_account") else 0
 			quotation.flags.ignore_permissions = True
 			quotation.save()
 			frappe.db.commit()
