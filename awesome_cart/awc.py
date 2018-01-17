@@ -282,14 +282,12 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		else:
 			missing_awc_item = item.name
 
-	if missing_awc_item:
-		data = { "success": False, "data": None, "error": "Missing AWC Item for {0}".format(missing_awc_item) }
-		set_cache(cache_key, data, session=awc_session)
-		return data
-
-	awc_item = frappe.get_doc("AWC Item", awc_item_name)
-	# get awc_item custom data as dictionary
-	custom_data = get_awc_item_custom_data(awc_item)
+	if not missing_awc_item:
+		awc_item = frappe.get_doc("AWC Item", awc_item_name)
+		# get awc_item custom data as dictionary
+		custom_data = get_awc_item_custom_data(awc_item)
+	else:
+		custom_data = {}
 
 	price_info = get_price(item.item_code, price_list)
 	price = price_info.get("rate")
