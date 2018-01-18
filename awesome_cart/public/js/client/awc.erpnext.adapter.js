@@ -288,6 +288,7 @@ function dispalyAddr(shipaddr) {
 awc.ErpnextAdapter.prototype.getProductBySKU = function (sku, detailed) {
 	var base = this;
 	var skuHash = detailed + ":" + sku;
+
 	if (base.itemCache[skuHash] !== undefined) {
 		// return promise if curretly fetching
 		if (base.itemCache[skuHash].constructor == awc.Promise) {
@@ -563,7 +564,7 @@ var AwcShippingProvider = Class.extend({
 						base.data.ship_method = method.name;
 						base.fee = method.fee;
 						base.label = method.label;
-						base.calculate_shipping(base.data.ship_method).then(function(r) {
+						base.calculate_shipping(base.data.ship_method, base.data).then(function(r) {
 							base.validate();
 							return r;
 						});
@@ -658,7 +659,6 @@ var AwcShippingProvider = Class.extend({
 	},
 
 	validate: function () {
-
 		var base = this;
 		var $form = $('#awc-shipping-form');
 		var $method_form = $('#awc-shipping-method');
@@ -705,6 +705,13 @@ var AwcShippingProvider = Class.extend({
 			country: this.data.country,
 			address_type: this.data.address_type,
 			is_residential: this.data.is_residential
+		}
+
+		//check "use my fedex account" toggle button's state and update the context
+		if($("#use-customer-fedex-acc > label > input[type='checkbox']").data("toggle")) {
+			this.data.use_customer_fedex_account = true;
+		} else 	{
+			this.data.use_customer_fedex_account = false;
 		}
 
 		if (awc._.isEqual(current_address_data, address_data) && this.result) {

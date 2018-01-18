@@ -60,6 +60,15 @@
 					</div>
 
 					<div id="checkout-shipping-method" data-bc="#bc-shipping-method" class="panel">
+						{% if customer_info.has_shipping_acc != 0 %}
+						<div id="use-customer-fedex-acc">
+							<label class="switch pull-right">
+								<input type="checkbox" data-toggle=false>
+								<span class="slide round"></span>
+							</label>
+							<h4 class="pull-right">Use my Fedex Account No</h4>
+						</div>
+						{% endif %}
 						<h2>Shipping Method</h2>
 						<ul class="content list-unstyled" id="awc-shipping-method"></ul>
 						<div class="error">
@@ -179,14 +188,8 @@
 	{% include "templates/widgets/login/js/widget.js" with context %}
 
 	// bypass redirect to keep user on checkout page
-	var orig_200 = login.login_handlers["200"];
-	login.login_handlers["200"] = function(data) {
-		if(data.message=="Logged In") {
-			data.home_page = "/cart";
-		} else if(data.message=="No App") {
-			data.redirect_to = "/cart";
-		}
-		return orig_200(data);
+	frappe.on_login_redirect_handler = function(url) {
+		window.location.href = "/cart";
 	}
 </script>
 {% endif %}

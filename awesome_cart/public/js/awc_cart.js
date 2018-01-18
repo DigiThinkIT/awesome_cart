@@ -237,6 +237,17 @@ awc_checkout = {
 						$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
 					})
 
+				$("#use-customer-fedex-acc > label > input[type='checkbox']").click(function (){
+					if($("#use-customer-fedex-acc > label > input[type='checkbox']").data("toggle")) {
+						$("#use-customer-fedex-acc > label > input[type='checkbox']").data("toggle", false);
+						awc_checkout.validate();
+						$("#awc-shipping-method > li > label > input[type='radio'][checked='checked']").trigger('change')
+					} else if(!$("#use-customer-fedex-acc > label > input[type='checkbox']").data("toggle")){
+						$("#use-customer-fedex-acc > label > input[type='checkbox']").data("toggle", true);
+						awc_checkout.validate();
+						$("#awc-shipping-method > li > label > input[type='radio'][checked='checked']").trigger('change')
+					}
+				})
 				// map address "edit" Button clicks ----------------------------
 
 				$('#checkout-confirm-shipping .btn-primary')
