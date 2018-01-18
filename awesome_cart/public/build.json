@@ -13,10 +13,12 @@
 		"public/css/checkout.css"
 	],
 	"css/awc.ui.desk.css": [
+		"public/js/lib/taggle/taggle.min.css",
 		"public/css/awc.ui.css",
 		"public/css/awc.ui.tags.css"
 	],
 	"js/awc.ui.desk.js": [
+		"public/js/lib/taggle/taggle.min.js",
 		"public/js/ui/tags.js"
 	],
 	"js/credit_gateway_embed.js": [
