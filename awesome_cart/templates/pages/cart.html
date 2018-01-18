@@ -188,14 +188,8 @@
 	{% include "templates/widgets/login/js/widget.js" with context %}
 
 	// bypass redirect to keep user on checkout page
-	var orig_200 = login.login_handlers["200"];
-	login.login_handlers["200"] = function(data) {
-		if(data.message=="Logged In") {
-			data.home_page = "/cart";
-		} else if(data.message=="No App") {
-			data.redirect_to = "/cart";
-		}
-		return orig_200(data);
+	frappe.on_login_redirect_handler = function(url) {
+		window.location.href = "/cart";
 	}
 </script>
 {% endif %}
