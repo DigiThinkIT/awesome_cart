@@ -222,7 +222,12 @@ awc.ErpnextAdapter.prototype._fetchProducts = function (filter, start, limit) {
 awc.ErpnextAdapter.prototype.loadTemplate = function (name) {
 	// simple template caching.  Always cache the promise
 	if (this._templates[name] === undefined) {
-		return this._templates[name] = awc.get('/awc_template/' + name).then(function (resp) {
+		var url = "/awc_template/" + name;
+		var file_asset_trigger = name.search(/^(\/|https?:\/\/)/i);
+		if ( file_asset_trigger > -1 ) {
+			url = name.substr(file_asset_trigger.index);
+		}
+		return this._templates[name] = awc.get(url).then(function (resp) {
 			return resp.body
 		});
 	} else {
