@@ -51,11 +51,25 @@ def get_power_user_settings():
 
 	return "Not A Power User"
 
+def has_role(roles, username):
+	if not isinstance(roles, (tuple, list)):
+		roles = (roles,)
+	roles = set(roles)
+	myroles = set(frappe.get_roles(username))
+
+	return roles.intersection(myroles)
+
 @frappe.whitelist()
 def set_cart_customer(customer_name):
 	user_doc = frappe.get_doc("User", frappe.session.user)
 
-	if user_doc.get("is_power_user") or user_doc.name == "Administrator":
+	if user_doc.get("is_power_user") or \
+		has_role([
+			"Administrator",
+			"Sales User",
+			"Sales Manager",
+			"System Manager"
+		], user_doc.name):
 
 		# lets make sure we have a primary contact first
 		contact_links = frappe.get_all("Dynamic Link", filters={
