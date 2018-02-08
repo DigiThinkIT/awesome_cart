@@ -58,10 +58,28 @@ def calculate_item_discount(item, coupon_item, item_names, state):
 	# logic feature only apply discount if another item is present else no
 	# discount is calculated
 	if coupon_item.apply_logic == "Only If Item B Is Present":
-		item_b = frappe.get_value("Item", coupon_item.item_b, "item_code")
+		if coupon_item.item_b_type == "AWC Item Group":
+			group_items = frappe.get_all("AWC Coupon Group Item",
+				filters={
+					"parent": coupon_item.item_b,
+					"parenttype": "AWC Item Group"},
+				fields=["item_name"],
+				as_list=1)
 
-		if not item_b in item_names:
-			return 0
+			found = False
+			for gitem in group_items:
+				item_code = frappe.get_value("Item", gitem[0], "item_code")
+				if item_code in item_names:
+					found = True
+					item_b = item_code
+
+			if not found:
+				return 0
+		else:
+			item_b = frappe.get_value("Item", coupon_item.item_b, "item_code")
+
+			if not item_b in item_names:
+				return 0
 
 	if coupon_item.discount_type == "Percent Discount":
 		state["item_codes"][item.item_code]["applied_qty"] += item_qty
@@ -85,15 +103,11 @@ def calculate_coupon_discount(items, coupon_code):
 		return (False, "Coupon Code Not Found")
 
 	# make quick list of items which this coupon applies to
-	coupon_items = [ {
-		"item_code": frappe.get_value("Item", item.item_name, "item_code"),
-		"item": item
-		} for item in coupon_doc.items ]
-
+	coupon_items = []
 	coupon_state = { "item_codes": {} }
 
-	for citem in coupon_doc.items:
-		item_code = frappe.get_value("Item", citem.item_name, "item_code")
+	def build_item_list(items, item_name):
+		item_code = frappe.get_value("Item", item_name, "item_code")
 		if not coupon_state.get(item_code):
 			coupon_state["item_codes"][item_code] = {
 				"cart_qty": 0,
@@ -104,6 +118,31 @@ def calculate_coupon_discount(items, coupon_code):
 			if item.item_code == item_code:
 				coupon_state["item_codes"][item_code]["cart_qty"] += item.get("qty", 1)
 
+	# prepopulate item states and build coupon item list
+	for citem in coupon_doc.items:
+		if citem.item_type == "AWC Item Group":
+			group_items = frappe.get_all(
+				"AWC Coupon Group Item",
+				filters={
+					"parent": citem.item_name,
+					"parenttype": "AWC Item Group"
+				},
+				fields=["item_name"],
+				as_list=1)
+
+			for gitem in group_items:
+				item_code = frappe.get_value("Item", gitem[0], "item_code")
+				coupon_items.append({
+					"item_code": item_code,
+					"item": citem})
+				build_item_list(items, item_code)
+		else:
+			item_code = frappe.get_value("Item", citem.item_name, "item_code")
+			coupon_items.append({
+				"item_code": item_code,
+				"item": citem})
+			build_item_list(items, item_code)
+
 	# quick list of items names for logic tests
 	item_names = { item.item_code: item for item in items }
 
@@ -113,8 +152,10 @@ def calculate_coupon_discount(items, coupon_code):
 	for coupon_item in coupon_items:
 		discount_amount += sum(
 				calculate_item_discount(
-					item, coupon_item["item"],
-					item_names, coupon_state
+					item,
+					coupon_item["item"],
+					item_names,
+					coupon_state
 				) for item in items \
 					if coupon_item["item_code"] == item.get("item_code")
 			)
