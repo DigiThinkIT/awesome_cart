@@ -765,7 +765,11 @@ def set_field(obj, field, value):
 		obj.set(field, value)
 
 def set_quotation_item_rate(quotation_item, rate, product):
-	quotation_item.discount_percentage = 100 - flt(rate * 100) / flt(product.get("base_price"))
+	try:
+		quotation_item.discount_percentage = 100 - flt(rate * 100) / flt(product.get("base_price"))
+	except ZeroDivisionError:
+		quotation_item.discount_percentage = 0
+
 	quotation_item.rate = flt(rate)
 	quotation_item.price_list_rate = flt(product.get("base_price"))
 	quotation_item.amount = flt(rate) * quotation_item.qty
