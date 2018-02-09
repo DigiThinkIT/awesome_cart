@@ -3,6 +3,8 @@ from frappe.utils import update_progress_bar
 
 
 def execute():
+	frappe.reload_doctype("AWC Coupon Item")
+
 	"""Updates Awc Coupon Items to set default values the new
 	item_type and item_b_type fields on existing records"""
 
