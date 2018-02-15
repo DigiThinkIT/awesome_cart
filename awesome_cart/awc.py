@@ -298,6 +298,13 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		if vprice < price:
 			price = vprice
 
+	item_slider_name = frappe.db.get_value("AWC Item", awc_item_name, "slider")
+	item_slider_images = []
+	if item_slider_name:
+		item_slider_doc = frappe.get_doc("Website Slideshow", item_slider_name)
+		for image in item_slider_doc.slideshow_items:
+			item_slider_images.append(image)
+
 	# format product for awcjs
 	product = dict(
 		sku=item.item_code,
@@ -316,6 +323,7 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 	if not missing_awc_item:
 		product.update(dict(
 			imageUrl=awc_item.product_thumbnail,
+			gallery=item_slider_images,
 			productUrl="/p/%s" % awc_item.product_route,
 			description=awc_item.description_short,
 			listing_widget=awc_item.listing_widget,
