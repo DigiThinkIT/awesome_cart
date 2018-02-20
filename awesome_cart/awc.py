@@ -1033,7 +1033,15 @@ def save_and_commit_quotation(quotation, is_dirty, awc_session, commit=False, sa
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def cart(data=None, action=None):
 	if data and isinstance(data, basestring):
-		data = json.loads(data)
+		try:
+			data = json.loads(data)
+		except ex:
+			log("REMOTE ADDR: {0}".format(frappe.requiest.get("remote_addr", "NO REMOTED ADDRESS?")))
+			log("URL: {0}".format(frappe.request.get("url", "NO URL DATA")))
+			log("Action: {0}".format(action))
+			log("Data: {0}".format(data))
+			log(traceback.format_exc())
+			data = None
 
 	# make sure we can handle bulk actions
 	if not isinstance(data, list):
