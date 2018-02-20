@@ -186,8 +186,9 @@ def build_awc_options_from_varients(item):
 
 			opt_hash = []
 			for opt_variant in options['variants']:
-				opt_hash.append(tmp_atts.get(opt_variant.get('id')))
-
+				vid = opt_variant.get('id')
+				if vid and tmp_atts.get(vid):
+					opt_hash.append(tmp_atts.get(vid))
 
 			options["hashes"][",".join(opt_hash)] = variant.get('name')
 
