@@ -1044,7 +1044,7 @@ def cart(data=None, action=None):
 		try:
 			data = json.loads(data)
 		except ex:
-			log("REMOTE ADDR: {0}".format(frappe.requiest.get("remote_addr", "NO REMOTED ADDRESS?")))
+			log("REMOTE ADDR: {0}".format(frappe.request.get("remote_addr", "NO REMOTE ADDRESS?")))
 			log("URL: {0}".format(frappe.request.get("url", "NO URL DATA")))
 			log("Action: {0}".format(action))
 			log("Data: {0}".format(data))
