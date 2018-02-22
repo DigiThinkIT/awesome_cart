@@ -186,8 +186,9 @@ def build_awc_options_from_varients(item):
 
 			opt_hash = []
 			for opt_variant in options['variants']:
-				opt_hash.append(tmp_atts.get(opt_variant.get('id')))
-
+				vid = opt_variant.get('id')
+				if vid and tmp_atts.get(vid):
+					opt_hash.append(tmp_atts.get(vid))
 
 			options["hashes"][",".join(opt_hash)] = variant.get('name')
 
@@ -1040,7 +1041,15 @@ def save_and_commit_quotation(quotation, is_dirty, awc_session, commit=False, sa
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def cart(data=None, action=None):
 	if data and isinstance(data, basestring):
-		data = json.loads(data)
+		try:
+			data = json.loads(data)
+		except ex:
+			log("REMOTE ADDR: {0}".format(frappe.request.get("remote_addr", "NO REMOTE ADDRESS?")))
+			log("URL: {0}".format(frappe.request.get("url", "NO URL DATA")))
+			log("Action: {0}".format(action))
+			log("Data: {0}".format(data))
+			log(traceback.format_exc())
+			data = None
 
 	# make sure we can handle bulk actions
 	if not isinstance(data, list):
