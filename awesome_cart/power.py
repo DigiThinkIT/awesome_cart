@@ -26,7 +26,14 @@ def get_power_user_settings():
 
 	user_doc = frappe.get_doc("User", frappe.session.user)
 
-	if user_doc.get("is_power_user") or frappe.session.user == "Administrator":
+	if user_doc.get("is_power_user")  or \
+		has_role([
+			"Administrator",
+			"Sales User",
+			"Sales Manager",
+			"System Manager"
+		], user_doc.name):
+
 		awc_session = get_awc_session()
 		contacts = get_user_contacts(frappe.session.user)
 
@@ -38,14 +45,17 @@ def get_power_user_settings():
 		else:
 			frappe.local.response["selected_customer_image"] = None
 
-		# list all customers this user may make purchases for
-		frappe.local.response["customers"] = [{
-				"customer_name": x["customer_name"],
-				"label": frappe.get_value("Customer", x["customer_name"], "customer_name"),
-				"image": frappe.get_value("Customer", x["customer_name"], "image")
-			} for x in contacts \
-				if x.get("can_place_orders") or x.get("is_primary_contact")
-		]
+		frappe.local.response["customers"] = []
+		if user_doc.get("is_power_user"):
+			# list all customers this user may make purchases for
+			frappe.local.response["customers"] = [{
+					"customer_name": x["customer_name"],
+					"label": frappe.get_value("Customer", x["customer_name"], "customer_name"),
+					"image": frappe.get_value("Customer", x["customer_name"], "image")
+				} for x in contacts \
+					if ( x.get("can_place_orders") or x.get("is_primary_contact") ) and \
+						frappe.get_value("Customer", x["customer_name"], "customer_name")
+			]
 
 		return "Power User"
 
