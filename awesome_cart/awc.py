@@ -1478,6 +1478,7 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	data = {
 		"doctype": "AWC Transaction",
 		"title": "Web Order",
+		"reference_doctype": "Quotation",
 		"description": "Online Web Order",
 		"status": "Initiated",
 		"payer_name": quotation.contact_person,
