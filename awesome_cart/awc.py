@@ -729,19 +729,7 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 
 	call_awc_sync_hook(awc_session, quotation)
 
-	save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=False, save_session=awc_is_dirty)
-	# if quotation_is_dirty:
-	# 	update_cart_settings(quotation, awc_session)
-	# 	quotation.flags.ignore_permissions = True
-	# 	if save_quotation:
-	# 		try:
-	# 			quotation.save()
-	# 			frappe.db.commit()
-	# 		except Exception as ex:
-	# 			log(traceback.format_exc())
-	#collect_totals(quotation, awc, awc_session)
-	# if awc_is_dirty:
-	# 	set_awc_session(awc_session)
+	save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True, save_session=awc_is_dirty)
 
 	return quotation_is_dirty
 
@@ -1267,7 +1255,6 @@ def cart(data=None, action=None):
 
 				quotation.set("items", quotation_items)
 
-			#update_cart_settings(quotation, awc_session)
 			quotation_is_dirty = True
 
 		save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
