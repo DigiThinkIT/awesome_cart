@@ -117,6 +117,7 @@ def quotation_validate(doc, method):
 		if discount is not False and discount != doc.discount_amount:
 			doc.discount_amount = discount
 			doc.apply_discount_on = apply_discount_on or "Net Total"
+			#doc.run_method("calculate_taxes_and_totals")
 		elif discount is False:
 			raise msg
 
@@ -152,3 +153,37 @@ def get_addresses():
 		return True
 
 	return False
+
+def fn_wrap(fn, before_fn):
+	"""A fn hot patch helper. Use to wrap method not accesible through hooks or other ways in ERPN.
+	Only to be used until the actual functionality is implemented upstream"""
+
+	def _fn(*args, **kwargs):
+		try:
+			before_fn(*args, **kwargs)
+		finally:
+			return fn(*args, **kwargs)
+
+	return _fn
+
+def erpnext_stock_get_item_details(args):
+	"""hot patching for erpnext.stock.get_item_details.get_item_details method
+	during item detail setting for quotation, sales order and sales invoices we
+	need a way to temporarily turn off price list rules on individual items.
+
+	This method is called on every individual item and we can change the rule behaviour
+	by updating passed arg dictionary with the "ignore_pricing_rule" key set to 1.
+
+	This only works because we have a custom field telling us if a user set the
+	item_ignore_pricing_rule to 1 on each individual item in the doctype.
+	"""
+
+	if args.get("item_ignore_pricing_rule"):
+		args["ignore_pricing_rule"] = 1
+
+def boot_session(bootinfo):
+
+	from erpnext.stock import get_item_details
+
+	print(" - Patched: erpnext.stock.get_item_details.get_item_details -> awesome_cart.utils.erpnext_stock_get_item_details")
+	get_item_details.get_item_details = fn_wrap(get_item_details.get_item_details, erpnext_stock_get_item_details)
