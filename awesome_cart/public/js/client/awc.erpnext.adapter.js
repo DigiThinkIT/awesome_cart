@@ -682,6 +682,7 @@ var AwcShippingProvider = Class.extend({
 			address_data.country = $form.find('select[name="country"] option:checked').attr('value');
 			address_data.is_residential = $form.find('select[name="is_residential"] option:checked').attr('value') == 1 ? 1 : 0;
 			address_data.address_type = "Shipping";
+			address_data.is_user_input = true;
 		} else {
 			address_data.shipping_address = $('#awc-shipping-addrs .addr.awc-selected').attr('data-name');
 			address_data.title = $('#awc-shipping-addrs .awc-selected span#title').text();
@@ -695,6 +696,7 @@ var AwcShippingProvider = Class.extend({
 			address_data.country = $('#awc-shipping-addrs .awc-selected span#country').text();
 			address_data.is_residential = $('#awc-shipping-addrs div.awc-selected').attr('data-is-residential');
 			address_data.address_type = $('#awc-shipping-addrs div.awc-selected').attr('data-address-type');
+			address_data.is_user_input = false;
 		}
 
 		current_address_data = {
@@ -709,7 +711,8 @@ var AwcShippingProvider = Class.extend({
 			pincode: this.data.pincode,
 			country: this.data.country,
 			address_type: this.data.address_type,
-			is_residential: this.data.is_residential
+			is_residential: this.data.is_residential,
+			is_user_input: this.data.is_user_input
 		}
 
 		//check "use my fedex account" toggle button's state and update the context
