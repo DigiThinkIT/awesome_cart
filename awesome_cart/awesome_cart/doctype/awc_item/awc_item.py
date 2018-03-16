@@ -5,6 +5,9 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
+from awesome_cart.utils import clear_cache
 
 class AWCItem(Document):
-	pass
+
+	def on_update(self):
+		clear_cache()

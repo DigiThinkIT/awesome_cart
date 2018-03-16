@@ -3,8 +3,10 @@ from __future__ import unicode_literals
 import json
 import traceback
 import frappe
+import datetime
+
 from frappe import _dict, _
-from frappe.utils import cint, cstr, random_string, flt
+from frappe.utils import cint, cstr, random_string, flt, get_datetime
 from erpnext.stock.get_item_details import apply_price_list_on_item
 
 from compat.customer import get_current_customer
@@ -147,7 +149,7 @@ def get_awc_item_custom_data(name):
 def build_awc_options_from_varients(item):
 
 	cache_key = "build_awc_options_from_varients-{}".format(item.name)
-	cache_data = get_cache(key=cache_key)
+	cache_data = get_cache(key=cache_key, prefix='awc-variant-')
 
 	if cache_data:
 		return cache_data
@@ -192,7 +194,7 @@ def build_awc_options_from_varients(item):
 
 			options["hashes"][",".join(opt_hash)] = variant.get('name')
 
-	set_cache(key=cache_key, value=options)
+	set_cache(key=cache_key, value=options, prefix='awc-variant-')
 
 	return options
 
@@ -246,7 +248,7 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		awc_session = get_awc_session()
 
 	cache_key = "get_product_by_sku-{}-{}-{}".format(sku, "detailed" if detailed else "none", is_logged_in())
-	cache_data = get_cache(cache_key, session=awc_session)
+	cache_data = get_cache(cache_key, session=awc_session, prefix='awc-sku-')
 
 	if cache_data:
 		return cache_data
@@ -262,12 +264,12 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		item = frappe.get_doc("Item", sku)
 	except frappe.DoesNotExistError:
 		data = { "success": False, "data": None }
-		set_cache(cache_key, data, session=awc_session)
+		set_cache(cache_key, data, session=awc_session, prefix='awc-sku-')
 		return data
 
 	if item.disabled:
 		data = { "success": False, "data": None }
-		set_cache(cache_key, data, session=awc_session)
+		set_cache(cache_key, data, session=awc_session, prefix='awc-sku-')
 		return data
 
 	awc_item_name = frappe.db.get_value("AWC Item", {"product_name": item.name}, "name")
@@ -342,7 +344,7 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		)
 
 	data = { "success": True, "data": product }
-	set_cache(cache_key, data, session=awc_session)
+	set_cache(cache_key, data, session=awc_session, prefix='awc-sku-')
 	return data
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
@@ -352,7 +354,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 	awc_session = get_awc_session()
 
 	cache_key = "fetch_products-{}-{}-{}-{}-{}-{}-{}".format(tags, terms, order_by, order_dir, start, limit, is_logged_in())
-	cache_data = get_cache(cache_key, session=awc_session)
+	cache_data = get_cache(cache_key, session=awc_session, prefix='awc-products-')
 	if cache_data:
 		return cache_data
 
@@ -481,7 +483,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 		payload["message"] = traceback.format_exc(ex)
 		log(payload["message"])
 
-	set_cache(cache_key, payload, session=awc_session)
+	set_cache(cache_key, payload, session=awc_session, prefix='awc-products-')
 
 	return payload
 
@@ -561,6 +563,14 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 	awc_is_dirty = False
 	awc_items_to_remove = []
 	awc_items_matched = []
+
+	# tests last quotation sync timestamp
+	# if quotation timestamp > awc_session timestamp then we'll reset the cart
+	# and allow the quotation to rebuild it as this means a system user updated the
+	# quotation on the backend while they had the cart open
+	if awc_session.get('timestamp') and timestamp(quotation.modified) > awc_session.get('timestamp'):
+		clear_awc_session(awc_session)
+
 	# step 1
 	# iterate over all awc items and update quotation to match values
 	awc_items = awc.get("items", [])
@@ -714,6 +724,11 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 					awc_item["options"]["custom"] = {
 						"rate": item.rate
 					}
+
+			if item.get("item_ignore_pricing_rule"):
+				awc_item["options"]["custom"] = {
+					"rate": item.rate
+				}
 
 			awc["items"].append(awc_item)
 			awc_is_dirty = True
@@ -1000,6 +1015,15 @@ def session_response(response, awc_session, quotation):
 	data.update(response)
 	return data
 
+def epoch():
+	return datetime.datetime(1970, 1, 1)
+
+def timestamp(dt):
+	if isinstance(dt, unicode) or isinstance(dt, str):
+		dt = get_datetime(dt)
+
+	return (dt - epoch()).total_seconds()
+
 def save_and_commit_quotation(quotation, is_dirty, awc_session, commit=False, save_session=True):
 	result=(False, None)
 
@@ -1008,16 +1032,17 @@ def save_and_commit_quotation(quotation, is_dirty, awc_session, commit=False, sa
 			update_cart_settings(quotation, awc_session)
 			quotation.flags.ignore_permissions = True
 			quotation.save()
-			collect_totals(quotation, None, awc_session)
 
 			result = (True, None)
 		except Exception as ex:
 			log(traceback.format_exc())
 			result = (False, ex)
-	else:
-		collect_totals(None, None, awc_session)
+
+	collect_totals(quotation, None, awc_session)
 
 	if save_session:
+		if quotation:
+			awc_session['timestamp'] = timestamp(quotation.modified)
 		set_awc_session(awc_session)
 
 	if commit:

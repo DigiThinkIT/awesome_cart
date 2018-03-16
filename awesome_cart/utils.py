@@ -9,7 +9,7 @@ import traceback
 from frappe import _
 from frappe.utils import random_string
 
-from .session import clear_awc_session
+from .session import clear_awc_session, clear_cache_keys
 from .compat.customer import get_current_customer
 from .awesome_cart.doctype.awc_coupon.awc_coupon import calculate_coupon_discount, is_coupon_valid as _is_coupon_valid
 
@@ -153,6 +153,9 @@ def get_addresses():
 		return True
 
 	return False
+
+def clear_cache():
+	clear_cache_keys(['awc-sku-', 'awc-variant-', 'awc-products-'])
 
 def fn_wrap(fn, before_fn):
 	"""A fn hot patch helper. Use to wrap method not accesible through hooks or other ways in ERPN.
