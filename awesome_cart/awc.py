@@ -607,11 +607,11 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 					update_quotation_item_awc_fields(item, awc_item)
 
 					if awc_item.get("options", {}).get("custom", {}).get("rate", None) != None:
-						item.set("item_ignore_pricing_rule", 1)
+						item.set("ignore_pricing_rule", 1)
 						set_quotation_item_rate(item, awc_item["options"]["custom"]["rate"], product)
 					else:
 						set_quotation_item_rate(item, product.get("price"), product)
-						item.set("item_ignore_pricing_rule", 0)
+						item.set("ignore_pricing_rule", 0)
 
 					awc_items_matched.append(awc_item.get("id"))
 				else:
@@ -643,10 +643,10 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 					new_quotation_item = quotation.append("items", item_data)
 
 					if awc_item.get("options", {}).get("custom", {}).get("rate", None) != None:
-						new_quotation_item.set("item_ignore_pricing_rule", 1)
+						new_quotation_item.set("ignore_pricing_rule", 1)
 						set_quotation_item_rate(new_quotation_item, awc_item["options"]["custom"]["rate"], product)
 					else:
-						new_quotation_item.set("item_ignore_pricing_rule", 0)
+						new_quotation_item.set("ignore_pricing_rule", 0)
 						set_quotation_item_rate(new_quotation_item, product.get("price"), product)
 
 					awc_item["unit"] = new_quotation_item.rate
@@ -729,7 +729,20 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 
 	call_awc_sync_hook(awc_session, quotation)
 
-	save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True, save_session=awc_is_dirty)
+	if quotation_is_dirty:
+		update_cart_settings(quotation, awc_session)
+		quotation.flags.ignore_permissions = True
+		if save_quotation:
+			try:
+				quotation.save()
+				frappe.db.commit()
+			except Exception as ex:
+				log(traceback.format_exc())
+
+	collect_totals(quotation, awc, awc_session)
+
+	if awc_is_dirty:
+		set_awc_session(awc_session)
 
 	return quotation_is_dirty
 
@@ -952,7 +965,7 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 	shipping_address_name = None
 
 	if quotation:
-		#update_cart_settings(quotation, awc_session)
+		update_cart_settings(quotation, awc_session)
 
 		if address:
 			shipping_address_name = address.get("shipping_address")
@@ -1226,11 +1239,11 @@ def cart(data=None, action=None):
 				# TODO: ( >_<) shitty way of setting rate due to rate reset
 				#       Please fix when not utterly pissed off
 				if item.get("options", {}).get("custom", {}).get("rate", None) != None:
-					quotation_item.set("item_ignore_pricing_rule", 1)
+					quotation_item.set("ignore_pricing_rule", 1)
 					set_quotation_item_rate(quotation_item, item["options"]["custom"]["rate"], product)
 					item_data['total'] = item["options"]["custom"]["rate"] * cint(item.get("qty"))
 				else:
-					quotation_item.set("item_ignore_pricing_rule", 0)
+					quotation_item.set("ignore_pricing_rule", 0)
 					set_quotation_item_rate(quotation_item, product.get("price"), product)
 					item_data['total'] = product.get("price") * cint(item.get("qty"))
 
@@ -1255,6 +1268,7 @@ def cart(data=None, action=None):
 
 				quotation.set("items", quotation_items)
 
+			update_cart_settings(quotation, awc_session)
 			quotation_is_dirty = True
 
 		save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
