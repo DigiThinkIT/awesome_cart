@@ -34,8 +34,7 @@ app_include_css = [
 app_include_js = [
 	"/assets/js/awc.ui.desk.js?v=%s" % app_version,
 	"/assets/js/awc_utils.js?v=%s" % app_version,
-	"/assets/js/credit_gateway_settings.js?v=%s" % app_version,
-	"/assets/awesome_cart/js/desk_customizations/item_ignore_pricing_rule_patch.js?v=%s" % app_version
+	"/assets/js/credit_gateway_settings.js?v=%s" % app_version
 ]
 
 website_route_rules = [
@@ -69,5 +68,3 @@ on_logout = "awesome_cart.utils.on_logout"
 awc_shipping_api = {
 	"get_rates": "awesome_cart.dummy.get_shipping_rates"
 }
-
-boot_session = "awesome_cart.utils.boot_session"
