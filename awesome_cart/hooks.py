@@ -66,8 +66,12 @@ extend_website_page_controller_context = {
 #on_session_creation = "awesome_cart.utils.on_session_creation"
 on_logout = "awesome_cart.utils.on_logout"
 
+
 awc_shipping_api = {
 	"get_rates": "awesome_cart.dummy.get_shipping_rates"
 }
 
 boot_session = "awesome_cart.utils.boot_session"
+update_website_context = "awesome_cart.utils.run_hotpatch"
+on_session_creation = "awesome_cart.utils.run_hotpatch"
+on_login = "awesome_cart.utils.run_hotpatch"
