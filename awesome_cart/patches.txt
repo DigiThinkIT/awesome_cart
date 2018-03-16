@@ -1,1 +1,2 @@
 awesome_cart.patches.coupon_new_item_type
+awesome_cart.patches.credit_gateway_rename

@@ -62,7 +62,7 @@ from awesome_cart.compat.customer import get_current_customer
 from dti_devtools.debug import log
 
 class CreditGatewaySettings(Document):
-	service_name = "Credit Gateway Settings"
+	service_name = "Credit Gateway"
 	supported_currencies = ["USD"]
 	is_embedable = True
 
