@@ -185,5 +185,5 @@ def boot_session(bootinfo):
 
 	from erpnext.stock import get_item_details
 
-	print(" - Patched: erpnext.stock.get_item_details.get_item_details -> awesome_cart.utils.erpnext_stock_get_item_details")
-	get_item_details.get_item_details = fn_wrap(get_item_details.get_item_details, erpnext_stock_get_item_details)
+	print(" - Patched: erpnext.stock.get_item_details.process_args -> awesome_cart.utils.erpnext_stock_get_item_details")
+	get_item_details.process_args = fn_wrap(get_item_details.process_args, erpnext_stock_get_item_details)
