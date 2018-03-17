@@ -127,6 +127,7 @@ awc_checkout = {
 							awc_checkout.shipping_provider.set_method("PICK UP").then(function(r) {
 								onCartChanges();
 								awc_checkout.showPage("#checkout-billing");
+								$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").show();
 								return r;
 							})
 						});
