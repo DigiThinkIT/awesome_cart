@@ -1449,6 +1449,11 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		quotation.instructions = instructions
 		quotation_is_dirty = False
 
+	# set billilng address
+	if billing_address.get("billing_address") and quotation.customer_address != billing_address.get("billing_address"):
+		quotation.customer_address = billing_address.get("billing_address")
+		quotation_is_dirty = True
+
 	# make sure quotation email is contact person if we are a power user
 	quotation_is_dirty = sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty, save_quotation=False)
 
