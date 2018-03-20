@@ -37,6 +37,7 @@ window.awc_utils = {
 
 		var tpl = awc_utils.render_address_widget(options);
 		var $widget = $(tpl);
+		$container.empty();
 		$container.append($widget);
 
 		$container.find(".addr").not(".no-click").click(function(e) {
@@ -71,6 +72,10 @@ window.awc_utils = {
 
 		if ( typeof options.on_init === "function" ) {
 			options.on_init($widget);
+		}
+
+		if ( options.default_address ) {
+			$container.find(".addr[data-name='" + options.default_address.replace("'", "\\'") + "']").click();
 		}
 
 	}

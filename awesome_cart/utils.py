@@ -70,6 +70,19 @@ def delete_address(address_name):
 def edit_address(address):
 	address =  json.loads(address)
 	add_doc = frappe.get_doc("Address", address.get('address_name'))
+	update_address(add_doc, address)
+
+@frappe.whitelist()
+def new_address(address):
+	address =  json.loads(address)
+	add_doc = frappe.new_doc("Address")
+	update_address(add_doc, address)
+
+	frappe.response.address_name = add_doc.name
+
+	return add_doc.as_dict()
+
+def update_address(add_doc, address):
 	add_doc.address_title = address.get('address_title')
 	add_doc.is_residential = address.get('address_is_residential')
 	add_doc.address_contact = address.get('address_contact')
@@ -83,6 +96,7 @@ def edit_address(address):
 	add_doc.flags.ignore_permissions=True
 	add_doc.save()
 	frappe.db.commit()
+
 
 def quotation_validate(doc, method):
 	main_items = []
@@ -190,10 +204,7 @@ def boot_session(bootinfo):
 
 def run_hotpatch(*args, **kwargs):
 	from erpnext.stock import get_item_details
-	print(" - RUNNING HOTPATCH...")
 
 	if not hasattr(get_item_details.process_args, "__patched"):
 		print(" - Patched: erpnext.stock.get_item_details.process_args -> awesome_cart.utils.erpnext_stock_get_item_details")
 		get_item_details.process_args = fn_wrap(get_item_details.process_args, erpnext_stock_get_item_details)
-	else:
-		print(" - Patch already applied...")
