@@ -59,8 +59,9 @@ def set_awc_session(session):
 	frappe.cache().set_value("awc_session_{0}".format(frappe.local.session["awc_sid"]), session)
 	return session
 
-def clear_awc_session():
-	awc_session = get_awc_session()
+def clear_awc_session(awc_session=None):
+	if not awc_session:
+		awc_session = get_awc_session()
 
 	if awc_session.get("shipping_method"):
 		del awc_session["shipping_method"]
@@ -72,22 +73,31 @@ def clear_awc_session():
 		del awc_session["selected_customer"]
 	if awc_session.get("selected_customer_image"):
 		del awc_session["selected_customer_image"]
+	if awc_session.get("timestamp"):
+		del awc_session["timestamp"]
 	awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
 
-def hash_key(key):
-	return hashlib.sha512(key).hexdigest()
+def hash_key(key, prefix=''):
+	return prefix + hashlib.sha512(key).hexdigest()
 
-def set_cache(key, value, expires_in_sec=1800, session=None):
+def set_cache(key, value, expires_in_sec=1800, session=None, prefix=''):
 	if not session:
 		session = get_awc_session()
 	sid = frappe.local.session["awc_sid"]
 
-	frappe.cache().set_value(key=hash_key(key), val=value, user=sid, expires_in_sec=expires_in_sec)
+	frappe.cache().set_value(key=hash_key(key, prefix), val=value, user=sid, expires_in_sec=expires_in_sec)
 
-def get_cache(key, expires=False, session=None):
+def get_cache(key, expires=False, session=None, prefix=''):
 	if not session:
 		session = get_awc_session()
 
 	sid = frappe.local.session["awc_sid"]
 
-	return frappe.cache().get_value(key=hash_key(key), user=sid, expires=expires)
+	return frappe.cache().get_value(key=hash_key(key, prefix), user=sid, expires=expires)
+
+def clear_cache_keys(keys):
+	if not isinstance(keys, list):
+		keys = [keys]
+
+	for key in keys:
+		frappe.cache().delete_keys(key)
