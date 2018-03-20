@@ -1100,6 +1100,10 @@ def cart(data=None, action=None):
 			address_name = address.get("shipping_address")
 			if not address_name:
 				new_address = frappe.new_doc("Address")
+			else:
+				new_address = frappe.get_doc("Address", address_name)
+
+			if address.get("is_user_input"):
 				new_address.update({
 					"address_title": data[0].get("address").get("title"),
 					"address_type": data[0].get("address").get("address_type", "Shipping"),
@@ -1117,7 +1121,7 @@ def cart(data=None, action=None):
 				new_address.flags.ignore_permissions= True
 				new_address.save()
 				address_name = new_address.name
-				address["shipping_address"] = address_name
+			address["shipping_address"] = address_name
 
 			if quotation:
 				quotation.shipping_address_name = address_name
