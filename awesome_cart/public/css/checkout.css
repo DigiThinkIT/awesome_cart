@@ -23,9 +23,9 @@
 	width: 60px;
 	height: 34px;
   }
-  
+
   .switch input {display:none;}
-  
+
   .slider {
 	position: absolute;
 	cursor: pointer;
@@ -37,7 +37,7 @@
 	-webkit-transition: .4s;
 	transition: .4s;
   }
-  
+
   .slider:before {
 	position: absolute;
 	content: "";
@@ -49,28 +49,40 @@
 	-webkit-transition: .4s;
 	transition: .4s;
   }
-  
+
   input:checked + .slider {
 	background-color: #000000;/*#2196F3;*/
   }
-  
+
   input:focus + .slider {
 	box-shadow: 0 0 1px #000000;/*#2196F3;*/
   }
-  
+
   input:checked + .slider:before {
 	-webkit-transform: translateX(26px);
 	-ms-transform: translateX(26px);
 	transform: translateX(26px);
   }
-  
+
   /* Rounded sliders */
   .slider.round {
 	border-radius: 34px;
   }
-  
+
   .slider.round:before {
 	border-radius: 50%;
   }
 
+
+.address-item .well {
+	padding: 0 !important;
+}
+
+.addr {
+	padding: .5em 1em;
+}
+
 /* Use customer Fedex toggle End */
+.awc-selected {
+	border: 2px solid black;
+}

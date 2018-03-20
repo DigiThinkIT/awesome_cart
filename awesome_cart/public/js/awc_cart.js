@@ -94,6 +94,247 @@ awc_checkout = {
 		$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
 	},
 
+	build_shipping_widget: function($shipping_container, addresses, shipform) {
+		awc_utils.build_address_widget($shipping_container, {
+			addresses: addresses,
+			label: "Shipping Address",
+			data_type: "ship",
+
+			on_init: function($widget) {
+				var $container = $widget.find('.awc-addresses-container');
+				var $pickup_option = $(frappe.render_template("awc_pickup_option"));
+
+				$container.prepend($pickup_option);
+
+				$pickup_option.click(function() {
+					$("#checkout-shipping-method").hide();
+					$("#bc-shipping-method").hide();
+
+					$shipping_container.find('.addr').not($(this).find('.addr')).removeClass('awc-selected');
+					$(this).find('.addr').addClass("awc-selected");
+
+					awc_checkout.shipping_provider.reset_method();
+					awc_checkout.shipping_provider.set_method("PICK UP").then(function(r) {
+						awc_checkout.onCartChanges();
+						awc_checkout.showPage("#checkout-billing");
+						return r;
+					})
+				});
+
+			},
+
+			on_address_click: function($addr) {
+				var country = $($addr).find("span#country.line")[0].innerText;
+				if (country != "United States") {
+					$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").hide();
+					$("#gateway-selector-options div.field.custom:has('input[value=\"authorizenet\"]')").click();
+				} else {
+					$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").show();
+				}
+				if ( awc_checkout.shipping_provider.data.ship_method == "PICK UP") {
+					awc_checkout.shipping_provider.reset_method();
+				}
+				$("#checkout-shipping-method").show();
+				$("#bc-shipping-method").show();
+				awc_checkout.showPage('#checkout-shipping-method');
+				$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
+			},
+
+			on_delete_click: function($addr, e) {
+				frappe.call({
+					method: "awesome_cart.utils.delete_address",
+					args: { "address_name": $addr.closest('div').attr('data-name') }
+				});
+				$addr.closest('.address-item').remove();
+				$shipping_container.find(".awc-addresses-container div.addr[data-name=" + $(this).closest("div").attr("data-name") + "]").parent().remove();
+			},
+
+			on_edit_click: function($addr, e) {
+				$("#awc-shipping-form .awc-form").trigger("reset");
+				$('#awc-shipping-form.awc-form')
+					.attr('data-name', $addr.attr('data-name'));
+
+				$('#awc_ship__title').val($addr.find('span#title').text());
+				$('#awc_ship__contact').val($addr.find('span#contact').text());
+				$('#awc_ship__phone').val($addr.find('span#phone').text());
+				$('#awc_ship__line1').val($addr.find('span#line1').text());
+				$('#awc_ship__line2').val($addr.find('span#line2').text());
+				$('#awc_ship__city').val($addr.find('span#city').text());
+				$('#awc_ship__state').val($addr.find('span#state').text());
+				$('#awc_ship__zip').val($addr.find('span#postal_code').text());
+				$('#awc_ship__country').val($addr.find('span#country').text());
+				$('#awc_ship__is_residential').val($addr.attr('data-is-residential'));
+
+				$addr.addClass('edited');
+				$('#awc-shipping-form .btn-nextbtn').text('Save');
+				$('#checkout-shipping .field.required input').change();
+				$('#checkout-shipping .field.required select').change();
+
+				awc_checkout.showPage('#checkout-shipping');
+				$('html, body').animate({
+					scrollTop: $('#awc-forms').offset().top - 60
+				}, 'slow');
+			}
+		});
+	},
+
+	build_billing_widget: function($billing_container, addresses, billform, default_address) {
+		awc_utils.build_address_widget($billing_container, {
+			addresses: addresses,
+			label: "Billing Address",
+			data_type: "bill",
+			default_address: default_address,
+
+			on_address_click: function($addr) {
+				awc_checkout.showPage('#checkout-confirmation');
+				$('html, body').animate({
+					scrollTop: $('#awc-forms').offset().top - 60
+				}, 'slow');
+			},
+
+			on_delete_click: function($addr, e) {
+				frappe.call({
+					method: "awesome_cart.utils.delete_address",
+					args: { "address_name": $addr.closest('div').attr('data-name') }
+				});
+				$addr.closest('.address-item').remove();
+				$billing_container.find(".awc-addresses-container div.addr[data-name=" + $(this).closest("div").attr("data-name") + "]").parent().remove();
+			},
+
+			on_edit_click: function($addr, e) {
+				$("#gateway-selector-billing-form").trigger("reset")
+				$('#gateway-selector-billing-form.awc-form')
+					.attr('data-name', $addr.attr('data-name'));
+
+				$('#billing_title').val($addr.find('span#title').text());
+				$('#billing_phone').val($addr.find('span#phone').text());
+				$('#billing_line1').val($addr.find('span#line1').text());
+				$('#billing_line2').val($addr.find('span#line2').text());
+				$('#billing_city').val($addr.find('span#city').text());
+				$('#billing_state').val($addr.find('span#state').text());
+				$('#billing_pincode').val($addr.find('span#postal_code').text());
+				$('#billing_country').val($addr.find('span#country').text());
+
+				$addr.addClass('edited');
+
+				$('#form-bill-addr .btn-nextbtn').text('Save');
+				$('#form-bill-addr .field.required input').change();
+				$('#form-bill-addr .field.required select').change();
+				$('#select-bill-addr').css('display', 'none');
+				$('#form-bill-addr').css('display', 'block');
+			}
+		});
+
+		awc_checkout.setup_billing_new_form($billing_container, addresses, billform);
+
+	},
+
+	setup_billing_new_form: function($billing_container, addresses, billform) {
+
+		$('#form-bill-addr .btn-nextbtn').click(function() {
+			if ($('#form-bill-addr .btn-nextbtn').text() == 'Next') {
+				$('#ship-form-err-msg').remove();
+				if (billform.title == true && billform.phone == true && billform.address_1 == true && billform.city == true && billform.country == true) {
+					var address = {
+						address_title: $('#billing_title').val(),
+						address_phone: $('#billing_phone').val(),
+						address_line1: $('#billing_line1').val(),
+						address_line2: $('#billing_line2').val(),
+						address_city: $('#billing_city').val(),
+						address_state: $('#billing_state').val(),
+						address_country: $('#billing_country').val(),
+						address_zip: $('#billing_pincode').val()
+					};
+
+					frappe.call({
+						method: "awesome_cart.utils.new_address",
+						args: { address: address },
+						freeze: 1,
+						callback: function(r) {
+							console.log("NEW ADDRESS: ", r);
+
+							if ( r.address_name ) {
+								addresses.unshift(r.message);
+
+								$('#select-bill-addr').show();
+								$('#form-bill-addr').hide();
+								$('#form-bill-addr').attr('data-select', 'false');
+								$('#select-bill-addr .addr').removeClass('awc-selected');
+
+								$('#billing_title').val('');
+								$('#billing_phone').val('');
+								$('#billing_line1').val('');
+								$('#billing_line2').val('');
+								$('#billing_city').val('');
+								$('#billing_state').val('');
+								$('#billing_country').val('');
+								$('#billing_pincode').val('');
+
+								awc_checkout.build_billing_widget($billing_container, addresses, billform, r.message.name);
+
+								//awc_checkout.showPage('#checkout-confirmation');
+								$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
+							}
+						}
+					});
+
+				} else {
+					$(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
+				}
+			} else if ($('#form-bill-addr .btn-nextbtn').text() == 'Save') {
+				if (billform.title == true && billform.phone == true && billform.address_1 == true && billform.city == true && billform.country == true) {
+					var address = {
+						address_name: $('#gateway-selector-billing-form.awc-form').attr('data-name'),
+						address_title: $('#billing_title').val(),
+						address_phone: $('#billing_phone').val(),
+						address_line1: $('#billing_line1').val(),
+						address_line2: $('#billing_line2').val(),
+						address_city: $('#billing_city').val(),
+						address_state: $('#billing_state').val(),
+						address_country: $('#billing_country').val(),
+						address_zip: $('#billing_pincode').val()
+					};
+					$('#awc-billing-addrs .edited span#phone').text($('#billing_phone').val());
+					$('#awc-billing-addrs .edited span#line1').text($('#billing_line1').val());
+					$('#awc-billing-addrs .edited span#line2').text($('#billing_line2').val());
+					$('#awc-billing-addrs .edited span#city').text($('#billing_city').val());
+					$('#awc-billing-addrs .edited span#state').text($('#billing_state').val());
+					$('#awc-billing-addrs .edited span#postal_code').text($('#billing_pincode').val());
+					$('#awc-billing-addrs .edited span#country').text($('#billing_country').val());
+					$('#awc-billing-addrs .addr .edited').removeClass('edited');
+					$('#form-bill-addr .btn-nextbtn').text('Next');
+					frappe.call({
+						method: "awesome_cart.utils.edit_address",
+						args: { address: address }
+					});
+					$('#select-bill-addr').css('display', 'block');
+					$('#form-bill-addr').css('display', 'none');
+					$('#form-bill-addr.awc-form').removeAttr('data-name');
+				} else {
+					$('#ship-form-err-msg').remove();
+					$(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
+				}
+			}
+		});
+
+
+		$billing_container.find(".btn-primary").click(function(e) {
+			$('#form-bill-addr').attr('data-select', 'true');
+			$('#select-bill-addr').css('display', 'none');
+			$('#form-bill-addr').css('display', 'block');
+		});
+
+		// billing form back button click
+		$("#form-bill-addr .btn-back").click(function(e) {
+			e.preventDefault();
+			$('#form-bill-addr').attr('data-select', 'false');
+			$('#select-bill-addr .addr').removeClass('awc-selected');
+			$('#select-bill-addr').css('display', 'block');
+			$('#form-bill-addr').css('display', 'none');
+		});
+
+	},
+
 	setupPage: function() {
 		awc_utils.get_user_addresses(function(err, addresses) {
 			if ( err ) {
@@ -103,138 +344,29 @@ awc_checkout = {
 				var $shipping_container = $("#awc-shipping-addrs");
 				var $billing_container = $("#awc-billing-addrs");
 
+				var shipform = {
+					"title": false,
+					"phone": false,
+					"address_1": false,
+					"city": false,
+					"country": false,
+				};
+
+				//validation for billing address form fields
+				var billform = {
+					"title": false,
+					"phone": false,
+					"address_1": false,
+					"city": false,
+					"country": false,
+				};
+
 				// setup shipping address //////////////////////////////////////////
 				// awc_utils code at js/awc_utils.js
-				awc_utils.build_address_widget($shipping_container, {
-					addresses: addresses,
-					label: "Shipping Address",
-					data_type: "ship",
-
-					on_init: function($widget) {
-						var $container = $widget.find('.awc-addresses-container');
-						var $pickup_option = $(frappe.render_template("awc_pickup_option"));
-
-						$container.prepend($pickup_option);
-
-						$pickup_option.click(function() {
-							$("#checkout-shipping-method").hide();
-							$("#bc-shipping-method").hide();
-
-							$shipping_container.find('.addr').not($(this).find('.addr')).removeClass('awc-selected');
-							$(this).find('.addr').addClass("awc-selected");
-
-							awc_checkout.shipping_provider.reset_method();
-							awc_checkout.shipping_provider.set_method("PICK UP").then(function(r) {
-								onCartChanges();
-								awc_checkout.showPage("#checkout-billing");
-								return r;
-							})
-						});
-
-					},
-
-					on_address_click: function($addr) {
-						var country = $($addr).find("span#country.line")[0].innerText;
-						if (country != "United States") {
-							$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").hide();
-							$("#gateway-selector-options div.field.custom:has('input[value=\"authorizenet\"]')").click();
-						} else {
-							$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").show();
-						}
-						if ( awc_checkout.shipping_provider.data.ship_method == "PICK UP") {
-							awc_checkout.shipping_provider.reset_method();
-						}
-						$("#checkout-shipping-method").show();
-						$("#bc-shipping-method").show();
-						awc_checkout.showPage('#checkout-shipping-method');
-						$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
-					},
-
-					on_delete_click: function($addr, e) {
-						frappe.call({
-							method: "awesome_cart.utils.delete_address",
-							args: { "address_name": $addr.closest('div').attr('data-name') }
-						});
-						$addr.closest('.address-item').remove();
-						$shipping_container.find(".awc-addresses-container div.addr[data-name=" + $(this).closest("div").attr("data-name") + "]").parent().remove();
-					},
-
-					on_edit_click: function($addr, e) {
-						$("#awc-shipping-form .awc-form").trigger("reset");
-						$('#awc-shipping-form.awc-form')
-							.attr('data-name', $addr.attr('data-name'));
-
-						$('#awc_ship__title').val($addr.find('span#title').text());
-						$('#awc_ship__contact').val($addr.find('span#contact').text());
-						$('#awc_ship__phone').val($addr.find('span#phone').text());
-						$('#awc_ship__line1').val($addr.find('span#line1').text());
-						$('#awc_ship__line2').val($addr.find('span#line2').text());
-						$('#awc_ship__city').val($addr.find('span#city').text());
-						$('#awc_ship__state').val($addr.find('span#state').text());
-						$('#awc_ship__zip').val($addr.find('span#postal_code').text());
-						$('#awc_ship__country').val($addr.find('span#country').text());
-						$('#awc_ship__is_residential').val($addr.attr('data-is-residential'));
-
-						$addr.addClass('edited');
-						$('#awc-shipping-form .btn-nextbtn').text('Save');
-						$('#checkout-shipping .field.required input').change();
-						$('#checkout-shipping .field.required select').change();
-
-						awc_checkout.showPage('#checkout-shipping');
-						$('html, body').animate({
-							scrollTop: $('#awc-forms').offset().top - 60
-						}, 'slow');
-					}
-				});
+				awc_checkout.build_shipping_widget($shipping_container, addresses, shipform);
 
 				// setup billing address ///////////////////////////////////////////
-				awc_utils.build_address_widget($billing_container, {
-					addresses: addresses,
-					label: "Billing Address",
-					data_type: "bill",
-
-					on_address_click: function($addr) {
-						awc_checkout.showPage('#checkout-confirmation');
-						$('html, body').animate({
-							scrollTop: $('#awc-forms').offset().top - 60
-						}, 'slow');
-					},
-
-					on_delete_click: function($addr, e) {
-						console.log("Delete address", $addr);
-
-						frappe.call({
-							method: "awesome_cart.utils.delete_address",
-							args: { "address_name": $addr.closest('div').attr('data-name') }
-						});
-						$addr.closest('.address-item').remove();
-						$billing_container.find(".awc-addresses-container div.addr[data-name=" + $(this).closest("div").attr("data-name") + "]").parent().remove();
-					},
-
-					on_edit_click: function($addr, e) {
-						console.log("Edit address", $addr);
-						$("#gateway-selector-billing-form").trigger("reset")
-						$('#gateway-selector-billing-form.awc-form')
-							.attr('data-name', $addr.attr('data-name'));
-
-						$('#billing_title').val($addr.find('span#title').text());
-						$('#billing_phone').val($addr.find('span#phone').text());
-						$('#billing_line1').val($addr.find('span#line1').text());
-						$('#billing_line2').val($addr.find('span#line2').text());
-						$('#billing_city').val($addr.find('span#city').text());
-						$('#billing_state').val($addr.find('span#state').text());
-						$('#billing_pincode').val($addr.find('span#postal_code').text());
-						$('#billing_country').val($addr.find('span#country').text());
-
-						$addr.addClass('edited');
-
-						$('#form-bill-addr .btn-nextbtn').text('Save');
-						$('#form-bill-addr .field.required input').change();
-						$('#form-bill-addr .field.required select').change();
-						$('#select-bill-addr').css('display', 'none');
-						$('#form-bill-addr').css('display', 'block');
-					}
-				});
+				awc_checkout.build_billing_widget($billing_container, addresses, billform);
 
 				$('.panel .btn-next').click(awc_checkout.nextPage); //click for all next btn on all pages
 
@@ -270,6 +402,7 @@ awc_checkout = {
 						}
 					})
 
+
 				$('#checkout-confirm-billing .btn-primary')
 					.click(function(e) {
 						if ($('#form-bill-addr').attr('data-select') == 'true') {
@@ -283,7 +416,7 @@ awc_checkout = {
 							$('#form-bill-addr').css('display', 'none');
 							$('#select-bill-addr').css('display', 'block');
 						}
-					})
+					});
 
 				// checkout error back button
 				$('#checkout-error .btn-primary')
@@ -341,12 +474,6 @@ awc_checkout = {
 					$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
 				});
 
-				$billing_container.find(".btn-primary").click(function(e) {
-					$('#form-bill-addr').attr('data-select', 'true');
-					$('#select-bill-addr').css('display', 'none');
-					$('#form-bill-addr').css('display', 'block');
-				});
-
 			}
 
 			// shipping form back button click
@@ -358,93 +485,20 @@ awc_checkout = {
 				$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
 			});
 
-			// billing form back button click
-			$("#form-bill-addr .btn-back").click(function(e) {
-				e.preventDefault();
-				$('#form-bill-addr').attr('data-select', 'false');
-				$('#select-bill-addr .addr').removeClass('awc-selected');
-				$('#select-bill-addr').css('display', 'block');
-				$('#form-bill-addr').css('display', 'none');
-			});
-
-
-
-			var shipform = {
-				"title": false,
-				"phone": false,
-				"address_1": false,
-				"city": false,
-				"country": false,
-			};
-
-			//validation for billing address form fields
-			var billform = {
-				"title": false,
-				"phone": false,
-				"address_1": false,
-				"city": false,
-				"country": false,
-			};
-
 			// handles change event and key up event properly plus auto complete support from browser
 			$('input[id^=awc_ship__], select[id^=awc_ship__], input[id^=billing_], select[id^=billing_]')
-				.bind('keyup change', function() {
-					// determine field name by the last word in the id attribute
-					var field_name = $(this).attr('data-type')
-					// determine if we are handling a select element
-					var is_select = $(this).is('select');
-					// get element value differently if a select element vs an input
-					var value = is_select ? $(this).find(':selected').attr('value') : $(this).val();
-					// determine if we are handling a shipping field or billing field
-					var is_ship = $(this).attr('id').indexOf('ship') >= 0;
-					// get a reference to the shipform or billform depending on what is_ship value
-					var data = is_ship ? shipform : billform;
-					data[field_name] = value ? true : false;
-				})
-
-			$('#form-bill-addr .btn-nextbtn').click(function() {
-				if ($('#form-bill-addr .btn-nextbtn').text() == 'Next') {
-					if (billform.title == true && billform.phone == true && billform.address_1 == true && billform.city == true && billform.country == true) {
-						awc_checkout.showPage('#checkout-confirmation');
-						$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
-						$('#ship-form-err-msg').remove();
-					} else {
-						$('#ship-form-err-msg').remove();
-						$(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
-					}
-				} else if ($('#form-bill-addr .btn-nextbtn').text() == 'Save') {
-					if (billform.title == true && billform.phone == true && billform.address_1 == true && billform.city == true && billform.country == true) {
-							var address = {
-							address_name: $('#gateway-selector-billing-form.awc-form').attr('data-name'),
-							address_title: $('#billing_title').val(),
-							address_phone: $('#billing_phone').val(),
-							address_line1: $('#billing_line1').val(),
-							address_line2: $('#billing_line2').val(),
-							address_city: $('#billing_city').val(),
-							address_state: $('#billing_state').val(),
-							address_country: $('#billing_country').val()
-						};
-						$('#awc-billing-addrs .edited span#phone').text($('#billing_phone').val());
-						$('#awc-billing-addrs .edited span#line1').text($('#billing_line1').val());
-						$('#awc-billing-addrs .edited span#line2').text($('#billing_line2').val());
-						$('#awc-billing-addrs .edited span#city').text($('#billing_city').val());
-						$('#awc-billing-addrs .edited span#state').text($('#billing_state').val());
-						$('#awc-billing-addrs .edited span#postal_code').text($('#billing_pincode').val());
-						$('#awc-billing-addrs .edited span#country').text($('#billing_country').val());
-						$('#awc-billing-addrs .addr .edited').removeClass('edited');
-						$('#form-bill-addr .btn-nextbtn').text('Next');
-						frappe.call({
-							method: "awesome_cart.utils.edit_address",
-							args: { address: address }
-						});
-						$('#select-bill-addr').css('display', 'block');
-						$('#form-bill-addr').css('display', 'none');
-						$('#form-bill-addr.awc-form').removeAttr('data-name');
-					} else {
-						$('#ship-form-err-msg').remove();
-						$(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
-					}
-				}
+			.bind('keyup change', function() {
+				// determine field name by the last word in the id attribute
+				var field_name = $(this).attr('data-type')
+				// determine if we are handling a select element
+				var is_select = $(this).is('select');
+				// get element value differently if a select element vs an input
+				var value = is_select ? $(this).find(':selected').attr('value') : $(this).val();
+				// determine if we are handling a shipping field or billing field
+				var is_ship = $(this).attr('id').indexOf('ship') >= 0;
+				// get a reference to the shipform or billform depending on what is_ship value
+				var data = is_ship ? shipform : billform;
+				data[field_name] = value ? true : false;
 			});
 
 			$('#awc-shipping-form .btn-nextbtn').click(function() {
@@ -572,6 +626,8 @@ awc_checkout = {
 				$('#checkout-panels').hide()
 			}
 		}
+
+		awc_checkout.onCartChanges = onCartChanges;
 
 		cart.on('init', onCartChanges);
 		cart.on('update', onCartChanges);
