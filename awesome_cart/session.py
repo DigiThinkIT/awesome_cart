@@ -21,7 +21,7 @@ def get_awc_session():
 		if awc_session:
 			if awc_session.get("session_ip") != frappe.local.request_ip:
 				# IP do not match... force build session from scratch
-				log(" - AWC Session IP ADDRESS MISTMATCH {0} != {1} ... Resetting\n{0}".format(
+				log(" - AWC Session IP ADDRESS MISTMATCH {0} != {1} ... Resetting\n{2}".format(
 					awc_session.get("session_ip"),
 					frappe.local.request_ip,
 					pretty_json(awc_session)))
