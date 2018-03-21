@@ -15,14 +15,17 @@ def get_awc_session():
 		awc_sid = "awc_session_{0}".format(sid)
 	awc_session = None
 
-	pretty_json(awc_session)
-
 	# lets make sure IPs match before applying this sid
 	if sid != None:
 		awc_session = frappe.cache().get_value(awc_sid)
 		if awc_session:
 			if awc_session.get("session_ip") != frappe.local.request_ip:
 				# IP do not match... force build session from scratch
+				log(" - AWC Session IP ADDRESS MISTMATCH {0} != {1} ... Resetting\n{2}".format(
+					awc_session.get("session_ip"),
+					frappe.local.request_ip,
+					pretty_json(awc_session)))
+
 				sid = None
 				awc_sid = None
 				awc_session = None
@@ -59,22 +62,25 @@ def set_awc_session(session):
 	frappe.cache().set_value("awc_session_{0}".format(frappe.local.session["awc_sid"]), session)
 	return session
 
-def clear_awc_session(awc_session=None):
+def clear_awc_session(awc_session=None, cart_only=False):
 	if not awc_session:
 		awc_session = get_awc_session()
 
-	if awc_session.get("shipping_method"):
-		del awc_session["shipping_method"]
-	if awc_session.get("shipping_rates"):
-		del awc_session["shipping_rates"]
-	if awc_session.get("shipping_rates_list"):
-		del awc_session["shipping_rates_list"]
-	if awc_session.get("selected_customer"):
-		del awc_session["selected_customer"]
-	if awc_session.get("selected_customer_image"):
-		del awc_session["selected_customer_image"]
+	if not cart_only:
+		if awc_session.get("shipping_method"):
+			del awc_session["shipping_method"]
+		if awc_session.get("shipping_rates"):
+			del awc_session["shipping_rates"]
+		if awc_session.get("shipping_rates_list"):
+			del awc_session["shipping_rates_list"]
+		if awc_session.get("selected_customer"):
+			del awc_session["selected_customer"]
+		if awc_session.get("selected_customer_image"):
+			del awc_session["selected_customer_image"]
+
 	if awc_session.get("timestamp"):
 		del awc_session["timestamp"]
+
 	awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
 
 def hash_key(key, prefix=''):

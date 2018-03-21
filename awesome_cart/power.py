@@ -4,6 +4,7 @@ import traceback
 import frappe
 
 from .session import get_awc_session, set_awc_session
+from .utils import clear_cache
 from .dbug import pretty_json
 
 def get_user_contacts(user):
@@ -94,6 +95,7 @@ def set_cart_customer(customer_name):
 		if not contacts or len(contacts) == 0:
 			return "This Customer requires at least one Contact before placing an order!"
 
+		clear_cache()
 		awc_session = get_awc_session()
 		awc_session["selected_customer"] = customer_name
 		set_awc_session(awc_session)
