@@ -569,7 +569,7 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 	# and allow the quotation to rebuild it as this means a system user updated the
 	# quotation on the backend while they had the cart open
 	if awc_session.get('timestamp') and timestamp(quotation.modified) > awc_session.get('timestamp'):
-		clear_awc_session(awc_session)
+		clear_awc_session(awc_session, cart_only=True)
 
 	# step 1
 	# iterate over all awc items and update quotation to match values
