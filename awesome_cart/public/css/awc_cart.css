@@ -446,7 +446,7 @@
 
 #customer-select-window .window {
 	position: absolute;
-	width: 300px;
+	width: 400px;
 	max-height: 400px;
 	top: 50%;
 	left: 50%;
@@ -455,6 +455,8 @@
 	overflow: auto;
 	background: #e8e8e8;
 	color: #000;
+	border-radius: .5em;
+	border: 1px solid black;
 }
 
 #customer-select-window .window ul {
@@ -468,8 +470,11 @@
 	list-style: none;
 	padding: 0;
 	margin: 2px;
+	cursor: pointer;
 }
-
+#customer-select-window .window li .item {
+	padding: .5em 1em;
+}
 #customer-select-window .window li .item img {
 	height: 2em;
 }
@@ -519,9 +524,9 @@ body.is_logged_in .coupon_input.no-login {
 	height: 34px;
 	padding-right: 65px;
   }
-  
+
   .switch input {display:none;}
-  
+
   .slide {
 	position: absolute;
 	cursor: pointer;
@@ -533,7 +538,7 @@ body.is_logged_in .coupon_input.no-login {
 	-webkit-transition: .4s;
 	transition: .4s;
   }
-  
+
   .slide:before {
 	position: absolute;
 	content: "";
@@ -545,26 +550,26 @@ body.is_logged_in .coupon_input.no-login {
 	-webkit-transition: .4s;
 	transition: .4s;
   }
-  
+
   input:checked + .slide {
 	background-color: #000000;/*#2196F3;*/
   }
-  
+
   input:focus + .slide {
 	box-shadow: 0 0 1px #000000;/*#2196F3;*/
   }
-  
+
   input:checked + .slide:before {
 	-webkit-transform: translateX(26px);
 	-ms-transform: translateX(26px);
 	transform: translateX(26px);
   }
-  
+
   /* Rounded sliders */
   .slide.round {
 	border-radius: 34px;
   }
-  
+
   .slide.round:before {
 	border-radius: 50%;
   }
