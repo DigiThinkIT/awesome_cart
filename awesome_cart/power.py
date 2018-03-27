@@ -14,8 +14,21 @@ def get_user_contacts(user):
 
 	contacts = frappe.get_all("Contact",
 		filters={"user": user},
-		fields=["name", "is_primary_contact", "customer_name", "can_place_orders"]
+		fields=["name", "is_primary_contact", "can_place_orders"]
 	)
+
+	for contact in contacts:
+		contact_links = frappe.get_all("Dynamic Link", filters={
+			"parent": contact.get("name"),
+			"parenttype": "Contact",
+			"link_doctype": "Customer"},
+			fields=["link_name"])
+
+		contact["customers"] = [ x.get("link_name") for x in contact_links ]
+		# here in case we are using this somewhere else.
+		# NOTE: remove once we know we aren't using this
+		if len(contact["customers"]) > 0:
+			contact["customer_name"] = contact["customers"][0]
 
 	return contacts
 
@@ -48,15 +61,16 @@ def get_power_user_settings():
 
 		frappe.local.response["customers"] = []
 		if user_doc.get("is_power_user"):
+			frappe.local.response["customers"] = []
 			# list all customers this user may make purchases for
-			frappe.local.response["customers"] = [{
-					"customer_name": x["customer_name"],
-					"label": frappe.get_value("Customer", x["customer_name"], "customer_name"),
-					"image": frappe.get_value("Customer", x["customer_name"], "image")
-				} for x in contacts \
-					if ( x.get("can_place_orders") or x.get("is_primary_contact") ) and \
-						frappe.get_value("Customer", x["customer_name"], "customer_name")
-			]
+			for contact in contacts:
+				if contact.get("can_place_orders") or contact.get("is_primary_contact"):
+					frappe.local.response["customers"].extend([{
+							"customer_name": customer_name,
+							"label": frappe.get_value("Customer", customer_name, "customer_name") or customer_name,
+							"image": frappe.get_value("Customer", customer_name, "image")
+						} for customer_name in contact.get("customers", [])
+					])
 
 		return "Power User"
 
