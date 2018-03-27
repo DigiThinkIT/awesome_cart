@@ -133,7 +133,7 @@ def quotation_validate(doc, method):
 		if discount is not False and discount != doc.discount_amount:
 			doc.discount_amount = discount
 			doc.apply_discount_on = apply_discount_on or "Net Total"
-			#doc.run_method("calculate_taxes_and_totals")
+			doc.run_method("calculate_taxes_and_totals")
 		elif discount is False:
 			raise msg
 
