@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from erpnext.setup.setup_wizard.setup_wizard import create_bank_account
+from erpnext.setup.setup_wizard.operations.company_setup import create_bank_account
 
 class AwcSettings(Document):
 	def on_update(self):
@@ -39,14 +39,14 @@ def create_gateway_bank_account(name):
 	account = frappe.db.get_value(
 		"Account",
 		{"account_name": _(name), "company": company},
-		["name", "account_currency"], 
+		["name", "account_currency"],
 		as_dict=True)
 
 	if not account:
 		account = frappe.db.get_value(
 			"Account",
 			{"account_name": name, "company": company},
-			["name", "account_currency"], 
+			["name", "account_currency"],
 			as_dict=True)
 
 	if not account:
@@ -66,7 +66,7 @@ def create_gateway_account(name, bank_account):
 
 	currency = frappe.db.get_value("Global Defaults", None, "default_currency")
 	if not frappe.db.exists("Payment Gateway Account", {
-			"payment_gateway": name, 
+			"payment_gateway": name,
 			"currency": bank_account.get("account_currency", currency)}):
 
 		account = frappe.get_doc({
@@ -99,4 +99,3 @@ def setup_gateway(gateway_name, enable):
 	bank_account = create_gateway_bank_account(gateway_name)
 	if bank_account:
 		gateway_account = create_gateway_account(gateway_name, bank_account)
-	
