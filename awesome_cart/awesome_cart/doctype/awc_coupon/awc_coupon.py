@@ -54,6 +54,8 @@ def calculate_item_discount(item, coupon_item, item_names, state):
 			item_qty = applicable_qty
 
 	amount = item.get("base_rate", item.get("amount")) * item_qty
+	if amount == 0:
+		return 0
 
 	# logic feature only apply discount if another item is present else no
 	# discount is calculated
@@ -81,20 +83,25 @@ def calculate_item_discount(item, coupon_item, item_names, state):
 			if not item_b in item_names:
 				return 0
 
+	result = 0
+
 	if coupon_item.discount_type == "Percent Discount":
 		state["item_codes"][item.item_code]["applied_qty"] += item_qty
-		return amount * (coupon_item.discount_value / 100)
-	if coupon_item.discount_type == "Value Discount":
+		result = amount * (coupon_item.discount_value / 100)
+	elif coupon_item.discount_type == "Value Discount":
 		state["item_codes"][item.item_code]["applied_qty"] += item_qty
-		return coupon_item.discount_value
-	if coupon_item.discount_type == "Actual Value":
+		result = coupon_item.discount_value
+	elif coupon_item.discount_type == "Actual Value":
 		state["item_codes"][item.item_code]["applied_qty"] += item_qty
-		return amount - coupon_item.discount_value
-	if coupon_item.discount_type == "Full Discount":
+		result = amount - coupon_item.discount_value
+	elif coupon_item.discount_type == "Full Discount":
 		state["item_codes"][item.item_code]["applied_qty"] += item_qty
-		return amount
+		result = amount
 
-	return 0
+	if result < 0:
+		result  = 0
+
+	return result
 
 def calculate_coupon_discount(items, coupon_code):
 	if frappe.db.exists("AWC Coupon", coupon_code):
@@ -195,6 +202,7 @@ def is_coupon_valid(coupon_code, customer, now=None):
 				"is_valid": False,
 				"msg": coupon_doc.customer_groups_mismatch_error.format(**{
 					"customer_group": customer.customer_group,
+					"group_name": customer.customer_group,
 					"coupon_code": coupon_code
 				})
 			}
