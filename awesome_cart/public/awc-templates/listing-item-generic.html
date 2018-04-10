@@ -1,0 +1,38 @@
+{{#if this.custom.listing_logo_url }}
+	<img class="iem-logos" src="{{this.custom.listing_logo_url}}">
+	<div class="{{#if custom.is_universal}}is-universal{{/if}} hide-performance"></div>
+{{else}}
+	<h2 class="accessories-logos group inner list-group-item-heading">{{#if this.custom.title}}{{this.custom.title}}{{else}}{{this.name}}{{/if}}</h2>
+{{/if}}
+<img alt="{{#if this.custom.title}}{{this.custom.title}}{{else}}{{this.name}}{{/if}}" class="group list-group-image" src="{{this.imageUrl}}">
+<div class="caption">
+		<p class="group inner list-group-item-text">{{{ this.description }}}</p>
+	<div class="catalog-price-holder">
+		<span class="hide-grid from">{{#if custom.is_signature_series }}Added Cost{{else}}Starting at{{/if}}<br>
+      {{#if (eq this.price this.base_price) }}
+      <span class="lead price">{{#if custom.is_signature_series }}+{{/if}}{{ currency this.price }}</span>
+      {{else}}
+      <span class="lead price old-price"><del>{{#if custom.is_signature_series }}+{{/if}}{{ currency this.base_price }}</del></span>
+      <span class="lead price">{{#if custom.is_signature_series }}+{{/if}}{{ currency this.price }}</span>
+      {{/if}}
+    </span>
+		{{#if this.custom.universal_url}}
+		<a class="btn btn-success" href="{{or this.custom.product_url this.productUrl}}">Universal Fit</a>
+		{{/if}}
+		<a class="btn btn-success" href="{{or this.custom.product_url this.productUrl}}">{{#if this.custom.is_universal}}Learn More{{else}}{{#if custom.designer}}Learn More{{else}}Explore{{/if}}{{/if}}</a>
+
+			<!--
+				<div class="col-xs-12 col-lg-6 col-sm-4">
+					<a data-awc-addtocart data-id="{{ this.sku }}" class="btn btn-success">Add to cart</a>
+				</div>
+			-->
+	</div>
+</div>
+<span class="hide-list from">{{#if custom.is_signature_series }}Added Cost{{else}}Starting at{{/if}}<br>
+  {{#if (eq this.price this.base_price) }}
+  <span class="lead price">{{#if custom.is_signature_series }}+{{/if}}{{ currency this.price }}</span>
+  {{else}}
+  <span class="lead price old-price"><del>{{#if custom.is_signature_series }}+{{/if}}{{ currency this.base_price }}</del></span>
+  <span class="lead price">{{#if custom.is_signature_series }}+{{/if}}{{ currency this.price }}</span>
+  {{/if}}
+</span>

@@ -1,0 +1,19 @@
+# Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+### Added
+- This CHANGELOG file to keep track of changes.
+- Added spinner to awc template loading process.
+
+### Changed
+- Passing base_price through awesome cart to keep track of customer "savings".
+- Updated AwesomeCartJS lib to pass base_price through templates and requests.
+- Moved full cart template to file at /awesome_cart/public/awc-templates/full-cart.html
+- Moved listing item template to file at /awesome_cart/public/awc-templates/listing-item-generic.html
+- During addToCart operation, we made sure to update the item base_price to keep consistent data on cart.
+
+### Removed

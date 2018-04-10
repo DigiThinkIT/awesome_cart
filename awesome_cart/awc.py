@@ -1226,6 +1226,9 @@ def cart(data=None, action=None):
 
 			product = get_product_by_sku(item.get("sku"), quotation=quotation).get("data")
 
+			if product.get("base_price"):
+				item["base_price"] = product["base_price"]
+
 			if item.get("replaces"):
 				to_remove.append(item.get("replaces"))
 				del item["replaces"]
