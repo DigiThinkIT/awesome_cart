@@ -125,12 +125,7 @@ awc_checkout = {
 
 			on_address_click: function($addr) {
 				var country = $($addr).find("span#country.line")[0].innerText;
-				if (country != "United States") {
-					$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").hide();
-					$("#gateway-selector-options div.field.custom:has('input[value=\"authorizenet\"]')").click();
-				} else {
-					$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").show();
-				}
+				awc_checkout.hideAffirm(country);
 				if ( awc_checkout.shipping_provider.data.ship_method == "PICK UP") {
 					awc_checkout.shipping_provider.reset_method();
 				}
@@ -563,6 +558,8 @@ awc_checkout = {
 						awc_checkout.showPage('#checkout-shipping-method');
 						$('#ship-form-err-msg').remove();
 
+						awc_checkout.hideAffirm($('#awc_ship__country').val());
+
 					} else {
 						$('#ship-form-err-msg').remove();
 						$(this).parent().prepend("<p id='ship-form-err-msg' style='color:red;'>Please fill in the required fields</p>");
@@ -646,6 +643,14 @@ awc_checkout = {
 			});
 		});
 
+	},
+	hideAffirm: function(country) {
+		if (country != "United States") {
+			$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").hide();
+			$("#gateway-selector-options div.field.custom:has('input[value=\"authorizenet\"]')").click();
+		} else {
+			$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").show();
+		}
 	}
 }
 
