@@ -506,7 +506,7 @@ awc_checkout = {
 					if (shipform.title == true && shipform.phone == true && shipform.address_1 == true && shipform.city == true && shipform.country == true) {
 						//adding newly entered shipping address on billing address tab in awc
 						var div = document.createElement('div');
-						div.setAttribute('class', 'col-md-12 col-sm-12');
+						div.setAttribute('class', 'col-md-12 col-sm-12 address-item');
 						var line2str, statestr, zipstr;
 						if ($('#awc_ship__line2').val()) {
 							line2str = "<span id='line2'>" + $('#awc_ship__line2').val() + "</span>,";
@@ -519,25 +519,34 @@ awc_checkout = {
 							statestr = "";
 						}
 						if ($('#awc_ship__zip').val()) {
-							zipstr = ",<span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>";
+							zipstr = "<span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>";
 						} else {
 							zipstr = "<br>";
 						}
-						str = "<div class='well'>\
-								<div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
-									<p>\
-										<span class='glyphicon glyphicon-tag'></span><span id='title'> " + $('#awc_ship__title').val() + "</span><br>\
-										<span class='glyphicon glyphicon-user'></span><span id='contact'> " + $('#awc_ship__contact').val() + "</span><br>\
-										<span id='line1'>" + $('#awc_ship__line1').val() + "</span>,\
-										" + line2str + "\
-										<span id='city'>" + $('#awc_ship__city').val() + "</span>,\
-										" + statestr + "\
-										<span id='country'>" + $('#awc_ship__country').val() + "</span>,\
-										" + zipstr + "\
-										<span class='glyphicon glyphicon-phone-alt'></span><span id='phone'> " + $('#awc_ship__phone').val() + "</span>\
-									</p>\
-								</div>\
-							</div>";
+						str = ['<div class="well">',
+								'<div id="same-as-ship-addr" class="addr">',
+									'<div class="address">',
+										'<span class="glyphicon glyphicon-tag"></span>',
+										'<span id="title">' + $('#awc_ship__title').val() + '</span>',
+										'<br>',
+										'<span class="glyphicon glyphicon-user"></span>',
+										'<span id="contact">' + $('#awc_ship__contact').val() + '</span>',
+										'<br>',
+										'<span class="glyphicon glyphicon-map-marker pull-left"></span>',
+										'<div style="padding-left: 1.5em;">',
+											'<span id="line1" class="line">' + $('#awc_ship__contact').val() + ' </span>',
+											line2str,
+											'<span id="city">' + $('#awc_ship__city').val() + '</span>,',
+											statestr,
+											zipstr,
+											'<span id="country" class="line">' + $('#awc_ship__country').val() + '</span>',
+											'<br></div>',
+										'<span class="glyphicon glyphicon-phone-alt"></span>',
+										'<span id="phone">' + $('#awc_ship__phone').val() + '</span>',
+										'<br> </div>',
+									'</div>',
+								'</div>'].join("")
+
 						div.innerHTML = str;
 
 						$('#awc-billing-addrs #same-as-ship-addr.addr').parent().remove();
