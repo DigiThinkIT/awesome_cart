@@ -81,7 +81,7 @@ def clear_awc_session(awc_session=None, cart_only=False):
 	if awc_session.get("timestamp"):
 		del awc_session["timestamp"]
 
-	awc_session["cart"] = { "items": [], "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
+	awc_session["cart"] = { "items": [], "discounts": None, "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
 
 def hash_key(key, prefix=''):
 	return prefix + hashlib.sha512(key).hexdigest()

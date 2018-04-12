@@ -492,18 +492,18 @@ def collect_totals(quotation, awc, awc_session):
 		awc = awc_session.get("cart")
 
 	if quotation:
-		quotation.run_method("calculate_taxes_and_totals")
-		awc["totals"]["sub_total"] = quotation.get("total")
-		awc["totals"]["grand_total"] = quotation.get("grand_total")
 		if quotation.get("discount_amount"):
 			awc["totals"]["coupon_total"] = -quotation.get("discount_amount")
+
+
 		elif "coupon_total" in awc["totals"]:
 			del awc["totals"]["coupon_total"]
 
-		if quotation and quotation.get("coupon_code"):
-			coupon_code = quotation.get("coupon_code")
-			coupon_label = frappe.get_value("AWC Coupon", quotation.get("coupon_code"), "coupon_label")
-			awc["totals"]["coupon"] = { "code": coupon_code, "label": coupon_label }
+		calculate_quotation_discount(quotation, awc_session)
+
+		quotation.run_method("calculate_taxes_and_totals")
+		awc["totals"]["sub_total"] = quotation.get("total")
+		awc["totals"]["grand_total"] = quotation.get("grand_total")
 
 		#if "other" not in awc["totals"]:
 		awc["totals"]["other"] = []
@@ -523,6 +523,8 @@ def collect_totals(quotation, awc, awc_session):
 	else:
 		awc["totals"]["sub_total"] = 0
 		awc["totals"]["grand_total"] = 0
+		awc["discounts"] = None
+
 		if "coupon_total" in awc["totals"]:
 			del awc["totals"]["coupon_total"]
 
@@ -745,6 +747,7 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 	call_awc_sync_hook(awc_session, quotation)
 
 	save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True, save_session=awc_is_dirty)
+	#calculate_quotation_discount(quotation, awc_session)
 
 	return quotation_is_dirty
 
@@ -764,7 +767,6 @@ def update_shipping_quotation(quotation, awc_session):
 			}
 
 			quotation.append("taxes", shipping_tax)
-
 		return True
 
 	return False
@@ -830,11 +832,28 @@ def remove_from_cart(items_to_remove, cart_items):
 
 	return success, removed_ids, awc_items
 
+def calculate_quotation_discount(quotation, awc_session):
+	awc = awc_session.get("cart")
+
+	if  quotation and quotation.get("coupon_code"):
+		coupon_code = quotation.get("coupon_code")
+		coupon_label = frappe.get_value("AWC Coupon", quotation.get("coupon_code"), "coupon_label")
+		awc["totals"]["coupon"] = { "code": coupon_code, "label": coupon_label }
+
+		# check if we've stored a breakdown of the coupon, if not rebuild once
+		if coupon_code:
+			discount, msg, _, coupon_state = calculate_coupon_discount(quotation.items, coupon_code, quotation.taxes)
+			awc["discounts"] = coupon_state
+	else:
+		awc["discounts"] = None
+
+
 def update_cart_settings(quotation, awc_session):
 	#apply_cart_settings(quotation=quotation)
 	set_taxes(quotation, get_shopping_cart_settings())
 	#quotation.run_method("calculate_taxes_and_totals")
 	update_shipping_quotation(quotation, awc_session)
+	calculate_quotation_discount(quotation, awc_session)
 
 def call_awc_sync_hook(awc_session, quotation):
 	awc = awc_session.get("cart")
@@ -861,18 +880,20 @@ def call_awc_sync_hook(awc_session, quotation):
 			for method in hooks:
 				frappe.call(method, awc_item=awc_item, quotation_item=quotation_item, quotation=quotation, awc_session=awc_session)
 
-def reset_shipping():
-	customer = get_current_customer()
-	awc_session = get_awc_session()
+def reset_shipping(quotation=None, awc_session=None, customer=None):
+	if not customer:
+		customer = get_current_customer()
+	if not awc_session:
+		awc_session = get_awc_session()
 	awc = awc_session.get("cart")
-	quotation = None
 
 	if not awc:
 		awc = clear_awc_session()
 
 	if customer:
 		cart_info = get_user_quotation(awc_session)
-		quotation = cart_info.get('doc')
+		if not quotation:
+			quotation = cart_info.get('doc')
 
 		if len(quotation.items) == 0:
 			apply_cart_settings(quotation=quotation)
@@ -881,7 +902,24 @@ def reset_shipping():
 	quotation_dirty=False
 
 	if quotation:
+		awc_shipping_account = frappe.get_value("Awc Settings", "Awc Settings", "shipping_account")
+		taxes_len = len(quotation.taxes)
+		quotation.taxes = [ t for t in quotation.taxes if t.account_head != awc_shipping_account ]
+		address_reset = False
+		if taxes_len != len(quotation.taxes):
+			address_reset = True
+
+		if quotation.shipping_address or quotation.fedex_shipping_method:
+			quotation.fedex_shipping_method = ""
+			quotation.shipping_address_name = ""
+			quotation.shipping_address = ""
+			address_reset = True
+
 		quotation_dirty = sync_awc_and_quotation(awc_session, quotation, save_quotation=False)
+
+		if address_reset:
+			quotation_dirty = True
+
 	else:
 		call_awc_sync_hook(awc_session, quotation)
 
@@ -991,6 +1029,8 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 
 	if save:
 		save_and_commit_quotation(quotation, True, awc_session, commit=True)
+	else:
+		collect_totals(quotation, None, awc_session)
 
 	return session_response({
 		"success": True,
@@ -1009,6 +1049,7 @@ def session_response(response, awc_session, quotation):
 		"data": awc["items"],
 		"removed": [],
 		"totals": awc.get("totals"),
+		"discounts": awc.get("discounts"),
 		"shipping_rates":  awc_session.get("shipping_rates_list",[])
 	}
 
@@ -1132,8 +1173,8 @@ def cart(data=None, action=None):
 			quotation.use_customer_fedex_account = 1 if data[0].get(
 				"address", {}).get("use_customer_fedex_account") else 0
 			quotation.flags.ignore_permissions = True
-			quotation.save()
-			frappe.db.commit()
+			#quotation.save()
+			#frappe.db.commit()
 
 		result = calculate_shipping(rate_name, address, awc_session, quotation, save=True)
 
@@ -1338,19 +1379,25 @@ def cart(data=None, action=None):
 			is_valid = frappe.response.get("is_coupon_valid")
 
 			if is_valid:
-				discount, msg = calculate_coupon_discount(quotation.items, coupon)[0:2]
+				discount, msg, _, coupon_state = calculate_coupon_discount(quotation.items, coupon, quotation.taxes)
+
 				if discount == 0:
 					is_valid = False
 					success = False
+					awc["discounts"] = None
 					msg = "Coupon is invalid for the current cart."
 				else:
+					awc["discounts"] = coupon_state
 					quotation.coupon_code = coupon
 					quotation_is_dirty = True
 					success = True
+			else:
+				awc["discounts"] = None
 		else:
 			# must be logged in to use cupon
 			success = False
 			msg = "Please Login to Apply Coupon"
+			awc["discounts"] = None
 
 		if success:
 			save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
@@ -1366,6 +1413,8 @@ def cart(data=None, action=None):
 
 
 	elif action == "removeCoupon":
+		awc["discounts"] = None
+
 		if quotation:
 			quotation.discount_amount = 0
 			quotation.coupon_code = None

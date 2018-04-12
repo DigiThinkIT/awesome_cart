@@ -537,11 +537,11 @@ body.is_logged_in .coupon_input.no-login {
 	width: 60px;
 	height: 34px;
 	padding-right: 65px;
-  }
+}
 
-  .switch input {display:none;}
+.switch input {display:none;}
 
-  .slide {
+.slide {
 	position: absolute;
 	cursor: pointer;
 	top: 8px;
@@ -551,9 +551,9 @@ body.is_logged_in .coupon_input.no-login {
 	background-color: #ccc;
 	-webkit-transition: .4s;
 	transition: .4s;
-  }
+}
 
-  .slide:before {
+.slide:before {
 	position: absolute;
 	content: "";
 	height: 18px;
@@ -563,29 +563,65 @@ body.is_logged_in .coupon_input.no-login {
 	background-color: white;
 	-webkit-transition: .4s;
 	transition: .4s;
-  }
+}
 
-  input:checked + .slide {
+input:checked + .slide {
 	background-color: #000000;/*#2196F3;*/
-  }
+}
 
-  input:focus + .slide {
+input:focus + .slide {
 	box-shadow: 0 0 1px #000000;/*#2196F3;*/
-  }
+}
 
-  input:checked + .slide:before {
+input:checked + .slide:before {
 	-webkit-transform: translateX(26px);
 	-ms-transform: translateX(26px);
 	transform: translateX(26px);
-  }
+}
 
-  /* Rounded sliders */
-  .slide.round {
+/* Rounded sliders */
+.slide.round {
 	border-radius: 34px;
-  }
+}
 
-  .slide.round:before {
+.slide.round:before {
 	border-radius: 50%;
-  }
+}
+
+#cart-full .total {
+	font-size: 1.5em;
+	color: black;
+	padding: 1em 0;
+	font-weight: bold;
+	border-top: 1px solid;
+	margin-top: 1em;
+}
+
+#cart-subtotal {
+	border-top: 1px solid black;
+	margin-top: 1em;
+	padding-top: .5em;
+}
+
+#discount-breakdown {
+	background: #f1f1f1;
+  padding: .5em;
+  font-weight: normal;
+  font-size: .8em;
+  margin: 1em 0;
+  border-radius: .25em;
+  color: #8a8a8a;
+}
+
+#discount-breakdown .item {
+	color: #888;
+	font-weight: lighter;
+}
+
+#discount-breakdown .columns {
+	border-bottom: 1px solid black;
+	color: #888;
+	font-weight: lighter;
+}
 
 /* Use customer Fedex toggle End */
