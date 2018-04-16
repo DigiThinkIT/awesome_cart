@@ -148,8 +148,14 @@ def get_awc_item_custom_data(name):
 
 def build_awc_options_from_varients(item):
 
+	customer = get_current_customer()
+	customer_lbl = "None"
+	if customer:
+		customer_lbl = customer.customer_group
+
+	cache_prefix = "awc-sku-{}".format(customer_lbl)
 	cache_key = "build_awc_options_from_varients-{}".format(item.name)
-	cache_data = get_cache(key=cache_key, prefix='awc-variant-')
+	cache_data = get_cache(key=cache_key, prefix=cache_prefix)
 
 	if cache_data:
 		return cache_data
@@ -194,7 +200,7 @@ def build_awc_options_from_varients(item):
 
 			options["hashes"][",".join(opt_hash)] = variant.get('name')
 
-	set_cache(key=cache_key, value=options, prefix='awc-variant-')
+	set_cache(key=cache_key, value=options, prefix=cache_prefix)
 
 	return options
 
@@ -247,8 +253,14 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 	if not awc_session:
 		awc_session = get_awc_session()
 
-	cache_key = "get_product_by_sku-{}-{}-{}".format(sku, "detailed" if detailed else "none", is_logged_in())
-	cache_data = get_cache(cache_key, session=awc_session, prefix='awc-sku-')
+	customer = get_current_customer()
+	customer_lbl = "None"
+	if customer:
+		customer_lbl = customer.customer_group
+
+	cache_prefix = "awc-sku-{}".format(customer_lbl)
+	cache_key = "get_product_by_sku-{}-{}".format(sku, "detailed" if detailed else "none")
+	cache_data = get_cache(cache_key, session=awc_session, prefix=cache_prefix)
 
 	if cache_data:
 		return cache_data
@@ -264,12 +276,12 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		item = frappe.get_doc("Item", sku)
 	except frappe.DoesNotExistError:
 		data = { "success": False, "data": None }
-		set_cache(cache_key, data, session=awc_session, prefix='awc-sku-')
+		set_cache(cache_key, data, session=awc_session, prefix=cache_prefix)
 		return data
 
 	if item.disabled:
 		data = { "success": False, "data": None }
-		set_cache(cache_key, data, session=awc_session, prefix='awc-sku-')
+		set_cache(cache_key, data, session=awc_session, prefix=cache_prefix)
 		return data
 
 	awc_item_name = frappe.db.get_value("AWC Item", {"product_name": item.name}, "name")
@@ -332,6 +344,7 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 			listing_widget=awc_item.listing_widget,
 			product_widget=awc_item.product_widget,
 			product_template=awc_item.product_template,
+			related_widget=awc_item.related_widget or frappe.db.get_single_value("Awc Settings", "tpl_related_widget"),
 			tags=awc_item.tags.split(',') if awc_item.tags else []
 		))
 
@@ -340,21 +353,60 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		product["detail"] = dict(
 			description_short=awc_item.description_short,
 			description_long=awc_item.description_long,
-			sections=get_content_sections(awc_item)
+			sections=get_content_sections(awc_item),
+			related_products=[ \
+				x for x in [ \
+					get_product_by_sku( \
+						sku=frappe.db.get_value("Item", r.item_name, "item_code"), \
+						detailed=True, \
+					    awc_session=awc_session, \
+						quotation=quotation).get("data") \
+					for r in awc_item.recomendations \
+				] if x is not None \
+			]
 		)
 
 	data = { "success": True, "data": product }
-	set_cache(cache_key, data, session=awc_session, prefix='awc-sku-')
+	set_cache(cache_key, data, session=awc_session, prefix=cache_prefix)
 	return data
+
+def get_related_products_by_sku(sku, awc_session, customer):
+
+	cache_key = "related-products-{}".format(sku)
+	cache_data, cache_prefix, awc_session = get_quick_cache(cache_key, awc_session=awc_session, customer=customer)
+	if cache_data:
+		return cache_data
+
+	result = []
+	item_name = frappe.db.get_value("Item", {"item_code": sku}, "name")
+
+	awc_item_name = frappe.db.get_value("AWC Item", {"product_name": item_name}, "name")
+	if awc_item_name:
+		related_items = frappe.get_list(
+			"AWC Item Recomendation", 
+			filters={ "parent": awc_item_name, "parenttype": "AWC Item"}, 
+			fields=["item_name"])
+
+		for r in related_items:
+			result += [frappe.db.get_value("Item", r.get("item_name"), "item_code")]
+
+	set_cache(cache_key, result, session=awc_session, prefix=cache_prefix)
+
+	return result
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", start=0, limit=None):
 	"""Fetches a list of products filtered by tags"""
 
 	awc_session = get_awc_session()
+	customer = get_current_customer()
+	customer_lbl = "None"
+	if customer:
+		customer_lbl = customer.customer_group
 
-	cache_key = "fetch_products-{}-{}-{}-{}-{}-{}-{}".format(tags, terms, order_by, order_dir, start, limit, is_logged_in())
-	cache_data = get_cache(cache_key, session=awc_session, prefix='awc-products-')
+	cache_prefix = "awc-sku-{}".format(customer_lbl)
+	cache_key = "fetch_products-{}-{}-{}-{}-{}-{}".format(tags, terms, order_by, order_dir, start, limit)
+	cache_data = get_cache(cache_key, session=awc_session, prefix=cache_prefix)
 	if cache_data:
 		return cache_data
 
@@ -483,7 +535,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 		payload["message"] = traceback.format_exc(ex)
 		log(payload["message"])
 
-	set_cache(cache_key, payload, session=awc_session, prefix='awc-products-')
+	set_cache(cache_key, payload, session=awc_session, prefix=cache_prefix)
 
 	return payload
 

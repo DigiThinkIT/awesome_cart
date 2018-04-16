@@ -107,3 +107,25 @@ def clear_cache_keys(keys):
 
 	for key in keys:
 		frappe.cache().delete_keys(key)
+
+def get_quick_cache(key, awc_session=None, customer=None, prefix=None):
+
+	if not prefix:
+		prefix = "awc-sku-{}"
+
+	if not awc_session:
+		awc_session = get_awc_session()
+	
+	if not customer:
+		from compat.customer import get_current_customer
+		customer = get_current_customer()
+
+	customer_lbl = "None"
+	if customer:
+		customer_lbl = customer.customer_group
+
+	cache_prefix = prefix.format(customer_lbl)
+	cache_data = get_cache(key, session=awc_session, prefix=cache_prefix)
+
+	return cache_data, cache_prefix, awc_session
+
