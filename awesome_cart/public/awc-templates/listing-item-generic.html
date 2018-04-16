@@ -8,12 +8,14 @@
 <div class="caption">
 		<p class="group inner list-group-item-text">{{{ this.description }}}</p>
 	<div class="catalog-price-holder">
-		<span class="hide-grid from">{{#if custom.is_signature_series }}Added Cost{{else}}Starting at{{/if}}<br>
-      {{#if (eq this.price this.base_price) }}
+		<span class="hide-grid from">
+			{{#if (eq this.price this.base_price) }}
+			<span>{{#if custom.is_signature_series }}Added Cost{{else}}Starting at{{/if}}<br></span>
       <span class="lead price">{{#if custom.is_signature_series }}+{{/if}}{{ currency this.price }}</span>
       {{else}}
-      <span class="lead price old-price"><del>{{#if custom.is_signature_series }}+{{/if}}{{ currency this.base_price }}</del></span>
-      <span class="lead price">{{#if custom.is_signature_series }}+{{/if}}{{ currency this.price }}</span>
+			<span class="lead price"><span class="text">{{#if custom.is_signature_series }}Added Cost{{else}}Starting at{{/if}}: </span>{{#if custom.is_signature_series }}+{{/if}}{{ currency this.price }}</span>
+      <span class="lead price old-price"><span class="text">Original Price: </span> <del>{{#if custom.is_signature_series }}+{{/if}}{{ currency this.base_price }}</del></span>
+			<span class="savings"><span class="text">You Saved</span> <span class="value">{{ toFixed (difPercentOf this.price this.base_price) 0 }}%</span></span>
       {{/if}}
     </span>
 		{{#if this.custom.universal_url}}
@@ -28,11 +30,13 @@
 			-->
 	</div>
 </div>
-<span class="hide-list from">{{#if custom.is_signature_series }}Added Cost{{else}}Starting at{{/if}}<br>
-  {{#if (eq this.price this.base_price) }}
+<span class="hide-list from">
+	{{#if (eq this.price this.base_price) }}
+	<span>{{#if custom.is_signature_series }}Added Cost{{else}}Starting at{{/if}}<br></span>
   <span class="lead price">{{#if custom.is_signature_series }}+{{/if}}{{ currency this.price }}</span>
   {{else}}
-  <span class="lead price old-price"><del>{{#if custom.is_signature_series }}+{{/if}}{{ currency this.base_price }}</del></span>
-  <span class="lead price">{{#if custom.is_signature_series }}+{{/if}}{{ currency this.price }}</span>
+	<span class="lead price"><span class="text">{{#if custom.is_signature_series }}Added Cost{{else}}Starting at{{/if}}: </span>{{#if custom.is_signature_series }}+{{/if}}{{ currency this.price }}</span>
+	<span class="lead price old-price"><span class="text">Original Price: </span> <del>{{#if custom.is_signature_series }}+{{/if}}{{ currency this.base_price }}</del></span>
+	<span class="savings"><span class="text">You Saved</span> <span class="value">{{ toFixed (difPercentOf this.price this.base_price) 0 }}%</span></span>
   {{/if}}
 </span>
