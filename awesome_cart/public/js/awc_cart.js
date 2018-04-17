@@ -598,6 +598,9 @@ awc_checkout = {
 						$('#awc-shipping-addrs .addr.edited').attr('data-is-residential', $('#awc_ship__is_residential').val());
 						$('#awc-shipping-addrs .addr.edited').removeClass('edited');
 						$('#awc-shipping-form .btn-nextbtn').text('Next');
+
+						awc_checkout.hideAffirm($('#awc_ship__country').val());
+
 						frappe.call({
 							method: "awesome_cart.utils.edit_address",
 							args: { address: address }
