@@ -125,12 +125,7 @@ awc_checkout = {
 
 			on_address_click: function($addr) {
 				var country = $($addr).find("span#country.line")[0].innerText;
-				if (country != "United States") {
-					$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").hide();
-					$("#gateway-selector-options div.field.custom:has('input[value=\"authorizenet\"]')").click();
-				} else {
-					$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").show();
-				}
+				awc_checkout.setAffirmDisplay(country);
 				if ( awc_checkout.shipping_provider.data.ship_method == "PICK UP") {
 					awc_checkout.shipping_provider.reset_method();
 				}
@@ -317,9 +312,13 @@ awc_checkout = {
 			}
 		});
 
-
+		// add new billing address button
 		$billing_container.find(".btn-primary").click(function(e) {
+			$('#checkout-billing .addr').removeClass('awc-selected');
 			$('#form-bill-addr').attr('data-select', 'true');
+			$("#gateway-selector-billing-form.awc-form").trigger("reset");
+			$('#gateway-selector-billing-form.awc-form .field.required input').change();
+			$('#gateway-selector-billing-form.awc-form .field.required select').change();
 			$('#select-bill-addr').css('display', 'none');
 			$('#form-bill-addr').css('display', 'block');
 		});
@@ -466,10 +465,13 @@ awc_checkout = {
 					awc_checkout.showPage('#checkout-shipping-method');
 				});
 
+				// add new shipping address button
 				$shipping_container.find(".btn-primary").click(function(e) {
 					$('#checkout-shipping-address .addr').removeClass('awc-selected');
 					$('#checkout-shipping').attr('data-select', 'true');
 					$("#awc-shipping-form .awc-form").trigger("reset");
+					$('#checkout-shipping .field.required input').change();
+					$('#checkout-shipping .field.required select').change();
 					awc_checkout.showPage('#checkout-shipping');
 					$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
 				});
@@ -506,7 +508,7 @@ awc_checkout = {
 					if (shipform.title == true && shipform.phone == true && shipform.address_1 == true && shipform.city == true && shipform.country == true) {
 						//adding newly entered shipping address on billing address tab in awc
 						var div = document.createElement('div');
-						div.setAttribute('class', 'col-md-12 col-sm-12');
+						div.setAttribute('class', 'col-md-12 col-sm-12 address-item');
 						var line2str, statestr, zipstr;
 						if ($('#awc_ship__line2').val()) {
 							line2str = "<span id='line2'>" + $('#awc_ship__line2').val() + "</span>,";
@@ -519,25 +521,34 @@ awc_checkout = {
 							statestr = "";
 						}
 						if ($('#awc_ship__zip').val()) {
-							zipstr = ",<span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>";
+							zipstr = "<span id='postal_code'>" + $('#awc_ship__zip').val() + "</span>.<br>";
 						} else {
 							zipstr = "<br>";
 						}
-						str = "<div class='well'>\
-								<div id='same-as-ship-addr' class='addr' style='cursor: pointer'>\
-									<p>\
-										<span class='glyphicon glyphicon-tag'></span><span id='title'> " + $('#awc_ship__title').val() + "</span><br>\
-										<span class='glyphicon glyphicon-user'></span><span id='contact'> " + $('#awc_ship__contact').val() + "</span><br>\
-										<span id='line1'>" + $('#awc_ship__line1').val() + "</span>,\
-										" + line2str + "\
-										<span id='city'>" + $('#awc_ship__city').val() + "</span>,\
-										" + statestr + "\
-										<span id='country'>" + $('#awc_ship__country').val() + "</span>,\
-										" + zipstr + "\
-										<span class='glyphicon glyphicon-phone-alt'></span><span id='phone'> " + $('#awc_ship__phone').val() + "</span>\
-									</p>\
-								</div>\
-							</div>";
+						str = ['<div class="well">',
+								'<div id="same-as-ship-addr" class="addr">',
+									'<div class="address">',
+										'<span class="glyphicon glyphicon-tag"></span>',
+										'<span id="title">' + $('#awc_ship__title').val() + '</span>',
+										'<br>',
+										'<span class="glyphicon glyphicon-user"></span>',
+										'<span id="contact">' + $('#awc_ship__contact').val() + '</span>',
+										'<br>',
+										'<span class="glyphicon glyphicon-map-marker pull-left"></span>',
+										'<div style="padding-left: 1.5em;">',
+											'<span id="line1" class="line">' + $('#awc_ship__contact').val() + ' </span>',
+											line2str,
+											'<span id="city">' + $('#awc_ship__city').val() + '</span>,',
+											statestr,
+											zipstr,
+											'<span id="country" class="line">' + $('#awc_ship__country').val() + '</span>',
+											'<br></div>',
+										'<span class="glyphicon glyphicon-phone-alt"></span>',
+										'<span id="phone">' + $('#awc_ship__phone').val() + '</span>',
+										'<br> </div>',
+									'</div>',
+								'</div>'].join("")
+
 						div.innerHTML = str;
 
 						$('#awc-billing-addrs #same-as-ship-addr.addr').parent().remove();
@@ -553,6 +564,8 @@ awc_checkout = {
 
 						awc_checkout.showPage('#checkout-shipping-method');
 						$('#ship-form-err-msg').remove();
+
+						awc_checkout.setAffirmDisplay($('#awc_ship__country').val());
 
 					} else {
 						$('#ship-form-err-msg').remove();
@@ -585,6 +598,9 @@ awc_checkout = {
 						$('#awc-shipping-addrs .addr.edited').attr('data-is-residential', $('#awc_ship__is_residential').val());
 						$('#awc-shipping-addrs .addr.edited').removeClass('edited');
 						$('#awc-shipping-form .btn-nextbtn').text('Next');
+
+						awc_checkout.setAffirmDisplay($('#awc_ship__country').val());
+
 						frappe.call({
 							method: "awesome_cart.utils.edit_address",
 							args: { address: address }
@@ -637,6 +653,14 @@ awc_checkout = {
 			});
 		});
 
+	},
+	setAffirmDisplay: function(country) {
+		if (country != "United States") {
+			$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").hide();
+			$("#gateway-selector-options div.field.custom:has('input[value=\"authorizenet\"]')").click();
+		} else {
+			$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").show();
+		}
 	}
 }
 

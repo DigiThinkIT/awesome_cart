@@ -287,7 +287,10 @@ awc.ErpnextAdapter.prototype.sessionAction = function (action, data) {
 
 function dispalyAddr(shipaddr) {
 	$('#same-as-ship-addr').attr('data-name', shipaddr);
-	$('#awc-shipping-form').attr('data-name', shipaddr);
+	// update 'data-name' only if new address is filled in the form
+	if($('#checkout-shipping').attr('data-select')) {
+		$('#awc-shipping-form').attr('data-name', shipaddr);
+	}
 }
 
 awc.ErpnextAdapter.prototype.getProductBySKU = function (sku, detailed) {
