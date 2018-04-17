@@ -15,5 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Moved full cart template to file at /awesome_cart/public/awc-templates/full-cart.html
 - Moved listing item template to file at /awesome_cart/public/awc-templates/listing-item-generic.html
 - During addToCart operation, we made sure to update the item base_price to keep consistent data on cart.
+- Fixed issue where coupon discount would apply to a zero value's original price causing extra discounts.
+- Fixes issue where coupon error message doesn't set group_name key
 
 ### Removed
