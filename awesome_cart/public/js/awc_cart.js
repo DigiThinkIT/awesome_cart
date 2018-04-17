@@ -125,7 +125,7 @@ awc_checkout = {
 
 			on_address_click: function($addr) {
 				var country = $($addr).find("span#country.line")[0].innerText;
-				awc_checkout.hideAffirm(country);
+				awc_checkout.setAffirmDisplay(country);
 				if ( awc_checkout.shipping_provider.data.ship_method == "PICK UP") {
 					awc_checkout.shipping_provider.reset_method();
 				}
@@ -565,7 +565,7 @@ awc_checkout = {
 						awc_checkout.showPage('#checkout-shipping-method');
 						$('#ship-form-err-msg').remove();
 
-						awc_checkout.hideAffirm($('#awc_ship__country').val());
+						awc_checkout.setAffirmDisplay($('#awc_ship__country').val());
 
 					} else {
 						$('#ship-form-err-msg').remove();
@@ -599,7 +599,7 @@ awc_checkout = {
 						$('#awc-shipping-addrs .addr.edited').removeClass('edited');
 						$('#awc-shipping-form .btn-nextbtn').text('Next');
 
-						awc_checkout.hideAffirm($('#awc_ship__country').val());
+						awc_checkout.setAffirmDisplay($('#awc_ship__country').val());
 
 						frappe.call({
 							method: "awesome_cart.utils.edit_address",
@@ -654,7 +654,7 @@ awc_checkout = {
 		});
 
 	},
-	hideAffirm: function(country) {
+	setAffirmDisplay: function(country) {
 		if (country != "United States") {
 			$("#gateway-selector-options div.field.custom:has('input[value=\"affirm\"]')").hide();
 			$("#gateway-selector-options div.field.custom:has('input[value=\"authorizenet\"]')").click();
