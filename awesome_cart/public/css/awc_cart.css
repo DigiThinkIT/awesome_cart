@@ -10,6 +10,20 @@
 	display: none;
 }
 
+.awc-placeholder.loading {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	display: block;
+  background-image: url(/assets/awesome_cart/images/spinner-small.gif);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+  height: 11px;
+	width: 16px;
+}
+
 .awc-form .no-pad {
 	padding: 0;
 }

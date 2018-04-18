@@ -977,6 +977,7 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 			save=True
 			if address:
 				quotation.shipping_address = get_address_display(quotation.shipping_address_name)
+
 		elif not address and quotation.shipping_address_name:
 			quotation.shipping_address_name = ""
 			quotation.shipping_address = ""
@@ -1125,6 +1126,7 @@ def cart(data=None, action=None):
 
 			if quotation:
 				quotation.shipping_address_name = address_name
+				quotation.shipping_address = get_address_display(address_name)
 				awc_session["last_shipping_address"] = address_name
 
 		# check and update use_customer_fedex_account field in quotation
@@ -1225,6 +1227,9 @@ def cart(data=None, action=None):
 				return { "success": False, "message": "Invalid Data" }
 
 			product = get_product_by_sku(item.get("sku"), quotation=quotation).get("data")
+
+			if product.get("base_price"):
+				item["base_price"] = product["base_price"]
 
 			if item.get("replaces"):
 				to_remove.append(item.get("replaces"))
@@ -1481,6 +1486,7 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	# set billilng address
 	if billing_address.get("billing_address") and quotation.customer_address != billing_address.get("billing_address"):
 		quotation.customer_address = billing_address.get("billing_address")
+		quotation.address_display = get_address_display(quotation.customer_address)
 		quotation_is_dirty = True
 
 	# make sure quotation email is contact person if we are a power user
