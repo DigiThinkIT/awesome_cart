@@ -1002,6 +1002,8 @@ $(function () {
 					});
 				}
 			}
+			// trigger FullStory to record custom data
+			$("body").trigger("awc-power-user-settings", data);
 
 			return resp;
 		})
