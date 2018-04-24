@@ -17,6 +17,28 @@ class AWCCoupon(Document):
 				not item.get("item_b"):
 				frappe.throw("Item B Must be defined if using apply logic or item: {0}".format(item.item_name))
 
+def calculate_service_discount(account, coupon_service, state):
+	result = 0
+	amount = account.get("amount", account.get("tax_amount"))
+	discount_type = coupon_service.get("discount_type")
+	discount_value = coupon_service.get("discount_value")
+
+	if discount_type == "Percentage":
+		result = amount * (discount_value / 100.00)
+	elif discount_type == "Value Discount":
+		result = discount_value
+
+	if result > amount:
+		result = amount
+
+	if result < 0:
+		result = 0
+
+	if result > 0:
+		state.append({ "discount": result, "name": coupon_service.get("discount_label") })
+
+	return result
+
 def calculate_item_discount(item, coupon_item, item_names, state):
 
 	limit_min = 1
@@ -101,13 +123,15 @@ def calculate_item_discount(item, coupon_item, item_names, state):
 	if result < 0:
 		result  = 0
 
+	state["item_codes"][item.item_code]["discount"] += result
+
 	return result
 
-def calculate_coupon_discount(items, coupon_code):
+def calculate_coupon_discount(items, coupon_code, accounts):
 	if frappe.db.exists("AWC Coupon", coupon_code):
 		coupon_doc = frappe.get_doc("AWC Coupon", coupon_code)
 	else:
-		return (False, "Coupon Code Not Found")
+		return (False, "Coupon Code Not Found", None, None)
 
 	# make quick list of items which this coupon applies to
 	coupon_items = []
@@ -118,7 +142,9 @@ def calculate_coupon_discount(items, coupon_code):
 		if not coupon_state.get(item_code):
 			coupon_state["item_codes"][item_code] = {
 				"cart_qty": 0,
-				"applied_qty": 0
+				"applied_qty": 0,
+				"name": frappe.get_value("Item", item_name, "item_name"),
+				"discount": 0
 			}
 
 		for item in items:
@@ -158,18 +184,33 @@ def calculate_coupon_discount(items, coupon_code):
 	discount_amount = 0
 	for coupon_item in coupon_items:
 		discount_amount += sum(
-				calculate_item_discount(
-					item,
-					coupon_item["item"],
-					item_names,
-					coupon_state
-				) for item in items \
-					if coupon_item["item_code"] == item.get("item_code")
-			)
+			calculate_item_discount(
+				item,
+				coupon_item["item"],
+				item_names,
+				coupon_state
+			) for item in items \
+				if coupon_item["item_code"] == item.get("item_code")
+		)
+
+	discount_state = []
+	for key, value in coupon_state.get("item_codes", {}).items():
+		discount_state.append(value)
+
+	for caccount in coupon_doc.services:
+		discount_amount += sum(
+			calculate_service_discount(
+				account,
+				caccount,
+				discount_state
+			) for account in accounts \
+				if account.get("account_head") == caccount.get("account_name")
+		)
 
 	return (discount_amount,
 		"Coupon Discount Total: {0}".format(discount_amount),
-		coupon_doc.apply_discount_on)
+		coupon_doc.apply_discount_on,
+		discount_state)
 
 def is_coupon_valid(coupon_code, customer, now=None):
 	if not now:
