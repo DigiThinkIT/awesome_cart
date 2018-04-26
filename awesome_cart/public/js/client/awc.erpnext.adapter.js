@@ -949,6 +949,7 @@ $(function () {
 	awc.call("awesome_cart.power.get_power_user_settings")
 		.then(function (resp) {
 			var data = resp.data;
+
 			if (data.message == "Power User") {
 				var cwindow_tpl = cart.template("Power User - Customer Select Window").promiseReady();
 				var $cwindow = null;
@@ -1007,6 +1008,9 @@ $(function () {
 					});
 				}
 			}
+
+			// triggers global page event to provide power user info to other scripts.
+			$("body").trigger("awc-power-user-settings", data);
 
 			return resp;
 		})

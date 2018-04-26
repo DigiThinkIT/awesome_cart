@@ -546,6 +546,12 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 	# convert quotation to awc object
 	# and merge items in the case where items are added before logging in.
 
+	# Adding quotation information to session data to cache information on subsequent calls
+	awc_session["quotation_info"] = {
+		"quotation": quotation.name,
+		"customer": quotation.customer_name
+	}
+
 	# steps:
 	# 1) loop over all awc items and update quotation items matching names/ids
 	# 2) remove invalid awc items who's skus do not match any products(awc items)
