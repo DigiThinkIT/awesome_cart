@@ -39,6 +39,7 @@ def get_power_user_settings():
 		return "Not A Power User"
 
 	user_doc = frappe.get_doc("User", frappe.session.user)
+	frappe.local.response["session_quotation"] = get_awc_session().get("quotation_info", {})
 
 	if user_doc.get("is_power_user")  or \
 		has_role([
