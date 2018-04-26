@@ -1008,6 +1008,8 @@ $(function () {
 					});
 				}
 			}
+			// trigger FullStory to record custom data
+			$("body").trigger("awc-power-user-settings", data);
 
 			// triggers global page event to provide power user info to other scripts.
 			$("body").trigger("awc-power-user-settings", data);

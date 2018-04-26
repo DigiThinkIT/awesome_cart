@@ -6,6 +6,7 @@ import frappe
 from .session import get_awc_session, set_awc_session
 from .utils import clear_cache
 from .dbug import pretty_json
+from .awc import get_user_quotation
 
 def get_user_contacts(user):
 
@@ -40,6 +41,13 @@ def get_power_user_settings():
 
 	user_doc = frappe.get_doc("User", frappe.session.user)
 	frappe.local.response["session_quotation"] = get_awc_session().get("quotation_info", {})
+
+	# pass quotation with response object to be recorded by FullStory
+	session_quotation = get_user_quotation(get_awc_session())
+	frappe.local.response["session_quotation"] = {
+		"quotation": session_quotation["doc"].name,
+		"customer": session_quotation["doc"].customer_name
+	}
 
 	if user_doc.get("is_power_user")  or \
 		has_role([
