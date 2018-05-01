@@ -97,7 +97,6 @@ def update_address(add_doc, address):
 	add_doc.save()
 	frappe.db.commit()
 
-
 def quotation_validate(doc, method):
 	main_items = []
 	groups = {}
@@ -145,6 +144,7 @@ def is_coupon_valid(coupon_code):
 	result = _is_coupon_valid(coupon_code, customer)
 
 	frappe.response["is_coupon_valid"] = result.get("is_valid", False)
+	frappe.response["coupon_response_code"] = result.get("code")
 
 	if not result.get("is_valid"):
 		return result.get("msg")
@@ -169,6 +169,10 @@ def get_addresses():
 		return True
 
 	return False
+
+
+def clear_cache_on_doc_update(doc, method):
+	clear_cache()
 
 def clear_cache():
 	clear_cache_keys(['awc-sku-', 'awc-variant-', 'awc-products-'])
