@@ -59,8 +59,13 @@ def get_context(context):
 	context.shipping_enabled = 1 if settings.awc_shipping_enabled else 0
 
 	related_items = []
+	skus_in_cart = []
 	# build upsell sku list using or building cache if necessary
 	for item in awc_session.get("cart", {}).get("items", []):
+		# build cart sku list to dedup later
+		skus_in_cart += [item.get("sku")]
+
+		# fetches related items to this sku
 		item_related_items = awc.get_related_products_by_sku(
 			item.get("sku"), awc_session=awc_session, customer=customer)
 
@@ -70,8 +75,11 @@ def get_context(context):
 	# builds upsell item objects using cache if necessary
 	upsell = []
 	for sku in related_items:
-		# fetches product data to build upsell widget
-		upsell += [awc.get_product_by_sku(sku, awc_session=awc_session).get("data")]
+		if sku not in skus_in_cart:
+			# fetches product data to build upsell widget
+			product_response = awc.get_product_by_sku(sku, awc_session=awc_session)
+			if product_response.get("success"):
+				upsell += [product_response.get("data")]
 
 	# upsell widget data is made available to the context here
 	context["upsell"] = dict(related_products=upsell)

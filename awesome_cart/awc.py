@@ -362,6 +362,7 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 					    awc_session=awc_session, \
 						quotation=quotation).get("data") \
 					for r in awc_item.recomendations \
+					if frappe.db.get_value("Item", r.item_name, "item_code") != sku
 				] if x is not None \
 			]
 		)
@@ -383,12 +384,15 @@ def get_related_products_by_sku(sku, awc_session, customer):
 	awc_item_name = frappe.db.get_value("AWC Item", {"product_name": item_name}, "name")
 	if awc_item_name:
 		related_items = frappe.get_list(
-			"AWC Item Recomendation", 
-			filters={ "parent": awc_item_name, "parenttype": "AWC Item"}, 
+			"AWC Item Recomendation",
+			filters={ "parent": awc_item_name, "parenttype": "AWC Item"},
 			fields=["item_name"])
 
 		for r in related_items:
-			result += [frappe.db.get_value("Item", r.get("item_name"), "item_code")]
+			related_sku = frappe.db.get_value("Item", r.get("item_name"), "item_code")
+			# avoids recursive queries later
+			if related_sku != sku:
+				result += [related_sku]
 
 	set_cache(cache_key, result, session=awc_session, prefix=cache_prefix)
 

@@ -115,7 +115,7 @@ def get_quick_cache(key, awc_session=None, customer=None, prefix=None):
 
 	if not awc_session:
 		awc_session = get_awc_session()
-	
+
 	if not customer:
 		from compat.customer import get_current_customer
 		customer = get_current_customer()
@@ -128,4 +128,3 @@ def get_quick_cache(key, awc_session=None, customer=None, prefix=None):
 	cache_data = get_cache(key, session=awc_session, prefix=cache_prefix)
 
 	return cache_data, cache_prefix, awc_session
-

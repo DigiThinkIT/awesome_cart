@@ -1,3 +1,5 @@
+/* global cart:false */
+
 class HorizontalGallery {
     constructor($el, config) {
         this.$el = $el;
@@ -6,32 +8,32 @@ class HorizontalGallery {
         this.$leftControl = $el.find(config.leftControl);
         this.$rightControl = $el.find(config.rightControl);
 
-        this.$leftControl.click(_ => {
+        this.$leftControl.click(() => {
             this.scrollLeft();
         });
 
-        this.$rightControl.click(_ => {
+        this.$rightControl.click(() => {
             this.scrollRight();
         });
     }
 
     animateScrollEffect($container, $item, action, speed, skipShrink) {
-        $container.css({ height: $container.height(), overflow: 'hidden' });
+        $container.css({ height: $container.height(), overflow: "hidden" });
         let width = $item.width();
-        $item.css({ overflow: 'hidden' })
-        $item.animate({ width: 0 }, skipShrink?1:speed, function() {
+        $item.css({ overflow: "hidden" });
+        $item.animate({ width: 0 }, skipShrink?1:speed, () => {
             action($container, $item);
-            $item.animate({ width: width }, speed, function () {
-                $item.css({ width: '', overflow: '' });
-                $container.css({ height: '', overflow: '' });
+            $item.animate({ width: width }, speed, () => {
+                $item.css({ width: "", overflow: "" });
+                $container.css({ height: "", overflow: "" });
             });
-        })
+        });
 
     }
 
     scrollLeft() {
         let $last = this.$container.children().last();
-        this.animateScrollEffect(this.$container, $last, function($container, $item) {
+        this.animateScrollEffect(this.$container, $last, ($container, $item) => {
             $container.prepend($item);
         }, 200, true);
 
@@ -39,7 +41,7 @@ class HorizontalGallery {
 
     scrollRight() {
         let $first = this.$container.children().first();
-        this.animateScrollEffect(this.$container, $first, function($container, $item) {
+        this.animateScrollEffect(this.$container, $first, ($container, $item) => {
             $container.append($first);
         }, 200);
 
@@ -48,26 +50,26 @@ class HorizontalGallery {
 
 $.fn.horizontalGallery = function(config) {
 
-    if ( $(this).data('_horizontal_gallery') ) {
-        return $(this)
+    if ( $(this).data("_horizontal_gallery") ) {
+        return $(this);
     }
     
     var _config = Object.assign({
         leftControl: ".control.left",
         rightControl: ".control.right",
         container: "ul"
-    }, config || {})
+    }, config || {});
 
     return $(this).each(function() {
-        $(this).data('_horizontal_gallery', new HorizontalGallery($(this), _config));
-    })
+        $(this).data("_horizontal_gallery", new HorizontalGallery($(this), _config));
+    });
 };
 
 
 $(function () {
-    cart.on('tpl-ready', () => {
-        $('[data-horizontal-gallery]').horizontalGallery()
-    })
+    cart.on("tpl-ready", () => {
+        $("[data-horizontal-gallery]").horizontalGallery();
+    });
 });
 
 
