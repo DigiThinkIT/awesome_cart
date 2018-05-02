@@ -127,7 +127,14 @@ def calculate_item_discount(item, coupon_item, item_names, state):
 
 	return result
 
-def calculate_coupon_discount(items, coupon_code, accounts):
+def calculate_coupon_discount(config):
+
+	items = config.get("items")
+	coupon_code = config.get("code")
+	accounts = config.get("accounts")
+	grand_total = config.get("grand_total")
+	net_total = config.get("net_total")
+
 	if frappe.db.exists("AWC Coupon", coupon_code):
 		coupon_doc = frappe.get_doc("AWC Coupon", coupon_code)
 	else:
@@ -208,6 +215,34 @@ def calculate_coupon_discount(items, coupon_code, accounts):
 			) for account in accounts \
 				if account.get("account_head") == caccount.get("account_name")
 		)
+
+	# applies total rule if enabled
+	if coupon_doc.total_rule == "Total Is Greater Than":
+		total_value = net_total if coupon_doc.apply_discount_on == "Net Total" else grand_total
+		total_value -= discount_amount
+		discount_value = 0
+		discount_label = ""
+
+		if total_value > coupon_doc.total_rule_value:
+			if coupon_doc.total_rule_discount_method == "Percent":
+				discount_value = (total_value * coupon_doc.total_rule_discount_value) / 100.00
+				discount_label = "{0:.0f}% Discount".format(coupon_doc.total_rule_discount_value)
+			elif coupon_doc.total_rule_discount_method == "Value":
+				discount_value = coupon_doc.total_rule_discount_value
+				discount_label = "${:,.2f} Discount".format(discount_value)
+
+			discount_amount += discount_value
+
+			discount_state.append({
+				"cart_qty": 1,
+				"applied_qty": 1,
+				"name": discount_label,
+				"discount": discount_value
+			})
+		else:
+			# resets discount if total rule doesn't work
+			discount_amount = 0
+			discount_state = []
 
 	return (discount_amount,
 		"Coupon Discount Total: {0}".format(discount_amount),

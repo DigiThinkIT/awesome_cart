@@ -128,7 +128,14 @@ def quotation_validate(doc, method):
 
 	# Apply coupon codes
 	if doc.coupon_code:
-		discount, msg, apply_discount_on = calculate_coupon_discount(doc.items, doc.coupon_code, doc.get("taxes", []))[0:3]
+		discount, msg, apply_discount_on = calculate_coupon_discount({
+			"items": doc.items,
+			"code": doc.coupon_code,
+			"accounts": doc.get("taxes", []),
+			"grand_total": doc.grand_total,
+			"net_total": doc.net_total
+		})[0:3]
+		
 		if discount is not False and discount != doc.discount_amount:
 			doc.discount_amount = discount
 			doc.apply_discount_on = apply_discount_on or "Net Total"

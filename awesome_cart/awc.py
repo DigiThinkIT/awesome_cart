@@ -978,8 +978,13 @@ def calculate_quotation_discount(quotation, awc_session):
 
 		# check if we've stored a breakdown of the coupon, if not rebuild once
 		if coupon_code:
-			discount, msg, apply_discount_on, coupon_state = calculate_coupon_discount(
-				quotation.items, coupon_code, quotation.taxes)
+			discount, msg, apply_discount_on, coupon_state = calculate_coupon_discount({
+				"items": quotation.items,
+				"code": coupon_code,
+				"accounts": quotation.taxes,
+				"grand_total": quotation.grand_total,
+				"net_total": quotation.net_total
+			})
 			awc["discounts"] = coupon_state
 	else:
 		awc["discounts"] = None
@@ -1518,7 +1523,13 @@ def cart(data=None, action=None):
 			is_valid = frappe.response.get("is_coupon_valid")
 
 			if is_valid:
-				discount, msg, apply_discount_on, coupon_state = calculate_coupon_discount(quotation.items, coupon, quotation.taxes)
+				discount, msg, apply_discount_on, coupon_state = calculate_coupon_discount({
+					"items": quotation.items,
+					"code": coupon,
+					"accounts": quotation.taxes,
+					"grand_total": quotation.grand_total,
+					"net_total": quotation.net_total
+				})
 
 				if discount == 0:
 					is_valid = False
