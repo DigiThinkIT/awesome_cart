@@ -57,7 +57,7 @@ doc_events = {
 		"validate": ["awesome_cart.utils.quotation_validate"]
 	},
 	"Item": {
-		"on_change": ["awesome_cart.utils.clear_cache_on_doc_update"]
+		"on_update": ["awesome_cart.utils.clear_cache_on_doc_update"]
 	}
 }
 

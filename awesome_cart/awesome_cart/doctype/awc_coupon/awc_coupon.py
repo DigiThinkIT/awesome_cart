@@ -195,7 +195,9 @@ def calculate_coupon_discount(items, coupon_code, accounts):
 
 	discount_state = []
 	for key, value in coupon_state.get("item_codes", {}).items():
-		discount_state.append(value)
+		# removes 0 discounts states
+		if value.get("discount") > 0:
+			discount_state.append(value)
 
 	for caccount in coupon_doc.services:
 		discount_amount += sum(
