@@ -1,0 +1,31 @@
+<div class="awc-product-detail">
+    <div class="sections">
+        <div class="product-widget">
+            <div class="section designer-widget container" id="product-widget">
+                {{{ template this.product_widget this }}}
+            </div>
+        </div>
+        {{#if detail.related_products }}
+        {{{ template "/assets/awesome_cart/awc-templates/upsell-widget.html" detail }}}
+        {{/if}}
+        {{#eachEven detail.sections }}
+        <div class="section details-{{$index}}">
+            <div class="section-content container">
+                {{#if this.$is_even }} {{#eachEven this.content}}
+                <div class="row row-{{$index}}">
+                    {{#html}}
+                    <div class="column col-sm-{{#if (lt ../html.length 2) }}12{{else}}6{{/if}}">{{{ . }}}</div>
+                    {{/html}}
+                </div>
+                {{/eachEven}} {{else}} {{#eachEven this.content}}
+                <div class="row row-{{$index}}">
+                    {{#html}}
+                    <div class="column col-sm-{{#if (lt ../html.length 2) }}12{{else}}6 col-sm-{{#is_even @index }}push{{else}}pull{{/is_even}}-6{{/if}}">{{{ . }}}</div>
+                    {{/html}}
+                </div>
+                {{/eachEven}} {{/if}}
+            </div>
+        </div>
+        {{/eachEven}}
+    </div>
+</div>
