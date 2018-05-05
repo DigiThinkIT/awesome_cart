@@ -588,6 +588,8 @@ input:checked + .slide:before {
 	border-radius: 50%;
 }
 
+/* Use customer Fedex toggle End */
+
 #cart-full .total {
 	font-size: 1.5em;
 	color: black;
@@ -623,5 +625,3 @@ input:checked + .slide:before {
 	color: #888;
 	font-weight: lighter;
 }
-
-/* Use customer Fedex toggle End */

@@ -2,7 +2,8 @@
 	"js/awc_utils.js": [
 		"public/js/templates/awc_address_form.html",
 		"public/js/templates/awc_pickup_option.html",
-		"public/js/awc_utils.js"
+		"public/js/awc_utils.js",
+		"public/js/horizontal_gallery.js"
 	],
 	"js/awc_cart.js": [
 		"public/js/jquery/jquery.helpers.js",
@@ -10,7 +11,8 @@
 	],
 	"css/awc_cart.css": [
 		"public/css/awc_cart.css",
-		"public/css/checkout.css"
+		"public/css/checkout.css",
+		"public/css/product-detail.css"
 	],
 	"css/awc.ui.desk.css": [
 		"public/js/lib/taggle/taggle.min.css",

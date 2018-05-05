@@ -253,6 +253,17 @@ def is_coupon_valid(coupon_code, customer, now=None):
 				"code": "GROUP_MISMATCH"
 			}
 
+	# validate customer
+	if coupon_doc.allowed_customer:
+		if not coupon_doc.allowed_customer == customer.name:
+			return {
+				"is_valid" : False,
+				"msg": coupon_doc.customer_mismatch_error.format(**{
+					"customer" : customer.name,
+					"coupon_code": coupon_code
+				})
+			}
+
 	# validate enable datetime
 	if coupon_doc.enable_datetime:
 		if now < coupon_doc.enable_datetime:
