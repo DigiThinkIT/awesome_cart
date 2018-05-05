@@ -88,6 +88,9 @@ def get_context(context):
 	context.is_logged = awc.is_logged_in()
 	login.apply_context(context)
 
+	if frappe.response.get("awc_alert"):
+		context["awc_alert"] = frappe.response.get("awc_alert")
+
 
 	if context.is_logged:
 		# load gateway provider into context

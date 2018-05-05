@@ -332,7 +332,8 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		productUrl=None,
 		base_price=price_info.get("base_price_rate"),
 		price=price,
-		options=build_awc_options_from_varients(item)
+		options=build_awc_options_from_varients(item),
+		item_is_disabled=item.disabled
 	)
 
 	if not missing_awc_item:
@@ -475,6 +476,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 			i.has_variants,
 			i.standard_rate,
 			i.net_weight,
+			i.disabled,
 			a.name as awc_item_name,
 			a.product_route as awc_product_route,
 			a.description_short as awc_description_short,
@@ -526,7 +528,8 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 				product_widget=item.awc_product_widget,
 				product_template=item.awc_product_template,
 				options=build_awc_options_from_varients(item),
-				tags=item.awc_tags.split(',') if item.awc_tags else []
+				tags=item.awc_tags.split(',') if item.awc_tags else [],
+				item_is_disabled=item.disabled
 			)
 			products.append(product)
 
@@ -627,6 +630,7 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 	awc_is_dirty = False
 	awc_items_to_remove = []
 	awc_items_matched = []
+	awc_items = awc.get("items", [])
 
 	# tests last quotation sync timestamp
 	# if quotation timestamp > awc_session timestamp then we'll reset the cart
@@ -635,20 +639,46 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 	if awc_session.get('timestamp') and timestamp(quotation.modified) > awc_session.get('timestamp'):
 		clear_awc_session(awc_session, cart_only=True)
 
+
+	# find disabled items we should not keep on the cart
+	remove_disabled = []
+	for awc_item in awc_items:
+		product_result = get_product_by_sku(awc_item.get("sku"), quotation=quotation)
+		product_found = product_result.get("success")
+		product = product_result.get("data")
+		if not product_found or product.get("item_is_disabled", False):
+			remove_disabled += [awc_item.get("sku")]
+
+	# remove disabled items in one go
+	success = False
+	success, removed_quotation_item_ids, awc_items = remove_from_cart(
+		remove_disabled, awc_items)
+	if success:
+		# replace items with filtered version
+		awc["items"] = awc_items
+		if quotation:
+			# remove item and related grouped items from quote
+			quotation_items = [ \
+				itm for itm in quotation.get("items", []) \
+                    if itm.name not in removed_quotation_item_ids \
+			]
+			quotation.set("items", quotation_items)
+			quotation_is_dirty = True
+
 	# step 1
 	# iterate over all awc items and update quotation to match values
-	awc_items = awc.get("items", [])
 	for awc_idx in range(0, len(awc_items)):
 		awc_item = awc_items[awc_idx]
-		product = get_product_by_sku(awc_item.get("sku"), quotation=quotation)
+		product_result = get_product_by_sku(awc_item.get("sku"), quotation=quotation)
+		product_found = product_result.get("success")
+		product = product_result.get("data")
 
 		if awc_item.get("id"):
 			idx = find_index(quotation.get("items", []), lambda itm: itm.get("name") == awc_item.get("id"))
 			if idx > -1:
 				item = quotation.items[idx]
 				# make sure product exists
-				if product.get("success"):
-					product = product.get("data")
+				if product_found:
 					if item.qty != awc_item.get("qty"):
 						item.qty = awc_item.get("qty")
 						quotation_is_dirty = True
@@ -696,8 +726,7 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 				# remove orphaned items
 				awc_items_to_remove.append(awc_item)
 			else:
-				if product.get("success"):
-					product = product.get("data")
+				if product_found:
 
 					# no quotation item matched, so lets create one
 					item_data = {
@@ -759,9 +788,11 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 	for item in [qitem for qitem in quotation.get("items", []) \
 		if qitem.name not in awc_items_matched]:
 
-		product = get_product_by_sku(item.get("item_code"), quotation=quotation)
-		if product.get("success"):
-			product = product.get("data")
+		product_result = get_product_by_sku(item.get("item_code"), quotation=quotation)
+		product_found = product_result.get("success")
+		product = product_result.get("data")
+
+		if product_found and not product.get("item_is_disabled"):
 			awc_item = {
 				"id": item.name,
 				"sku": item.item_code,
@@ -806,10 +837,53 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 		del quotation.items[idx]
 		quotation_is_dirty = True
 
+
+	if quotation.coupon_code:
+		# quick check on coupon validity, we'll remove any coupons that do not
+		# pass validation.
+		is_coupon_valid(quotation.coupon_code)
+		is_valid = frappe.response.get("is_coupon_valid", False)
+		coupon_response_code = frappe.response.get("coupon_response_code")
+		msg = None
+		if not is_valid and coupon_response_code != "SUCCESS":
+			if coupon_response_code == "EXPIRED":
+				msg = "Coupon \"{coupon_code}\" has expired.\nCoupon automaticaly removed from your cart."
+			elif coupon_response_code == "USE_LIMIT_REACHED":
+				msg = "Coupon \"{coupon_code}\" has reached its use limit.\nCoupon automatically removed."
+			elif coupon_response_code == "NOT_ENABLED_BY_DATETIME":
+				# if somehow a coupon is added before enabled time, we'll remove it quietly
+				msg = None
+			elif coupon_response_code == "GROUP_MISMATCH":
+				# if somehow a coupon is added with a customer group mistmatch, we'll remove it quietly
+				msg = None
+			elif coupon_response_code == "NOT_ENABLED":
+				# if somehow a coupon is added before it was enabled, we'll remove it quietly
+				msg = None
+			elif coupon_response_code == "NOT_FOUND":
+				# if somehow a coupon is added and then deleted, we'll remove it quietly from the quotation.
+				msg = None
+
+			if msg:
+				msg = msg.format(coupon_code=quotation.coupon_code)
+				frappe.response["awc_alert"] = msg
+				# Q: This isn't showing up on front end... why?
+				# frappe.msgprint(msg, title="Message", alert=1)
+
+			if "coupon_total" in awc["totals"]:
+				del awc["totals"]["coupon_total"]
+
+			if "coupon" in awc["totals"]:
+				del awc["totals"]["coupon"]
+
+			awc["discounts"] = None
+			quotation.coupon_code = ""
+			quotation.discount_amount = ""
+			quotation_is_dirty = True
+			awc_is_dirty = True
+
 	call_awc_sync_hook(awc_session, quotation)
 
 	save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True, save_session=awc_is_dirty)
-	#calculate_quotation_discount(quotation, awc_session)
 
 	return quotation_is_dirty
 

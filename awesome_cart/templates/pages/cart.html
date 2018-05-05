@@ -164,6 +164,14 @@
 {% block script %}
 <script type="text/javascript" src="/assets/js/awc_cart.js"></script>
 
+<script type="text/javascript">
+{% if awc_alert %}
+frappe.ready(function() {
+	frappe.msgprint({{ awc_alert| json }});
+});
+{% endif %}
+</script>
+
 {% if gateway_provider %}
 	{% for script in gateway_provider.scripts %}
 		<script type="text/javascript" src="{{script}}"></script>

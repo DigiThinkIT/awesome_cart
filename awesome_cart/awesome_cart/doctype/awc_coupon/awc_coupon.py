@@ -195,7 +195,9 @@ def calculate_coupon_discount(items, coupon_code, accounts):
 
 	discount_state = []
 	for key, value in coupon_state.get("item_codes", {}).items():
-		discount_state.append(value)
+		# removes 0 discounts states
+		if value.get("discount") > 0:
+			discount_state.append(value)
 
 	for caccount in coupon_doc.services:
 		discount_amount += sum(
@@ -221,14 +223,16 @@ def is_coupon_valid(coupon_code, customer, now=None):
 	else:
 		return {
 			"is_valid": False,
-			"msg": _("Coupon Code Not Found")
+			"msg": _("Coupon Code Not Found"),
+			"code": "NOT_FOUND"
 		}
 
 	# validate enabled field
 	if not coupon_doc.enabled:
 		return {
 			"is_valid": False,
-			"msg": _("Coupon Not Found.")
+			"msg": _("Coupon Not Found."),
+			"code": "NOT_ENABLED"
 		}
 
 	# validate customer group filter
@@ -245,7 +249,8 @@ def is_coupon_valid(coupon_code, customer, now=None):
 					"customer_group": customer.customer_group,
 					"group_name": customer.customer_group,
 					"coupon_code": coupon_code
-				})
+				}),
+				"code": "GROUP_MISMATCH"
 			}
 
 	# validate customer
@@ -264,7 +269,8 @@ def is_coupon_valid(coupon_code, customer, now=None):
 		if now < coupon_doc.enable_datetime:
 			return {
 				"is_valid": False,
-				"msg": _("Coupon Not Found.")
+				"msg": _("Coupon Not Found."),
+				"code": "NOT_ENABLED_BY_DATETIME"
 			}
 
 	# valdiate expire datetime
@@ -272,7 +278,8 @@ def is_coupon_valid(coupon_code, customer, now=None):
 		if now > coupon_doc.expire_datetime:
 			return {
 				"is_valid": False,
-				"msg": _("This Coupon has Expired.")
+				"msg": _("Coupon {0} has Expired.").format(coupon_code),
+				"code": "EXPIRED"
 			}
 
 	# validate per customer use limit
@@ -281,11 +288,13 @@ def is_coupon_valid(coupon_code, customer, now=None):
 		if quotes_total > coupon_doc.customer_limit:
 			return {
 				"is_valid": False,
-				"msg": _("Coupon Use Limit Reached: {limit}").format(coupon_doc.customer_limit)
+				"msg": _("Coupon Use Limit Reached: {limit}").format(coupon_doc.customer_limit),
+				"code": "USE_LIMIT_REACHED"
 			}
 
 	return {
 		"is_valid": True,
 		"msg": "Valid",
-		"label": coupon_doc.coupon_label
+		"label": coupon_doc.coupon_label,
+		"CODE": "SUCCESS"
 	}
