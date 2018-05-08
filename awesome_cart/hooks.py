@@ -20,7 +20,7 @@ web_include_js = [
 	"https://www.promisejs.org/polyfills/promise-7.0.4.min.js",
 	"/assets/awesome_cart/js/jquery/jquery.helpers.js?v=%s" % app_version,
 	"/assets/awesome_cart/js/client/awc.standalone.js?v=%s" % app_version,
-	"/assets/awesome_cart/js/client/awc.erpnext.adapter.js?v=%s" % app_version
+	"/assets/awesome_cart/js/client/awc.erpnext.adapter.js?v=%s&p=1" % app_version
 ]
 
 web_include_css = [
