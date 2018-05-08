@@ -1,1 +1,2 @@
+website_slideshow
 item_page_slideshow
