@@ -885,7 +885,7 @@ cart.scan_forms = function () {
 	$('.awc-form .field').not('.awc-form-bound').each(function () {
 		var $field = $(this);
 		var $input = $(this).find('input:first, select:first, textarea:first');
-		$field.addClass(".awc-form-bound");
+		$field.addClass("awc-form-bound");
 
 		var validate_phone = function (value) {
 			// simple validation for phone numbers, just remove all non numeric values
