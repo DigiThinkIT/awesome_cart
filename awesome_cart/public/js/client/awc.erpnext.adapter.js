@@ -202,9 +202,7 @@ awc.ErpnextAdapter.prototype._fetchProducts = function (filter, start, limit) {
 				var result = resp.data;
 
 				if (result.message.success) {
-					if (result.message.data.totals) {
-						base._totals = result.message.data.totals;
-					}
+					base._updateSession(result.message)
 
 					resolve(result.message.data)
 				} else {
@@ -235,14 +233,23 @@ awc.ErpnextAdapter.prototype.loadTemplate = function (name) {
 	}
 }
 
+awc.ErpnextAdapter.prototype._updateSession = function(data) {
+	if (data.totals) {
+		this._totals = data.totals;
+	}
+	if (data.discounts) {
+		this._discounts = data.discounts;
+	} else {
+		this._discounts = null;
+	}
+}
+
 awc.ErpnextAdapter.prototype.fetchCartSession = function () {
 	var base = this;
 	return awc.get('/api/method/awesome_cart.awc.cart')
 		.then(function (resp, xhr) {
 			var data = JSON.parse(resp.body).message;
-			if (data.data.totals) {
-				base._totals = data.data.totals;
-			}
+			base._updateSession(data.data);
 			return data;
 		})
 }
@@ -259,9 +266,7 @@ awc.ErpnextAdapter.prototype.sessionAction = function (action, data) {
 
 				dispalyAddr(result.message.shipping_address_name);
 				if (result.message.success) {
-					if (result.message.totals) {
-						base._totals = result.message.totals;
-					}
+					base._updateSession(result.message);
 					resolve(result.message)
 				} else {
 					if ( typeof result.message.message === "string" ) {
@@ -944,6 +949,7 @@ $(function () {
 	awc.call("awesome_cart.power.get_power_user_settings")
 		.then(function (resp) {
 			var data = resp.data;
+
 			if (data.message == "Power User") {
 				var cwindow_tpl = cart.template("Power User - Customer Select Window").promiseReady();
 				var $cwindow = null;
@@ -1002,6 +1008,9 @@ $(function () {
 					});
 				}
 			}
+
+			// triggers global page event to provide power user info to other scripts.
+			$("body").trigger("awc-power-user-settings", data);
 
 			return resp;
 		})

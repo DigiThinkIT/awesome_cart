@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - This CHANGELOG file to keep track of changes.
 - Added spinner to awc template loading process.
+- Added taxes_and_charges as "services" discounts on coupons.
+- Added coupon discount breakdown table on totals areas.
 
 ### Changed
 - Passing base_price through awesome cart to keep track of customer "savings".
@@ -17,5 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - During addToCart operation, we made sure to update the item base_price to keep consistent data on cart.
 - Fixed issue where coupon discount would apply to a zero value's original price causing extra discounts.
 - Fixes issue where coupon error message doesn't set group_name key
+- Fixed bug where shipping method and address would stay on quotation when cart was loaded and UI would not reflect those values. Fix just clears these fields to allow user to reselect.
+- Refactored how coupon discounts are recalculated on shipping value changes or resyncing quotation and awc cart.
 
 ### Removed

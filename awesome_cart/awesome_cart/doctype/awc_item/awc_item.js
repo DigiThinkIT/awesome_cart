@@ -62,5 +62,11 @@ frappe.ui.form.on('AWC Item', {
 			tag_control.refresh(frm.doc.tags.split(','));
 		}
 
+		frm.set_query("item_name", "recomendations", function () {
+			return {
+				"query": "awesome_cart.awesome_cart.doctype.awc_item.awc_item.query_items_with_awc_items"
+			};
+		});
+
 	}
 });

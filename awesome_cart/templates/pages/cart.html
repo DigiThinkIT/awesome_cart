@@ -155,12 +155,22 @@
 		</div>
 	</div>
 </div>
+<div id="upsell">
+</div>
 
 <!-- no-sidebar -->
 {% endblock %}
 
 {% block script %}
 <script type="text/javascript" src="/assets/js/awc_cart.js"></script>
+
+<script type="text/javascript">
+{% if awc_alert %}
+frappe.ready(function() {
+	frappe.msgprint({{ awc_alert| json }});
+});
+{% endif %}
+</script>
 
 {% if gateway_provider %}
 	{% for script in gateway_provider.scripts %}
@@ -180,6 +190,27 @@
 			awc_checkout.shipping_provider.form(cart.shipping_info);
 		});
 	</script>
+{% endif %}
+
+{% if upsell %}
+<script type="text/javascript">
+	cart.on('init', function() {
+		// we are reusing the upsell widget template from product details
+		cart
+			.template('/assets/awesome_cart/awc-templates/upsell-widget.html')
+			.promiseReady()
+			.then((tpl) => {
+				// after fetching upsell widget, well build it from context data
+				var html = tpl.beginRender({{ upsell| json }});
+				$('#upsell').append(html);
+				$('#upsell').addClass('awc-placeholder loaded');
+				return tpl.endRender().then((r) => {
+					cart.updateUI();
+					return r;
+				});
+			})
+	});
+</script>
 {% endif %}
 
 {# Only load login widget if not logged in #}

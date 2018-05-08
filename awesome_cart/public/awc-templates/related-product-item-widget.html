@@ -1,0 +1,10 @@
+<a href="{{ this.productUrl }}">
+  <div 
+    class="product-image" 
+    title="{{#if this.custom.title}}{{this.custom.title}}{{else}}{{this.name}}{{/if}}" 
+    style="background-image: url({{this.imageUrl}});"></div>
+  <div class="product-name">{{ or this.custom.title_small this.custom.title this.name }}</div>
+  <div class="price-container">
+    <span class="price">{{ currency this.price }}</span>
+  </div>
+</a>

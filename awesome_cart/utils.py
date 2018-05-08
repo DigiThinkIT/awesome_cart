@@ -97,7 +97,6 @@ def update_address(add_doc, address):
 	add_doc.save()
 	frappe.db.commit()
 
-
 def quotation_validate(doc, method):
 	main_items = []
 	groups = {}
@@ -129,7 +128,7 @@ def quotation_validate(doc, method):
 
 	# Apply coupon codes
 	if doc.coupon_code:
-		discount, msg, apply_discount_on = calculate_coupon_discount(doc.items, doc.coupon_code)
+		discount, msg, apply_discount_on = calculate_coupon_discount(doc.items, doc.coupon_code, doc.get("taxes", []))[0:3]
 		if discount is not False and discount != doc.discount_amount:
 			doc.discount_amount = discount
 			doc.apply_discount_on = apply_discount_on or "Net Total"
@@ -145,6 +144,7 @@ def is_coupon_valid(coupon_code):
 	result = _is_coupon_valid(coupon_code, customer)
 
 	frappe.response["is_coupon_valid"] = result.get("is_valid", False)
+	frappe.response["coupon_response_code"] = result.get("code")
 
 	if not result.get("is_valid"):
 		return result.get("msg")
@@ -170,8 +170,11 @@ def get_addresses():
 
 	return False
 
-def clear_cache():
-	clear_cache_keys(['awc-sku-', 'awc-variant-', 'awc-products-'])
+def clear_cache_on_doc_update(doc, method):
+	clear_cache()
+  
+def clear_cache(customer_group=""):
+	clear_cache_keys(['awc-sku-{}'.format(customer_group), 'awc-variant-{}'.format(customer_group), 'awc-products-{}'.format(customer_group)])
 
 def fn_wrap(fn, before_fn):
 	"""A fn hot patch helper. Use to wrap method not accesible through hooks or other ways in ERPN.
