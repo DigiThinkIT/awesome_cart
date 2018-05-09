@@ -207,19 +207,19 @@ def calculate_coupon_discount(config):
 			discount_state.append(value)
 
 	for caccount in coupon_doc.services:
-		discount_amount += sum(
-			calculate_service_discount(
-				account,
-				caccount,
-				discount_state
-			) for account in accounts \
-				if account.get("account_head") == caccount.get("account_name")
-		)
+		for account in accounts:
+			if account.get("account_head") == caccount.get("account_name"):
+				service_discount = calculate_service_discount(
+						account,
+						caccount,
+						discount_state)
+
+				discount_amount += service_discount
 
 	# applies total rule if enabled
 	if coupon_doc.total_rule == "Total Is Greater Than":
-		total_value = net_total if coupon_doc.apply_discount_on == "Net Total" else grand_total
-		total_value -= discount_amount
+		total_value = net_total if coupon_doc.apply_discount_on == "Net Total" else grand_total - discount_amount
+		#total_value -= discount_amount
 		discount_value = 0
 		discount_label = ""
 

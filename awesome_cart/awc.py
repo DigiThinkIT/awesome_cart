@@ -546,6 +546,22 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 
 	return payload
 
+def calculate_taxes_and_totals(quotation, awc_session):
+	quotation.run_method("calculate_taxes_and_totals")
+	# Fetches coupon label and discount breakdown after quotation save
+	# since we moved coupon calculations into on_calculate_tax_and_totals hook
+	awc = awc_session["cart"]
+	awc["discounts"] = None
+	if quotation.coupon_code:
+		coupon_label = frappe.get_value("AWC Coupon", quotation.get("coupon_code"), "coupon_label")
+		awc["totals"]["coupon"] = { "code": quotation.coupon_code, "label": coupon_label }
+
+		if quotation.get("discount_data"):
+			try:
+				awc_session["cart"]["discounts"] = json.loads(quotation.get("discount_data"))
+			except Exception as ex:
+				awc["discounts"] = None
+
 def collect_totals(quotation, awc, awc_session):
 	if not awc:
 		awc = awc_session.get("cart")
@@ -553,14 +569,11 @@ def collect_totals(quotation, awc, awc_session):
 	if quotation:
 		if quotation.get("discount_amount"):
 			awc["totals"]["coupon_total"] = -quotation.get("discount_amount")
-
-
 		elif "coupon_total" in awc["totals"]:
 			del awc["totals"]["coupon_total"]
 
-		calculate_quotation_discount(quotation, awc_session)
+		calculate_taxes_and_totals(quotation, awc_session)
 
-		quotation.run_method("calculate_taxes_and_totals")
 		awc["totals"]["sub_total"] = quotation.get("total")
 		awc["totals"]["grand_total"] = quotation.get("grand_total")
 
@@ -968,34 +981,9 @@ def remove_from_cart(items_to_remove, cart_items):
 
 	return success, removed_ids, awc_items
 
-def calculate_quotation_discount(quotation, awc_session):
-	awc = awc_session.get("cart")
-
-	if  quotation and quotation.get("coupon_code"):
-		coupon_code = quotation.get("coupon_code")
-		coupon_label = frappe.get_value("AWC Coupon", quotation.get("coupon_code"), "coupon_label")
-		awc["totals"]["coupon"] = { "code": coupon_code, "label": coupon_label }
-
-		# check if we've stored a breakdown of the coupon, if not rebuild once
-		if coupon_code:
-			discount, msg, apply_discount_on, coupon_state = calculate_coupon_discount({
-				"items": quotation.items,
-				"code": coupon_code,
-				"accounts": quotation.taxes,
-				"grand_total": quotation.grand_total,
-				"net_total": quotation.net_total
-			})
-			awc["discounts"] = coupon_state
-	else:
-		awc["discounts"] = None
-
-
 def update_cart_settings(quotation, awc_session):
-	#apply_cart_settings(quotation=quotation)
 	set_taxes(quotation, get_shopping_cart_settings())
-	#quotation.run_method("calculate_taxes_and_totals")
 	update_shipping_quotation(quotation, awc_session)
-	calculate_quotation_discount(quotation, awc_session)
 
 def call_awc_sync_hook(awc_session, quotation):
 	awc = awc_session.get("cart")
@@ -1147,8 +1135,6 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 	shipping_address_name = None
 
 	if quotation:
-		#update_cart_settings(quotation, awc_session)
-
 		if address:
 			shipping_address_name = address.get("shipping_address")
 
@@ -1527,8 +1513,8 @@ def cart(data=None, action=None):
 					"items": quotation.items,
 					"code": coupon,
 					"accounts": quotation.taxes,
-					"grand_total": quotation.grand_total,
-					"net_total": quotation.net_total
+					"grand_total": quotation.base_grand_total,
+					"net_total": quotation.base_net_total
 				})
 
 				if discount == 0:
@@ -1549,18 +1535,13 @@ def cart(data=None, action=None):
 			msg = "Please Login to Apply Coupon"
 			awc["discounts"] = None
 
-		if success:
-			save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
-			return session_response({
-				"success": True
-			}, awc_session, quotation)
-
 		save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
-		return session_response({
-			"success": False,
-			"message": _(msg)
-		}, awc_session, quotation)
 
+		result = { "success": success }
+		if not success:
+			result["message"] = _(msg)
+
+		return session_response(result, awc_session, quotation)
 
 	elif action == "removeCoupon":
 		awc["discounts"] = None
