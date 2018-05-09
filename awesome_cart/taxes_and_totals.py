@@ -1,10 +1,9 @@
 from __future__ import unicode_literals
 
-import frappe
 import json
 
 from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
-from .awesome_cart.doctype.awc_coupon.awc_coupon import calculate_coupon_discount, is_coupon_valid as _is_coupon_valid
+from .awesome_cart.doctype.awc_coupon.awc_coupon import calculate_coupon_discount
 
 class AWCCalculateTaxesAndTotals(calculate_taxes_and_totals):
     """Extends the default implementation of calculate_taxes_and_totals controller

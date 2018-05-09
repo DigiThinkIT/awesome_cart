@@ -235,7 +235,7 @@ def calculate_coupon_discount(config):
 
 			discount_state.append({
 				"cart_qty": 1,
-				"applied_qty": 1,
+				"applied_qty": None,
 				"name": discount_label,
 				"discount": discount_value
 			})
