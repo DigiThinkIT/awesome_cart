@@ -247,7 +247,7 @@ def _get_cart_quotation(awc_session=None):
 	return cart_info.get('doc')
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
-def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
+def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None, skip_related=False):
 	"""Get's product in awcjs format by its sku and optionally detailed data."""
 
 	if not awc_session:
@@ -354,19 +354,22 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		product["detail"] = dict(
 			description_short=awc_item.description_short,
 			description_long=awc_item.description_long,
-			sections=get_content_sections(awc_item),
-			related_products=[ \
-				x for x in [ \
-					get_product_by_sku( \
-						sku=frappe.db.get_value("Item", r.item_name, "item_code"), \
-						detailed=True, \
-					    awc_session=awc_session, \
-						quotation=quotation).get("data") \
-					for r in awc_item.recomendations \
-					if frappe.db.get_value("Item", r.item_name, "item_code") != sku
-				] if x is not None \
-			]
-		)
+			sections=get_content_sections(awc_item))
+
+		if not skip_related:
+			product["detail"].update(dict(
+				related_products=[ \
+					x for x in [ \
+						get_product_by_sku( \
+							sku=frappe.db.get_value("Item", r.item_name, "item_code"), \
+							detailed=True, \
+							awc_session=awc_session, \
+							quotation=quotation,
+							skip_related=True).get("data") \
+						for r in awc_item.recomendations \
+						if frappe.db.get_value("Item", r.item_name, "item_code") != sku
+					] if x is not None ]
+				))
 
 	data = { "success": True, "data": product }
 	set_cache(cache_key, data, session=awc_session, prefix=cache_prefix)
