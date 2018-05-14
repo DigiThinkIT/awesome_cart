@@ -4,7 +4,6 @@ $(function() {
     function setupSlick() {
         // detect slick slider setups
         $(".slick-horizontal").each(function () {
-            console.log($(this));
             if ($(this).hasClass("slick-bounded")) {
                 return;
             } else {
