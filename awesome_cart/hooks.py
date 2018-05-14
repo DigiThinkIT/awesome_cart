@@ -20,11 +20,16 @@ web_include_js = [
 	"https://www.promisejs.org/polyfills/promise-7.0.4.min.js",
 	"/assets/awesome_cart/js/jquery/jquery.helpers.js?v=%s" % app_version,
 	"/assets/awesome_cart/js/client/awc.standalone.js?v=%s" % app_version,
-	"/assets/awesome_cart/js/client/awc.erpnext.adapter.js?v=%s&p=1" % app_version
+	"/assets/awesome_cart/js/client/awc.erpnext.adapter.js?v=%s" % app_version,
+	"/assets/awesome_cart/js/lib/slick.min.js?v=%s" % app_version,
+	"/assets/awesome_cart/js/lib/slick.auto.js?v=%s" % app_version
 ]
 
 web_include_css = [
-	"/assets/css/awc_cart.css?v=%s" % app_version
+    "/assets/awesome_cart/css/slick.css?v=%s" % app_version,
+    "/assets/awesome_cart/css/slick-theme.css?v=%s" % app_version,
+   	"/assets/css/awc_cart.css?v=%s" % app_version,
+   	"/assets/awesome_cart/css/product-detail.css?v=%s" % app_version
 ]
 
 app_include_css = [

@@ -1,0 +1,17 @@
+--2018-05-13 17:52:26--  https://github.com/kenwheeler/slick/blob/master/slick/fonts/slick.svg?raw=true
+Resolving github.com (github.com)... 192.30.253.113, 192.30.253.112
+Connecting to github.com (github.com)|192.30.253.113|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://github.com/kenwheeler/slick/raw/master/slick/fonts/slick.svg [following]
+--2018-05-13 17:52:27--  https://github.com/kenwheeler/slick/raw/master/slick/fonts/slick.svg
+Reusing existing connection to github.com:443.
+HTTP request sent, awaiting response... 302 Found
+Location: https://raw.githubusercontent.com/kenwheeler/slick/master/slick/fonts/slick.svg [following]
+--2018-05-13 17:52:27--  https://raw.githubusercontent.com/kenwheeler/slick/master/slick/fonts/slick.svg
+Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 151.101.56.133
+Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|151.101.56.133|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 2152 (2.1K) [text/plain]
+slick.svg?raw=true: Protocol error
+
+Cannot write to ‘slick.svg?raw=true’ (Success).

@@ -1,0 +1,17 @@
+--2018-05-13 17:52:11--  https://github.com/kenwheeler/slick/blob/master/slick/fonts/slick.eot?raw=true
+Resolving github.com (github.com)... 192.30.253.112, 192.30.253.113
+Connecting to github.com (github.com)|192.30.253.112|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://github.com/kenwheeler/slick/raw/master/slick/fonts/slick.eot [following]
+--2018-05-13 17:52:12--  https://github.com/kenwheeler/slick/raw/master/slick/fonts/slick.eot
+Reusing existing connection to github.com:443.
+HTTP request sent, awaiting response... 302 Found
+Location: https://raw.githubusercontent.com/kenwheeler/slick/master/slick/fonts/slick.eot [following]
+--2018-05-13 17:52:12--  https://raw.githubusercontent.com/kenwheeler/slick/master/slick/fonts/slick.eot
+Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 151.101.56.133
+Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|151.101.56.133|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 2048 (2.0K) [application/octet-stream]
+slick.eot?raw=true: Protocol error
+
+Cannot write to ‘slick.eot?raw=true’ (Success).
