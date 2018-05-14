@@ -73,7 +73,7 @@
 
 .related-products .slick-arrow::before,
 .related-products .slick-arrow::after {
-  content: unset !important;
+  content: unset;
 }
 
 .related-products .slick-horizontal {

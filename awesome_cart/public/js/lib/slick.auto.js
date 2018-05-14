@@ -1,6 +1,7 @@
+/* global cart */
 $(function() {
 
-    function setup_slick() {
+    function setupSlick() {
         // detect slick slider setups
         $(".slick-horizontal").each(function () {
             console.log($(this));
@@ -12,8 +13,8 @@ $(function() {
                     infinite: false,
                     slidesToShow: 4,
                     slidesToScroll: 4,
-                    prevArrow: '<button type="button" class="slick-prev"><span class="glyphicon glyphicon-chevron-left"></span></button>',
-                    nextArrow: '<button type="button" class="slick-next"><span class="glyphicon glyphicon-chevron-right"></span></button>',
+                    prevArrow: "<button type='button' class='slick-prev'><span class='glyphicon glyphicon-chevron-left'></span></button>",
+                    nextArrow: "<button type='button' class='slick-next'><span class='glyphicon glyphicon-chevron-right'></span></button>",
 
                     responsive: [{
                         breakpoint: 1024,
@@ -40,8 +41,8 @@ $(function() {
     }
 
     cart.on("tpl-ready", () => {
-        setup_slick();
+        setupSlick();
     });
 
-    setup_slick();
+    setupSlick();
 });
