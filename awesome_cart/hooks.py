@@ -61,6 +61,8 @@ doc_events = {
 	}
 }
 
+on_calculate_taxes_and_totals = "awesome_cart.utils.on_calculate_taxes_and_totals"
+
 # cart context override
 extend_website_page_controller_context = {
 	"erpnext.templates.pages.cart": "awesome_cart.templates.pages.cart"
