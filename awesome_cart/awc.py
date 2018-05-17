@@ -259,7 +259,7 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None, skip_r
 		customer_lbl = customer.customer_group
 
 	cache_prefix = "awc-sku-{}".format(customer_lbl)
-	cache_key = "get_product_by_sku-{}-{}".format(sku, "detailed" if detailed else "none")
+	cache_key = "get_product_by_sku-{}-{}-{}".format(sku, "detailed" if detailed else "none", "skip_related" if skip_related else "none")
 	cache_data = get_cache(cache_key, session=awc_session, prefix=cache_prefix)
 
 	if cache_data:

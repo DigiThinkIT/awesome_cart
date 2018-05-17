@@ -18,25 +18,6 @@
   display: block;
 }
 
-.related-products .control {
-  position: absolute;
-  font-size: 2em;
-  color: #999;
-  height: 100%;
-  top: 0;
-  cursor: pointer;
-}
-
-.related-products .control:hover {
-  font-size: 2.1em;
-}
-
-.related-products .control span {
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
 .related-products .control.left {
   display: none;
   left: 15px;
@@ -47,36 +28,6 @@
   display: none;
 }
 
-.related-products ul {
-  display: block;
-  padding: 0;
-  margin: 0;
-  white-space: nowrap;
-  overflow-x: scroll;
-}
-
-.related-products ul li {
-  display: inline-block;
-  width: 10em;
-  height: 100%;
-  text-align: center;
-  vertical-align: bottom;
-}
-
-.related-products ul li a {
-  display: block;
-  height: 100%;
-  text-align: center;
-  text-decoration: none;
-  color: black;
-}
-
-.related-products ul li a:active,
-.related-products ul li a:hover {
-  color: black;
-  text-decoration: none;
-}
-
 .related-products h3 {
   text-align: center;
 }
@@ -85,9 +36,15 @@
   height: 1em;
 }
 
+.related-products a:hover {
+  text-decoration: none;
+}
+
 .related-products .product-name {
   text-align: center;
   color: black;
+  min-height: 3rem;
+  padding: 0 2em;
 }
 
 .related-products .price-container {
@@ -95,42 +52,30 @@
 }
 
 .related-products .price-container .price {
-  color: red;
+  color: #f1582f;
   font-weight: lighter;
 }
 
-/* Small devices (landscape phones, 576px and up) */
-@media (min-width: 576px) {
-  .related-products ul {
-    overflow-x: scroll;
-  }
+.related-products .slick-arrow {
+  background: transparent;
+  color: rgb(26, 26, 26);
+  border-radius: 2rem;
+  font-size: 1.2rem;
+  padding: 0;
+  width: 3rem;
+  height: 3rem;
 }
 
-/* Medium devices (tablets, 768px and up) */
-@media (min-width: 768px) {
-  .related-products ul {
-    overflow-x: hidden;
-    margin: 0 3em;
-  }
-  .related-products ul li {
-    width: 15em;
-  }
-  .related-products .control.left,
-  .related-products .control.right {
-    display: block;
-  }
+.related-products .slick-arrow:hover {
+  background: lightgrey;
+  color: white;
 }
 
-/* Large devices (desktops, 992px and up) */
-@media (min-width: 992px) {
-  .related-products ul {
-    overflow-x: hidden;
-  }
+.related-products .slick-arrow::before,
+.related-products .slick-arrow::after {
+  content: unset;
 }
 
-/* Extra large devices (large desktops, 1200px and up) */
-@media (min-width: 1200px) {
-  .related-products ul {
-    overflow-x: hidden;
-  }
+.related-products .slick-horizontal {
+  margin: 0 50px;
 }
