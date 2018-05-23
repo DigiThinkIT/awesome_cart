@@ -197,6 +197,26 @@ awc_checkout = {
 			},
 
 			on_edit_click: function($addr, e) {
+
+				// lets figure out if this address is being used on shipping
+				// if so, we'll need to insert this edit instead of saving to
+				// avoid changing the shipping address and shipping method.
+				// so, we'll invoke the new address form instead prefilled with
+				// this address values.
+				if (awc_checkout.shipping_provider.data && $addr.attr("data-name") == awc_checkout.shipping_provider.data.shipping_address) {
+					awc_checkout.displayAddNewBillingAddress({
+						title: $addr.find('span#title').text(),
+						phone: $addr.find('span#phone').text(),
+						line1: $addr.find('span#line1').text(),
+						line2: $addr.find('span#line2').text(),
+						city: $addr.find('span#city').text(),
+						state: $addr.find('span#state').text(),
+						pincode: $addr.find('span#pincode').text(),
+						country: $addr.find('span#country').text()
+					});
+					return;
+				}
+
 				$("#gateway-selector-billing-form").trigger("reset")
 				$('#gateway-selector-billing-form.awc-form')
 					.attr('data-name', $addr.attr('data-name'));
@@ -314,13 +334,7 @@ awc_checkout = {
 
 		// add new billing address button
 		$billing_container.find(".btn-primary").click(function(e) {
-			$('#checkout-billing .addr').removeClass('awc-selected');
-			$('#form-bill-addr').attr('data-select', 'true');
-			$("#gateway-selector-billing-form.awc-form").trigger("reset");
-			$('#gateway-selector-billing-form.awc-form .field.required input').change();
-			$('#gateway-selector-billing-form.awc-form .field.required select').change();
-			$('#select-bill-addr').css('display', 'none');
-			$('#form-bill-addr').css('display', 'block');
+			displayAddNewBillingAddress();
 		});
 
 		// billing form back button click
@@ -332,6 +346,28 @@ awc_checkout = {
 			$('#form-bill-addr').css('display', 'none');
 		});
 
+	},
+
+	/**
+	 * Displays the "Add new billing address" form
+	 * @arg data - An address is object formart to preset before displaying the form.
+	 */
+	displayAddNewBillingAddress: function(data) {
+		$('#checkout-billing .addr').removeClass('awc-selected');
+		$('#form-bill-addr').attr('data-select', 'true');
+		$("#gateway-selector-billing-form.awc-form").trigger("reset");
+		if ( data ) {
+			for(var key in data) {
+				var value = data[key];
+				if ( typeof(value) != 'function' ) {
+					$('#billing_' + key).val(value);
+				}
+			}
+		}
+		$('#gateway-selector-billing-form.awc-form .field.required input').change();
+		$('#gateway-selector-billing-form.awc-form .field.required select').change();
+		$('#select-bill-addr').css('display', 'none');
+		$('#form-bill-addr').css('display', 'block');
 	},
 
 	setupPage: function() {
