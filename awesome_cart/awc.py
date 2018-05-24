@@ -153,8 +153,8 @@ def build_awc_options_from_varients(item):
 	if customer:
 		customer_lbl = customer.customer_group
 
-	cache_prefix = "awc-sku-{}".format(customer_lbl)
-	cache_key = "build_awc_options_from_varients-{}".format(item.name)
+	cache_prefix = "awc-sku" #-{}".format(customer_lbl)
+	cache_key = "build_awc_options_from_varients-{}-{}".format(customer_lbl, item.name)
 	cache_data = get_cache(key=cache_key, prefix=cache_prefix)
 
 	if cache_data:
@@ -258,9 +258,16 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None, skip_r
 	if customer:
 		customer_lbl = customer.customer_group
 
-	cache_prefix = "awc-sku-{}".format(customer_lbl)
-	cache_key = "get_product_by_sku-{}-{}-{}".format(sku, "detailed" if detailed else "none", "skip_related" if skip_related else "none")
+	cache_prefix = "awc-sku"#-{}".format(customer_lbl)
+	cache_key = "get_product_by_sku-{}-{}-{}-{}".format(customer_lbl, sku, "detailed" if detailed else "none", "skip_related" if skip_related else "none")
 	cache_data = get_cache(cache_key, session=awc_session, prefix=cache_prefix)
+
+	# invalidates cache dynamically without forcing a system wide cache clear.
+	invalidate_cache_key = "awc-item-invalidate-cache-{}".format(sku)
+	invalidate_cache = get_cache(invalidate_cache_key)
+	if invalidate_cache:
+		clear_cache_keys(invalidate_cache_key)
+		cache_data = None
 
 	if cache_data:
 		return cache_data
@@ -412,9 +419,15 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 	if customer:
 		customer_lbl = customer.customer_group
 
-	cache_prefix = "awc-sku-{}".format(customer_lbl)
-	cache_key = "fetch_products-{}-{}-{}-{}-{}-{}".format(tags, terms, order_by, order_dir, start, limit)
+	cache_prefix = "awc-sku" #-{}".format(customer_lbl)
+	cache_key = "fetch_products-{}-{}-{}-{}-{}-{}-{}".format(customer_lbl, tags, terms, order_by, order_dir, start, limit)
 	cache_data = get_cache(cache_key, session=awc_session, prefix=cache_prefix)
+
+	# checks if any awc were invalidated and forces cache rebuild.
+	if get_cache("awc-catalog-invalidate"):
+		clear_cache_keys("awc-catalog-invalidate")
+		cache_data = None
+
 	if cache_data:
 		return cache_data
 
