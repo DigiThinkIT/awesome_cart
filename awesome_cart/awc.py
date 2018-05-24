@@ -153,7 +153,7 @@ def build_awc_options_from_varients(item):
 	if customer:
 		customer_lbl = customer.customer_group
 
-	cache_prefix = "awc-sku" #-{}".format(customer_lbl)
+	cache_prefix = "awc-sku"
 	cache_key = "build_awc_options_from_varients-{}-{}".format(customer_lbl, item.name)
 	cache_data = get_cache(key=cache_key, prefix=cache_prefix)
 
@@ -161,7 +161,6 @@ def build_awc_options_from_varients(item):
 		return cache_data
 
 	item = frappe.get_doc("Item", item.name)
-	#item_data = frappe.get_all("Item", fields=["variant_of", "attributes", "has_variants"], filters={"name": item.name})
 
 	# early exit for items which are already variants to another item
 	if item.get('variant_of'):
@@ -258,7 +257,7 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None, skip_r
 	if customer:
 		customer_lbl = customer.customer_group
 
-	cache_prefix = "awc-sku"#-{}".format(customer_lbl)
+	cache_prefix = "awc-sku"
 	cache_key = "get_product_by_sku-{}-{}-{}-{}".format(customer_lbl, sku, "detailed" if detailed else "none", "skip_related" if skip_related else "none")
 	cache_data = get_cache(cache_key, session=awc_session, prefix=cache_prefix)
 
@@ -419,7 +418,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 	if customer:
 		customer_lbl = customer.customer_group
 
-	cache_prefix = "awc-sku" #-{}".format(customer_lbl)
+	cache_prefix = "awc-sku"
 	cache_key = "fetch_products-{}-{}-{}-{}-{}-{}-{}".format(customer_lbl, tags, terms, order_by, order_dir, start, limit)
 	cache_data = get_cache(cache_key, session=awc_session, prefix=cache_prefix)
 
@@ -1319,8 +1318,6 @@ def cart(data=None, action=None):
 			quotation.use_customer_fedex_account = 1 if data[0].get(
 				"address", {}).get("use_customer_fedex_account") else 0
 			quotation.flags.ignore_permissions = True
-			#quotation.save()
-			#frappe.db.commit()
 
 		result = calculate_shipping(rate_name, address, awc_session, quotation, save=True)
 
@@ -1354,9 +1351,6 @@ def cart(data=None, action=None):
 						if quotation_item:
 							quotation_item.set(erp_key, item.get(awc_key))
 
-							#if erp_key == "qty":
-								#quotation_item.amount = flt(quotation_item.rate) * quotation_item.qty
-
 				if awc_item.get('options', {}).get('group'):
 					# find all subgroup items and update qty accordingly
 					for sub_item in [i for i in awc["items"] if i.get('options', {}).get('group') == awc_item.get('options', {}).get('group')]:
@@ -1366,7 +1360,6 @@ def cart(data=None, action=None):
 							sub_quotation_item = next((q for q in quotation.get("items", []) if q.name == sub_item.get("id")), None)
 							if sub_quotation_item:
 								sub_quotation_item.set("qty", sub_item.get("qty"))
-								#sub_quotation_item.amount = flt(sub_quotation_item.rate) * sub_quotation_item.qty
 
 						sub_item["total"] = sub_item["unit"] * sub_item["qty"]
 
@@ -1715,9 +1708,6 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	if shipping_address.get("ship_method"):
 		# retrieve quoted chargesfee
 		rates = awc_session.get("shipping_rates")
-		#data["shipping_method"] = shipping_address.get("ship_method")
-		#if rates:
-		#	data["shipping_fee"] = rates.get(data["shipping_method"], {}).get("fee")
 
 	data.update({ "billing_%s" % key: value for key, value in billing_address.iteritems() })
 	data.update({ "shipping_%s" % key: value for key, value in shipping_address.iteritems() })
