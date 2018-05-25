@@ -5,12 +5,28 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
+from awesome_cart.session import set_cache
 from awesome_cart.utils import clear_cache
 
 class AWCItem(Document):
 
 	def on_update(self):
+		item_code = frappe.db.get_value("Item", self.product_name, "item_code")
+
+		# general cache clear
 		clear_cache()
+
+		# secondary flagging for cache invalidation in case redis isn't running(frappe.local.cache storage)
+		set_cache("awc-item-invalidate-cache-{}".format(item_code), True)
+		set_cache("awc-catalog-invalidate", True)
+
+		# figure out all products that might be refering to this item and flag them as invalid cache so we regen
+		related_parents = frappe.db.get_list("AWC Item Recomendation",
+			filters={"item_name": self.product_name, "parenttype": "AWC Item"},
+			fields=["parent"])
+		for row in related_parents:
+			if row.get("parent"):
+				set_cache("awc-item-invalidate-cache-{}".format(row.get("parent")), True)
 
 
 @frappe.whitelist()

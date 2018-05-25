@@ -84,14 +84,18 @@ def clear_awc_session(awc_session=None, cart_only=False):
 	awc_session["cart"] = { "items": [], "discounts": None, "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
 
 def hash_key(key, prefix=''):
-	return prefix + hashlib.sha512(key).hexdigest()
+	if prefix:
+		return "{}|{}".format(prefix,  hashlib.sha512(key).hexdigest())
+
+	return hashlib.sha512(key).hexdigest()
 
 def set_cache(key, value, expires_in_sec=1800, session=None, prefix=''):
 	if not session:
 		session = get_awc_session()
 	sid = frappe.local.session["awc_sid"]
 
-	frappe.cache().set_value(key=hash_key(key, prefix), val=value, user=sid, expires_in_sec=expires_in_sec)
+	hashed_key = hash_key(key, prefix)
+	frappe.cache().set_value(key=hashed_key, val=value, user=sid, expires_in_sec=expires_in_sec)
 
 def get_cache(key, expires=False, session=None, prefix=''):
 	if not session:
@@ -111,7 +115,7 @@ def clear_cache_keys(keys):
 def get_quick_cache(key, awc_session=None, customer=None, prefix=None):
 
 	if not prefix:
-		prefix = "awc-sku-{}"
+		prefix = "awc-sku"
 
 	if not awc_session:
 		awc_session = get_awc_session()
@@ -124,7 +128,7 @@ def get_quick_cache(key, awc_session=None, customer=None, prefix=None):
 	if customer:
 		customer_lbl = customer.customer_group
 
-	cache_prefix = prefix.format(customer_lbl)
-	cache_data = get_cache(key, session=awc_session, prefix=cache_prefix)
+	cache_prefix = prefix #.format(customer_lbl)
+	cache_data = get_cache("{}-{}".format(customer_lbl, key), session=awc_session, prefix=cache_prefix)
 
 	return cache_data, cache_prefix, awc_session

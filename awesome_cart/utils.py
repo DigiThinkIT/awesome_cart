@@ -164,7 +164,8 @@ def clear_cache_on_doc_update(doc, method):
 	clear_cache()
   
 def clear_cache(customer_group=""):
-	clear_cache_keys(['awc-sku-{}'.format(customer_group), 'awc-variant-{}'.format(customer_group), 'awc-products-{}'.format(customer_group)])
+	clear_cache_keys(['*awc-sku*', '*awc-variant*', '*awc-products*'])
+		
 
 def fn_wrap(fn, before_fn):
 	"""A fn hot patch helper. Use to wrap method not accesible through hooks or other ways in ERPN.
