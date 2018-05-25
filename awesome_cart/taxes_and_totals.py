@@ -14,14 +14,15 @@ class AWCCalculateTaxesAndTotals(calculate_taxes_and_totals):
 
     def set_discount_amount(self):
         """extends set_discount_amount method to add coupon calculations first"""
-        self.calculate_coupon_discounts()
+        if self.doc.meta.get_field("coupon_code"):
+            self.calculate_coupon_discounts()
         super(AWCCalculateTaxesAndTotals, self).set_discount_amount()
 
     def calculate_coupon_discounts(self):
         if self.doc.docstatus > 0:
             return # avoid messing with doc if already submitted
 
-       	# Apply coupon codes
+        # Apply coupon codes
         if self.doc.coupon_code:
             discount, msg, apply_discount_on, coupon_state = calculate_coupon_discount({
                 "items": self.doc.items,
