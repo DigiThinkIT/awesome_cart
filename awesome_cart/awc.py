@@ -153,15 +153,14 @@ def build_awc_options_from_varients(item):
 	if customer:
 		customer_lbl = customer.customer_group
 
-	cache_prefix = "awc-sku-{}".format(customer_lbl)
-	cache_key = "build_awc_options_from_varients-{}".format(item.name)
+	cache_prefix = "awc-sku"
+	cache_key = "build_awc_options_from_varients-{}-{}".format(customer_lbl, item.name)
 	cache_data = get_cache(key=cache_key, prefix=cache_prefix)
 
 	if cache_data:
 		return cache_data
 
 	item = frappe.get_doc("Item", item.name)
-	#item_data = frappe.get_all("Item", fields=["variant_of", "attributes", "has_variants"], filters={"name": item.name})
 
 	# early exit for items which are already variants to another item
 	if item.get('variant_of'):
@@ -247,7 +246,7 @@ def _get_cart_quotation(awc_session=None):
 	return cart_info.get('doc')
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
-def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
+def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None, skip_related=False):
 	"""Get's product in awcjs format by its sku and optionally detailed data."""
 
 	if not awc_session:
@@ -258,9 +257,16 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 	if customer:
 		customer_lbl = customer.customer_group
 
-	cache_prefix = "awc-sku-{}".format(customer_lbl)
-	cache_key = "get_product_by_sku-{}-{}".format(sku, "detailed" if detailed else "none")
+	cache_prefix = "awc-sku"
+	cache_key = "get_product_by_sku-{}-{}-{}-{}".format(customer_lbl, sku, "detailed" if detailed else "none", "skip_related" if skip_related else "none")
 	cache_data = get_cache(cache_key, session=awc_session, prefix=cache_prefix)
+
+	# invalidates cache dynamically without forcing a system wide cache clear.
+	invalidate_cache_key = "awc-item-invalidate-cache-{}".format(sku)
+	invalidate_cache = get_cache(invalidate_cache_key)
+	if invalidate_cache:
+		clear_cache_keys(invalidate_cache_key)
+		cache_data = None
 
 	if cache_data:
 		return cache_data
@@ -354,19 +360,22 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None):
 		product["detail"] = dict(
 			description_short=awc_item.description_short,
 			description_long=awc_item.description_long,
-			sections=get_content_sections(awc_item),
-			related_products=[ \
-				x for x in [ \
-					get_product_by_sku( \
-						sku=frappe.db.get_value("Item", r.item_name, "item_code"), \
-						detailed=True, \
-					    awc_session=awc_session, \
-						quotation=quotation).get("data") \
-					for r in awc_item.recomendations \
-					if frappe.db.get_value("Item", r.item_name, "item_code") != sku
-				] if x is not None \
-			]
-		)
+			sections=get_content_sections(awc_item))
+
+		if not skip_related:
+			product["detail"].update(dict(
+				related_products=[ \
+					x for x in [ \
+						get_product_by_sku( \
+							sku=frappe.db.get_value("Item", r.item_name, "item_code"), \
+							detailed=True, \
+							awc_session=awc_session, \
+							quotation=quotation,
+							skip_related=True).get("data") \
+						for r in awc_item.recomendations \
+						if frappe.db.get_value("Item", r.item_name, "item_code") != sku
+					] if x is not None ]
+				))
 
 	data = { "success": True, "data": product }
 	set_cache(cache_key, data, session=awc_session, prefix=cache_prefix)
@@ -409,9 +418,15 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 	if customer:
 		customer_lbl = customer.customer_group
 
-	cache_prefix = "awc-sku-{}".format(customer_lbl)
-	cache_key = "fetch_products-{}-{}-{}-{}-{}-{}".format(tags, terms, order_by, order_dir, start, limit)
+	cache_prefix = "awc-sku"
+	cache_key = "fetch_products-{}-{}-{}-{}-{}-{}-{}".format(customer_lbl, tags, terms, order_by, order_dir, start, limit)
 	cache_data = get_cache(cache_key, session=awc_session, prefix=cache_prefix)
+
+	# checks if any awc were invalidated and forces cache rebuild.
+	if get_cache("awc-catalog-invalidate"):
+		clear_cache_keys("awc-catalog-invalidate")
+		cache_data = None
+
 	if cache_data:
 		return cache_data
 
@@ -546,6 +561,22 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 
 	return payload
 
+def calculate_taxes_and_totals(quotation, awc_session):
+	quotation.run_method("calculate_taxes_and_totals")
+	# Fetches coupon label and discount breakdown after quotation save
+	# since we moved coupon calculations into on_calculate_tax_and_totals hook
+	awc = awc_session["cart"]
+	awc["discounts"] = None
+	if quotation.coupon_code:
+		coupon_label = frappe.get_value("AWC Coupon", quotation.get("coupon_code"), "coupon_label")
+		awc["totals"]["coupon"] = { "code": quotation.coupon_code, "label": coupon_label }
+
+		if quotation.get("discount_data"):
+			try:
+				awc_session["cart"]["discounts"] = json.loads(quotation.get("discount_data"))
+			except Exception as ex:
+				awc["discounts"] = None
+
 def collect_totals(quotation, awc, awc_session):
 	if not awc:
 		awc = awc_session.get("cart")
@@ -553,14 +584,11 @@ def collect_totals(quotation, awc, awc_session):
 	if quotation:
 		if quotation.get("discount_amount"):
 			awc["totals"]["coupon_total"] = -quotation.get("discount_amount")
-
-
 		elif "coupon_total" in awc["totals"]:
 			del awc["totals"]["coupon_total"]
 
-		calculate_quotation_discount(quotation, awc_session)
+		calculate_taxes_and_totals(quotation, awc_session)
 
-		quotation.run_method("calculate_taxes_and_totals")
 		awc["totals"]["sub_total"] = quotation.get("total")
 		awc["totals"]["grand_total"] = quotation.get("grand_total")
 
@@ -968,29 +996,9 @@ def remove_from_cart(items_to_remove, cart_items):
 
 	return success, removed_ids, awc_items
 
-def calculate_quotation_discount(quotation, awc_session):
-	awc = awc_session.get("cart")
-
-	if  quotation and quotation.get("coupon_code"):
-		coupon_code = quotation.get("coupon_code")
-		coupon_label = frappe.get_value("AWC Coupon", quotation.get("coupon_code"), "coupon_label")
-		awc["totals"]["coupon"] = { "code": coupon_code, "label": coupon_label }
-
-		# check if we've stored a breakdown of the coupon, if not rebuild once
-		if coupon_code:
-			discount, msg, apply_discount_on, coupon_state = calculate_coupon_discount(
-				quotation.items, coupon_code, quotation.taxes)
-			awc["discounts"] = coupon_state
-	else:
-		awc["discounts"] = None
-
-
 def update_cart_settings(quotation, awc_session):
-	#apply_cart_settings(quotation=quotation)
 	set_taxes(quotation, get_shopping_cart_settings())
-	#quotation.run_method("calculate_taxes_and_totals")
 	update_shipping_quotation(quotation, awc_session)
-	calculate_quotation_discount(quotation, awc_session)
 
 def call_awc_sync_hook(awc_session, quotation):
 	awc = awc_session.get("cart")
@@ -1142,8 +1150,6 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 	shipping_address_name = None
 
 	if quotation:
-		#update_cart_settings(quotation, awc_session)
-
 		if address:
 			shipping_address_name = address.get("shipping_address")
 
@@ -1312,8 +1318,6 @@ def cart(data=None, action=None):
 			quotation.use_customer_fedex_account = 1 if data[0].get(
 				"address", {}).get("use_customer_fedex_account") else 0
 			quotation.flags.ignore_permissions = True
-			#quotation.save()
-			#frappe.db.commit()
 
 		result = calculate_shipping(rate_name, address, awc_session, quotation, save=True)
 
@@ -1347,9 +1351,6 @@ def cart(data=None, action=None):
 						if quotation_item:
 							quotation_item.set(erp_key, item.get(awc_key))
 
-							#if erp_key == "qty":
-								#quotation_item.amount = flt(quotation_item.rate) * quotation_item.qty
-
 				if awc_item.get('options', {}).get('group'):
 					# find all subgroup items and update qty accordingly
 					for sub_item in [i for i in awc["items"] if i.get('options', {}).get('group') == awc_item.get('options', {}).get('group')]:
@@ -1359,7 +1360,6 @@ def cart(data=None, action=None):
 							sub_quotation_item = next((q for q in quotation.get("items", []) if q.name == sub_item.get("id")), None)
 							if sub_quotation_item:
 								sub_quotation_item.set("qty", sub_item.get("qty"))
-								#sub_quotation_item.amount = flt(sub_quotation_item.rate) * sub_quotation_item.qty
 
 						sub_item["total"] = sub_item["unit"] * sub_item["qty"]
 
@@ -1518,7 +1518,13 @@ def cart(data=None, action=None):
 			is_valid = frappe.response.get("is_coupon_valid")
 
 			if is_valid:
-				discount, msg, apply_discount_on, coupon_state = calculate_coupon_discount(quotation.items, coupon, quotation.taxes)
+				discount, msg, apply_discount_on, coupon_state = calculate_coupon_discount({
+					"items": quotation.items,
+					"code": coupon,
+					"accounts": quotation.taxes,
+					"grand_total": quotation.base_grand_total,
+					"net_total": quotation.base_net_total
+				})
 
 				if discount == 0:
 					is_valid = False
@@ -1538,18 +1544,13 @@ def cart(data=None, action=None):
 			msg = "Please Login to Apply Coupon"
 			awc["discounts"] = None
 
-		if success:
-			save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
-			return session_response({
-				"success": True
-			}, awc_session, quotation)
-
 		save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
-		return session_response({
-			"success": False,
-			"message": _(msg)
-		}, awc_session, quotation)
 
+		result = { "success": success }
+		if not success:
+			result["message"] = _(msg)
+
+		return session_response(result, awc_session, quotation)
 
 	elif action == "removeCoupon":
 		awc["discounts"] = None
@@ -1707,9 +1708,6 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	if shipping_address.get("ship_method"):
 		# retrieve quoted chargesfee
 		rates = awc_session.get("shipping_rates")
-		#data["shipping_method"] = shipping_address.get("ship_method")
-		#if rates:
-		#	data["shipping_fee"] = rates.get(data["shipping_method"], {}).get("fee")
 
 	data.update({ "billing_%s" % key: value for key, value in billing_address.iteritems() })
 	data.update({ "shipping_%s" % key: value for key, value in shipping_address.iteritems() })

@@ -11,7 +11,7 @@ from frappe.utils import random_string
 
 from .session import clear_awc_session, clear_cache_keys
 from .compat.customer import get_current_customer
-from .awesome_cart.doctype.awc_coupon.awc_coupon import calculate_coupon_discount, is_coupon_valid as _is_coupon_valid
+from .awesome_cart.doctype.awc_coupon.awc_coupon import is_coupon_valid as _is_coupon_valid
 
 from dti_devtools.debug import log, pretty_json
 
@@ -126,16 +126,6 @@ def quotation_validate(doc, method):
 
 	doc.items = sorted(doc.items, key=lambda x: x.idx)
 
-	# Apply coupon codes
-	if doc.coupon_code:
-		discount, msg, apply_discount_on = calculate_coupon_discount(doc.items, doc.coupon_code, doc.get("taxes", []))[0:3]
-		if discount is not False and discount != doc.discount_amount:
-			doc.discount_amount = discount
-			doc.apply_discount_on = apply_discount_on or "Net Total"
-			doc.run_method("calculate_taxes_and_totals")
-		elif discount is False:
-			raise msg
-
 	return True
 
 @frappe.whitelist()
@@ -174,7 +164,8 @@ def clear_cache_on_doc_update(doc, method):
 	clear_cache()
   
 def clear_cache(customer_group=""):
-	clear_cache_keys(['awc-sku-{}'.format(customer_group), 'awc-variant-{}'.format(customer_group), 'awc-products-{}'.format(customer_group)])
+	clear_cache_keys(['*awc-sku*', '*awc-variant*', '*awc-products*'])
+		
 
 def fn_wrap(fn, before_fn):
 	"""A fn hot patch helper. Use to wrap method not accesible through hooks or other ways in ERPN.
@@ -214,3 +205,7 @@ def run_hotpatch(*args, **kwargs):
 	if not hasattr(get_item_details.process_args, "__patched"):
 		print(" - Patched: erpnext.stock.get_item_details.process_args -> awesome_cart.utils.erpnext_stock_get_item_details")
 		get_item_details.process_args = fn_wrap(get_item_details.process_args, erpnext_stock_get_item_details)
+
+def on_calculate_taxes_and_totals(doc):
+	from .taxes_and_totals import AWCCalculateTaxesAndTotals
+	AWCCalculateTaxesAndTotals(doc)

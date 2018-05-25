@@ -1,17 +1,11 @@
 {{#if related_products }}
 <div class="related-products">
-    <div class="section-content container horizontal-gallery" data-horizontal-gallery>
+    <div class="section-content container">
         <h3>You May Also Like</h3>
-        <ul>
+        <div class="slick-horizontal">
             {{#each related_products }}
-            <li>{{{ template related_widget this }}}</li>
+            <div>{{{ template related_widget this }}}</div>
             {{/each}}
-        </ul>
-        <div class="control left">
-            <span class="glyphicon glyphicon-chevron-left"></span>
-        </div>
-        <div class="control right">
-            <span class="glyphicon glyphicon-chevron-right"></span>
         </div>
     </div>
 </div>
