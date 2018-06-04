@@ -1345,7 +1345,7 @@ def cart(data=None, action=None):
 					if awc_key in item:
 						awc_item[awc_key] = item.get(awc_key)
 
-						if awc_key == "qty":
+						if awc_key == "qty" and awc_item["qty"]:
 							awc_item["total"] = awc_item["unit"] * awc_item["qty"]
 
 						if quotation_item:
@@ -1363,7 +1363,7 @@ def cart(data=None, action=None):
 
 						sub_item["total"] = sub_item["unit"] * sub_item["qty"]
 
-				if awc_item.get("qty") == 0:
+				if not awc_item.get("qty"):
 					remove_items.append(awc_item)
 
 		# remove all 0 qty items
