@@ -560,7 +560,7 @@ body.is_logged_in .coupon_input.no-login {
 	width: 18px;
 	left: 3px;
 	bottom: 3px;
-	background-color: white;
+	/*background-color: white;*/
 	-webkit-transition: .4s;
 	transition: .4s;
 }
