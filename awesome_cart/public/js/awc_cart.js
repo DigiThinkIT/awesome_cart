@@ -334,7 +334,7 @@ awc_checkout = {
 
 		// add new billing address button
 		$billing_container.find(".btn-primary").click(function(e) {
-			displayAddNewBillingAddress();
+			awc_checkout.displayAddNewBillingAddress();
 		});
 
 		// billing form back button click
