@@ -1351,7 +1351,7 @@ def cart(data=None, action=None):
 						if quotation_item:
 							quotation_item.set(erp_key, item.get(awc_key))
 
-				if awc_item.get('options', {}).get('group'):
+				if awc_item.get('options', {}).get('group') and awc_item.get("qty"):
 					# find all subgroup items and update qty accordingly
 					for sub_item in [i for i in awc["items"] if i.get('options', {}).get('group') == awc_item.get('options', {}).get('group')]:
 						sub_item["qty"] = awc_item["qty"]
