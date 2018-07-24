@@ -323,7 +323,7 @@ def is_coupon_valid(coupon_code, customer, now=None):
 		if quotes_total > coupon_doc.customer_limit:
 			return {
 				"is_valid": False,
-				"msg": _("Coupon Use Limit Reached: {limit}").format(coupon_doc.customer_limit),
+				"msg": _("Coupon Use Limit Reached: {limit}").format(limit=coupon_doc.customer_limit),
 				"code": "USE_LIMIT_REACHED"
 			}
 
