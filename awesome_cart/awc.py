@@ -1278,7 +1278,7 @@ def cart(data=None, action=None):
 		save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
 		return { "data": awc, "success": True}
 
-	elif action == "calculate_shipping":
+	if action == "calculate_shipping":
 		rate_name = data[0].get("name")
 		address = data[0].get("address")
 		if address:
@@ -1315,8 +1315,8 @@ def cart(data=None, action=None):
 
 		# check and update use_customer_fedex_account field in quotation
 		if quotation:
-			quotation.use_customer_fedex_account = 1 if data[0].get(
-				"address", {}).get("use_customer_fedex_account") else 0
+			quotation.use_customer_fedex_account = 1 if data[0].get("address", {}).get("use_customer_fedex_account") else 0
+			quotation.fedex_account_number = frappe.db.get_value("Customer", quotation.customer, "fedex_account_number")
 			quotation.flags.ignore_permissions = True
 
 		result = calculate_shipping(rate_name, address, awc_session, quotation, save=True)
