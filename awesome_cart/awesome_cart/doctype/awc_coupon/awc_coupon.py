@@ -327,9 +327,17 @@ def is_coupon_valid(coupon_code, customer, now=None):
 				"code": "USE_LIMIT_REACHED"
 			}
 
+	items_to_insert = []
+	for insert_item in coupon_doc.insert_items:
+		items_to_insert.append({
+			"sku": frappe.db.get_value("Item", insert_item.item_name, "item_code"),
+			"qty": insert_item.qty
+		})
+
 	return {
 		"is_valid": True,
 		"msg": "Valid",
 		"label": coupon_doc.coupon_label,
+		"insert_items": items_to_insert,
 		"CODE": "SUCCESS"
 	}
