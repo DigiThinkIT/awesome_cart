@@ -1,0 +1,3 @@
+---
+exclude_paths:
+ - 'awesome_cart/public/js/client/awc.standalone.js'
