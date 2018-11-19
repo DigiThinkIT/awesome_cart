@@ -665,7 +665,8 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 	# if quotation timestamp > awc_session timestamp then we'll reset the cart
 	# and allow the quotation to rebuild it as this means a system user updated the
 	# quotation on the backend while they had the cart open
-	if awc_session.get('timestamp') and timestamp(quotation.modified) > awc_session.get('timestamp'):
+
+	if timestamp(quotation.modified) > awc_session.get('timestamp', 0):
 		clear_awc_session(awc_session, cart_only=True)
 
 		# find disabled items we should not keep on the cart
@@ -813,6 +814,7 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 
 		# step 3
 		# now create awc items for quotation items not matched with existing awc session
+
 		for item in [qitem for qitem in quotation.get("items", []) \
 			if qitem.name not in awc_items_matched]:
 
@@ -1226,7 +1228,7 @@ def save_and_commit_quotation(quotation, is_dirty, awc_session, commit=False, sa
 	collect_totals(quotation, None, awc_session)
 
 	if save_session:
-		if quotation:
+		if quotation and len(awc_session.get('cart', {}).get('items', [])) > 0:
 			awc_session['timestamp'] = timestamp(quotation.modified)
 		set_awc_session(awc_session)
 
