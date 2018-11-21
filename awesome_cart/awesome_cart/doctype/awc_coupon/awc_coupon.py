@@ -331,7 +331,8 @@ def is_coupon_valid(coupon_code, customer, now=None):
 	for insert_item in coupon_doc.insert_items:
 		items_to_insert.append({
 			"sku": frappe.db.get_value("Item", insert_item.item_name, "item_code"),
-			"qty": insert_item.qty
+			"qty": insert_item.qty,
+			"total_is_greater_than": insert_item.get("total_is_greater_than", 0)
 		})
 
 	return {

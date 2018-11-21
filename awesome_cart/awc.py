@@ -1561,10 +1561,12 @@ def cart(data=None, action=None):
 
 						insert_items = [ \
 							x for x in insert_items \
-								if cart_sku_qty(x.get("sku"), awc_session) < x.get("qty", 0) \
+								if cart_sku_qty(x.get("sku"), awc_session) < x.get("qty", 0) and \
+									quotation.base_grand_total >= x.get("total_is_greater_than", 0) \
 						]
-						quotation_is_dirty, removed_ids = add_to_cart(insert_items, awc_session, quotation)
-						result["removed_ids"] = removed_ids
+						if len(insert_items) > 0:
+							quotation_is_dirty, removed_ids = add_to_cart(insert_items, awc_session, quotation)
+							result["removed_ids"] = removed_ids
 
 					quotation.coupon_code = coupon
 					quotation_is_dirty = True
