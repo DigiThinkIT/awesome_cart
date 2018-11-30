@@ -81,7 +81,13 @@ def clear_awc_session(awc_session=None, cart_only=False):
 	if awc_session.get("timestamp"):
 		del awc_session["timestamp"]
 
-	awc_session["cart"] = { "items": [], "discounts": None, "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
+	if not awc_session.get("cart"):
+		awc_session["cart"] = { "items": [], "discounts": None, "totals": { "sub_total": 0, "grand_total": 0, "other": [] } }
+	else:
+		# clean up without dropping cart item references
+		del awc_session["cart"]["items"][:]
+		awc_session["cart"]["discounts"] = None
+		awc_session["totals"] = { "sub_total": 0, "grand_total": 0, "other": [] }
 
 def hash_key(key, prefix=''):
 	if prefix:

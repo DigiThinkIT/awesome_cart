@@ -896,8 +896,6 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 				if msg:
 					msg = msg.format(coupon_code=quotation.coupon_code)
 					frappe.response["awc_alert"] = msg
-					# Q: This isn't showing up on front end... why?
-					# frappe.msgprint(msg, title="Message", alert=1)
 
 				if "coupon_total" in awc["totals"]:
 					del awc["totals"]["coupon_total"]

@@ -112,6 +112,7 @@ def set_cart_customer(customer_name):
 
 		clear_cache()
 		awc_session = get_awc_session()
+		clear_awc_session(awc_session)
 		awc_session["selected_customer"] = customer_name
 		set_awc_session(awc_session)
 
