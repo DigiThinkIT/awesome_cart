@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import traceback
 import frappe
 
-from .session import get_awc_session, set_awc_session
+from .session import get_awc_session, set_awc_session, clear_awc_session
 from .utils import clear_cache
 from .dbug import pretty_json
 
