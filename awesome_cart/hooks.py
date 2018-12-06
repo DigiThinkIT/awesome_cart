@@ -66,6 +66,12 @@ doc_events = {
 	}
 }
 
+scheduler_events = {
+	"daily_long": [
+		"awesome_cart.utils.remove_expired_coupons"
+	],
+}
+
 on_calculate_taxes_and_totals = "awesome_cart.utils.on_calculate_taxes_and_totals"
 
 # cart context override
