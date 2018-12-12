@@ -17,8 +17,13 @@ class AWCCoupon(Document):
 				not item.get("item_b"):
 				frappe.throw("Item B Must be defined if using apply logic or item: {0}".format(item.item_name))
 
-def calculate_service_discount(account, coupon_service, state):
+def calculate_service_discount(account, coupon_service, state, shipping_info):
 	result = 0
+
+	if coupon_service.get("apply_when") == "Is Ground Shipping" and \
+		not shipping_info.get("is_ground_shipping"):
+		return 0
+
 	amount = account.get("amount", account.get("tax_amount"))
 	discount_type = coupon_service.get("discount_type")
 	discount_value = coupon_service.get("discount_value")
@@ -135,6 +140,10 @@ def calculate_coupon_discount(config):
 	grand_total = config.get("grand_total")
 	net_total = config.get("net_total")
 
+	shipping_info = {
+		"is_ground_shipping": config.get("is_ground_shipping")
+	}
+
 	if frappe.db.exists("AWC Coupon", coupon_code):
 		coupon_doc = frappe.get_doc("AWC Coupon", coupon_code)
 	else:
@@ -212,7 +221,8 @@ def calculate_coupon_discount(config):
 				service_discount = calculate_service_discount(
 						account,
 						caccount,
-						discount_state)
+						discount_state,
+						shipping_info)
 
 				discount_amount += service_discount
 
@@ -247,7 +257,8 @@ def calculate_coupon_discount(config):
 	return (discount_amount,
 		"Coupon Discount Total: {0}".format(discount_amount),
 		coupon_doc.apply_discount_on,
-		discount_state)
+		discount_state,
+		True if len(coupon_doc.services) > 0 else False)
 
 def is_coupon_valid(coupon_code, customer, now=None):
 	if not now:
@@ -332,6 +343,7 @@ def is_coupon_valid(coupon_code, customer, now=None):
 		items_to_insert.append({
 			"sku": frappe.db.get_value("Item", insert_item.item_name, "item_code"),
 			"qty": insert_item.qty,
+			"lock_qty": insert_item.get("lock_qty", False),
 			"total_is_greater_than": insert_item.get("total_is_greater_than", 0)
 		})
 
