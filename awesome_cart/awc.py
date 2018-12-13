@@ -708,6 +708,11 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 					item = quotation.items[idx]
 					# make sure product exists
 					if product_found:
+
+						if item.awc_lock_qty != awc_item.get("lock_qty", 0):
+							item.awc_lock_qty = awc_item.get("lock_qty", 0)
+							quotation_is_dirty = True
+
 						if item.qty != awc_item.get("qty"):
 							item.qty = awc_item.get("qty")
 							quotation_is_dirty = True
@@ -764,7 +769,8 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 							"item_name": product.get("name"),
 							"description": awc_item.get("options", {}).get("description", product.get("name")),
 							"qty": cint(awc_item.get("qty")),
-							"warehouse": product.get("warehouse")
+							"warehouse": product.get("warehouse"),
+							"awc_lock_qty": awc_item.get("lock_qty", 0)
 						}
 
 						if awc_item.get("options", {}).get("image"):
@@ -831,6 +837,7 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 					"unit": item.rate,
 					"total": item.amount,
 					"image": item.image,
+					"lock_qty": item.get("awc_lock_qty", 0),
 					"base_price": product.get("base_price"),
 					"options": {
 						"description": item.description
@@ -1235,7 +1242,7 @@ def save_and_commit_quotation(quotation, is_dirty, awc_session, commit=False, sa
 
 	return result
 
-def add_to_cart(data, awc_session, quotation):
+def add_to_cart(data, awc_session, quotation, allow_qty_lock=False):
 	quotation_is_dirty = False
 	awc = awc_session.get("cart")
 	to_remove = []
@@ -1275,7 +1282,8 @@ def add_to_cart(data, awc_session, quotation):
 				"item_name": product.get("name"),
 				"description": item.get("options", {}).get("description", product.get("name")),
 				"qty": cint(item.get("qty")),
-				"warehouse": product.get("warehouse")
+				"warehouse": product.get("warehouse"),
+				"lock_qty": item.get("lock_qty", 0) if allow_qty_lock else 0
 			}
 
 			update_quotation_item_awc_fields(item_data, item)
@@ -1444,16 +1452,18 @@ def cart(data=None, action=None):
 							quotation_item.set(erp_key, item.get(awc_key))
 
 				if awc_item.get('options', {}).get('group') and awc_item.get("qty"):
-					# find all subgroup items and update qty accordingly
-					for sub_item in [i for i in awc["items"] if i.get('options', {}).get('group') == awc_item.get('options', {}).get('group')]:
-						sub_item["qty"] = awc_item["qty"]
+					# do not update qty if locked
+					if not awc_item.get("lock_qty", 0):
+						# find all subgroup items and update qty accordingly
+						for sub_item in [i for i in awc["items"] if i.get('options', {}).get('group') == awc_item.get('options', {}).get('group')]:
+							sub_item["qty"] = awc_item["qty"]
 
-						if quotation:
-							sub_quotation_item = next((q for q in quotation.get("items", []) if q.name == sub_item.get("id")), None)
-							if sub_quotation_item:
-								sub_quotation_item.set("qty", sub_item.get("qty"))
+							if quotation:
+								sub_quotation_item = next((q for q in quotation.get("items", []) if q.name == sub_item.get("id")), None)
+								if sub_quotation_item:
+									sub_quotation_item.set("qty", sub_item.get("qty"))
 
-						sub_item["total"] = sub_item["unit"] * sub_item["qty"]
+							sub_item["total"] = sub_item["unit"] * sub_item["qty"]
 
 				if not awc_item.get("qty"):
 					remove_items.append(awc_item)
@@ -1537,15 +1547,17 @@ def cart(data=None, action=None):
 			is_valid = frappe.response.get("is_coupon_valid")
 
 			if is_valid:
-				discount, msg, apply_discount_on, coupon_state = calculate_coupon_discount({
+				shipping_method = awc_session.get("shipping_method", {}).get("name") or quotation.get("fedex_shipping_method", "").upper()
+				discount, msg, apply_discount_on, coupon_state, has_services = calculate_coupon_discount({
 					"items": quotation.items,
 					"code": coupon,
 					"accounts": quotation.taxes,
 					"grand_total": quotation.base_grand_total,
-					"net_total": quotation.base_net_total
+					"net_total": quotation.base_net_total,
+					"is_ground_shipping": True if "GROUND" in shipping_method else False
 				})
 
-				if discount == 0:
+				if discount == 0 and not frappe.response.get("coupon_insert_items", False) and not has_services:
 					is_valid = False
 					success = False
 					awc["discounts"] = None
@@ -1563,7 +1575,7 @@ def cart(data=None, action=None):
 									quotation.base_grand_total >= x.get("total_is_greater_than", 0) \
 						]
 						if len(insert_items) > 0:
-							quotation_is_dirty, removed_ids = add_to_cart(insert_items, awc_session, quotation)
+							quotation_is_dirty, removed_ids = add_to_cart(insert_items, awc_session, quotation, True)
 							result["removed_ids"] = removed_ids
 
 					quotation.coupon_code = coupon
@@ -1571,11 +1583,13 @@ def cart(data=None, action=None):
 					success = True
 			else:
 				awc["discounts"] = None
+				del awc["totals"]["coupon"]
 		else:
 			# must be logged in to use cupon
 			success = False
 			msg = "Please Login to Apply Coupon"
 			awc["discounts"] = None
+			del awc["totals"]["coupon"]
 
 		save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
 
@@ -1588,6 +1602,7 @@ def cart(data=None, action=None):
 
 	elif action == "removeCoupon":
 		awc["discounts"] = None
+		del awc["totals"]["coupon"]
 
 		if quotation:
 			quotation.discount_amount = 0

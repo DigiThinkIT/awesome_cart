@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import json
 
 from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
+from .session import *
 from .awesome_cart.doctype.awc_coupon.awc_coupon import calculate_coupon_discount
 
 class AWCCalculateTaxesAndTotals(calculate_taxes_and_totals):
@@ -22,14 +23,18 @@ class AWCCalculateTaxesAndTotals(calculate_taxes_and_totals):
         if self.doc.docstatus > 0:
             return # avoid messing with doc if already submitted
 
+        awc_session = get_awc_session()
+
         # Apply coupon codes
         if self.doc.coupon_code:
-            discount, msg, apply_discount_on, coupon_state = calculate_coupon_discount({
+            shipping_method = awc_session.get("shipping_method", {}).get("name") or self.doc.get("fedex_shipping_method", "").upper()
+            discount, msg, apply_discount_on, coupon_state, has_services = calculate_coupon_discount({
                 "items": self.doc.items,
                 "code": self.doc.coupon_code,
                 "accounts": self.doc.get("taxes", []),
                 "grand_total": self.doc.base_grand_total,
-                "net_total": self.doc.base_net_total
+                "net_total": self.doc.base_net_total,
+                "is_ground_shipping": True if "GROUND" in shipping_method else False
             })
 
             # appends our discount data list, we can use it to list discount details
