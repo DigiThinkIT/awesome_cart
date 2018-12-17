@@ -1548,7 +1548,7 @@ def cart(data=None, action=None):
 
 			if is_valid:
 				shipping_method = awc_session.get("shipping_method", {}).get("name") or quotation.get("fedex_shipping_method", "").upper()
-				discount, msg, apply_discount_on, coupon_state, has_services = calculate_coupon_discount({
+				discount, msg, apply_discount_on, coupon_state, has_services, has_total_limit = calculate_coupon_discount({
 					"items": quotation.items,
 					"code": coupon,
 					"accounts": quotation.taxes,
@@ -1557,11 +1557,12 @@ def cart(data=None, action=None):
 					"is_ground_shipping": True if "GROUND" in shipping_method else False
 				})
 
-				if discount == 0 and not frappe.response.get("coupon_insert_items", False) and not has_services:
+				if has_total_limit or (discount == 0 and not frappe.response.get("coupon_insert_items", False) and not has_services):
 					is_valid = False
 					success = False
 					awc["discounts"] = None
-					msg = "Coupon is invalid for the current cart."
+					if not has_total_limit:
+						msg = "Coupon is invalid for the current cart."
 				else:
 					awc["discounts"] = coupon_state
 					
@@ -1583,7 +1584,8 @@ def cart(data=None, action=None):
 					success = True
 			else:
 				awc["discounts"] = None
-				del awc["totals"]["coupon"]
+				if "coupon" in awc["totals"]:
+					del awc["totals"]["coupon"]
 		else:
 			# must be logged in to use cupon
 			success = False

@@ -139,6 +139,8 @@ def calculate_coupon_discount(config):
 	accounts = config.get("accounts")
 	grand_total = config.get("grand_total")
 	net_total = config.get("net_total")
+	total_limit = False
+	msg = None
 
 	shipping_info = {
 		"is_ground_shipping": config.get("is_ground_shipping")
@@ -253,12 +255,18 @@ def calculate_coupon_discount(config):
 			# resets discount if total rule doesn't work
 			discount_amount = 0
 			discount_state = []
+			total_limit = True
+			msg = "Your cart must be at least ${0} to apply this coupon.".format(coupon_doc.total_rule_value)
+
+	if not msg:
+		msg = "Coupon Discount Total: {0}".format(discount_amount),
 
 	return (discount_amount,
-		"Coupon Discount Total: {0}".format(discount_amount),
+		msg,
 		coupon_doc.apply_discount_on,
 		discount_state,
-		True if len(coupon_doc.services) > 0 else False)
+		True if len(coupon_doc.services) > 0 else False,
+		total_limit)
 
 def is_coupon_valid(coupon_code, customer, now=None):
 	if not now:

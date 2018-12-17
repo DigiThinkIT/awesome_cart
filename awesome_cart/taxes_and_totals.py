@@ -28,7 +28,7 @@ class AWCCalculateTaxesAndTotals(calculate_taxes_and_totals):
         # Apply coupon codes
         if self.doc.coupon_code:
             shipping_method = awc_session.get("shipping_method", {}).get("name") or self.doc.get("fedex_shipping_method", "").upper()
-            discount, msg, apply_discount_on, coupon_state, has_services = calculate_coupon_discount({
+            discount, msg, apply_discount_on, coupon_state, has_services, has_total_limit = calculate_coupon_discount({
                 "items": self.doc.items,
                 "code": self.doc.coupon_code,
                 "accounts": self.doc.get("taxes", []),
@@ -42,7 +42,7 @@ class AWCCalculateTaxesAndTotals(calculate_taxes_and_totals):
             if self.doc.meta.get_field("discount_data"):
                 self.doc.discount_data = json.dumps(coupon_state)
 
-            if discount is not False and discount != self.doc.discount_amount:
+            if not has_total_limit and discount is not False and discount != self.doc.discount_amount:
                 self.doc.discount_amount = discount
                 self.doc.apply_discount_on = apply_discount_on or "Net Total"
             elif discount is False:
