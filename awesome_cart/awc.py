@@ -1547,7 +1547,7 @@ def cart(data=None, action=None):
 			is_valid = frappe.response.get("is_coupon_valid")
 
 			if is_valid:
-				shipping_method = awc_session.get("shipping_method", {}).get("name") or quotation.get("fedex_shipping_method", "").upper()
+				shipping_method = awc_session.get("shipping_method", {}).get("name") or (quotation.get("fedex_shipping_method") or "").upper()
 				discount, msg, apply_discount_on, coupon_state, has_services, has_total_limit = calculate_coupon_discount({
 					"items": quotation.items,
 					"code": coupon,
@@ -1565,7 +1565,7 @@ def cart(data=None, action=None):
 						msg = "Coupon is invalid for the current cart."
 				else:
 					awc["discounts"] = coupon_state
-					
+
 					insert_items = frappe.response.get("coupon_insert_items", False)
 
 					if insert_items:

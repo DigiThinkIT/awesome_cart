@@ -27,7 +27,7 @@ class AWCCalculateTaxesAndTotals(calculate_taxes_and_totals):
 
         # Apply coupon codes
         if self.doc.coupon_code:
-            shipping_method = awc_session.get("shipping_method", {}).get("name") or self.doc.get("fedex_shipping_method", "").upper()
+            shipping_method = awc_session.get("shipping_method", {}).get("name") or (self.doc.get("fedex_shipping_method") or "").upper()
             discount, msg, apply_discount_on, coupon_state, has_services, has_total_limit = calculate_coupon_discount({
                 "items": self.doc.items,
                 "code": self.doc.coupon_code,
