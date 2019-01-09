@@ -1691,7 +1691,6 @@ def update_shipping_rate(address, awc_session, is_pickup=False):
 
 @frappe.whitelist()
 def create_transaction(gateway_service, billing_address, shipping_address, instructions=""):
-
 	if billing_address and isinstance(billing_address, basestring):
 		billing_address = json.loads(billing_address)
 
@@ -1714,12 +1713,11 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	cart_info = get_user_quotation(awc_session)
 	quotation = cart_info.get('doc')
 
-
 	quotation_is_dirty = False
 	# assign instructions to quotation
 	if instructions:
 		quotation.instructions = instructions
-		quotation_is_dirty = False
+		quotation_is_dirty = True
 
 	# set billilng address
 	if billing_address.get("billing_address") and quotation.customer_address != billing_address.get("billing_address"):
