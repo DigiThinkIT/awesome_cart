@@ -77,12 +77,14 @@ class AWCTransaction(Document):
 					if tries <= 0:
 						raise ex
 					else:
-						print("--------------------------------------------------------------")
-						print("Caught error while trying to save quotation in awc transaction")
-						print("Attempting to save again...")
-						print(ex)
-						print(" - RESPONSE -------------- ")
-						print(frappe.local.response)
+						msg = """
+						--------------------------------------------------------------
+						Caught error while trying to save quotation in awc transaction
+						Attempting to save again...
+						{}
+						- RESPONSE --------------
+						{}""".format(ex, frappe.local.respone)
+						log(msg, trace=1)
 
 			# create sales order
 			so = convert_quotation_to_sales_order(quotation)
