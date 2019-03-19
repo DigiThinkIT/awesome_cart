@@ -23,52 +23,74 @@ LOG_LEVELS = {
 
 class AWCTransaction(Document):
 
+	def update_quotation(self):
+		quotation = frappe.get_doc("Quotation", self.order_id)
+		# check if we have a billing address linked
+		if self.get('billing_address'):
+			quotation.customer_address = self.billing_address
+		else:
+			# else create one from transaction data
+			quotation.customer_address = create_address(
+				parent_dt="Customer",
+				parent=quotation.customer,
+				address_1=self.get("billing_address_1"),
+				address_2=self.get("billing_address_2"),
+				city=self.get("billing_city"),
+				state=self.get("billing_state"),
+				pincode=self.get("billing_pincode"),
+				country=self.get("billing_country"),
+				email=self.get("payer_email"),
+				address_type="Billing",
+				phone=self.get("billing_phone"),
+				title=self.get("billing_title"),
+				return_name=1,
+				flags={"ignore_permissions": 1}
+			)
+
+		# check if we have a shipping address linked
+		quotation.shipping_address_name = self.shipping_address
+
+		# assign formatted address text
+		if not quotation.shipping_address_name:
+			quotation.shipping_address_name = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
+
+		quotation.address_display = get_address_display(frappe.get_doc("Address", quotation.customer_address).as_dict())
+		quotation.shipping_address = get_address_display(frappe.get_doc("Address", quotation.shipping_address_name).as_dict())
+
+		quotation.flags.ignore_permissions = 1
+		quotation.save()
+
+		return quotation
+
 	def on_payment_authorized(self, payment_status):
 		try:
-			quotation = frappe.get_doc("Quotation", self.order_id)
 
-			# check if we have a billing address linked
-			if self.get('billing_address'):
-				quotation.customer_address = self.billing_address
-			else:
-				# else create one from transaction data
-				quotation.customer_address = create_address(
-					parent_dt="Customer",
-					parent=quotation.customer,
-					address_1=self.get("billing_address_1"),
-					address_2=self.get("billing_address_2"),
-					city=self.get("billing_city"),
-					state=self.get("billing_state"),
-					pincode=self.get("billing_pincode"),
-					country=self.get("billing_country"),
-					email=self.get("payer_email"),
-					address_type="Billing",
-					phone=self.get("billing_phone"),
-					title=self.get("billing_title"),
-					return_name=1,
-					flags={"ignore_permissions": 1}
-				)
-
-			# check if we have a shipping address linked
-			quotation.shipping_address_name = self.shipping_address
-
-			# assign formatted address text
-			if not quotation.shipping_address_name:
-				quotation.shipping_address_name = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
-
-			quotation.address_display = get_address_display(frappe.get_doc("Address", quotation.customer_address).as_dict())
-			quotation.shipping_address = get_address_display(frappe.get_doc("Address", quotation.shipping_address_name).as_dict())
-
-			quotation.flags.ignore_permissions = 1
-			quotation.save()
+			# dumb loop to catch out of sync quotation.
+			# loop at least 3 times for timestamp error
+			tries = 3
+			while tries > 0:
+				try:
+					quotation = self.update_quotation()
+					tries = 0 # success, exit loop
+				except Exception as ex:
+					tries = tries - 1
+					if tries <= 0:
+						raise ex
+					else:
+						msg = """
+						--------------------------------------------------------------
+						Caught error while trying to save quotation in awc transaction
+						Attempting to save again...
+						{}
+						- RESPONSE --------------
+						{}""".format(ex, frappe.local.respone)
+						log(msg, trace=1)
 
 			# create sales order
 			so = convert_quotation_to_sales_order(quotation)
 
 			if self.flags.get("skip_payment_request", False):
 				so.submit()
-				# NOTE: TEST THIS!!!! WHY IS THERE A SAVE AFTER SUBMIT???????
-				#so.save()
 
 				self.reference_doctype = "Sales Order"
 				self.reference_docname = so.name
@@ -96,9 +118,6 @@ class AWCTransaction(Document):
 				#############################################################
 
 				preq.flags.ignore_permissions=1
-				# preq.insert()
-
-				log(preq)
 
 				if preq.docstatus != 1:
 					preq.submit()
@@ -117,10 +136,6 @@ class AWCTransaction(Document):
 				result = preq.run_method("on_payment_authorized", payment_status)
 			else:
 				result = None
-
-			# update shipping method in Sales Order
-			#if self.get("shipping_method"):
-			#	frappe.db.set_value("Sales Order", self.order_id, "fedex_shipping_method", self.get("shipping_method"))
 
 			if self.get("gateway_service"):
 				has_universals = False
@@ -151,7 +166,7 @@ class AWCTransaction(Document):
 			# TODO: Consider bring this to erpnext team to remove warning
 			if frappe.local.message_log:
 				for msg in frappe.local.message_log:
-					self.log_action(msg, "Info")
+					log(msg)
 				frappe.local.message_log = []
 
 			# don't kill processing if saving cleaning session address info breaks
@@ -160,13 +175,11 @@ class AWCTransaction(Document):
 				awc.clear_awc_session()
 			except Exception as awc_ex:
 				log(frappe.get_traceback())
-				self.log_action(frappe.get_traceback(), "Error")
 				pass
 
 			return result
 		except Exception as ex:
 			log(frappe.get_traceback())
-			self.log_action(frappe.get_traceback(), "Error")
 			raise ex
 
 	def max_log_level(self, level):
