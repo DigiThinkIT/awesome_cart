@@ -314,7 +314,7 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None, skip_r
 	price_info = get_price(item.item_code, price_list)
 	price = price_info.get("rate")
 
-	variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.name, "disabled": 0})
+	variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.name, "disabled": 0, "show_variant_in_website": 1})
 	for vitem in variants:
 		vprice = get_price(vitem.get("item_code"), price_list).get("rate")
 		if vprice < price:
@@ -524,7 +524,7 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 			price_info = get_price(item.get("item_code"), price_list)
 			price = price_info.get("rate")
 
-			variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name"), "disabled": 0})
+			variants = frappe.get_all("Item", fields=["name", "item_code"], filters={"variant_of": item.get("name"), "disabled": 0, "show_variant_in_website": 1})
 			for vitem in variants:
 				vprice = get_price(vitem.get("item_code"), price_list).get("rate")
 				if vprice < price:
