@@ -138,25 +138,33 @@ class AWCTransaction(Document):
 				result = None
 
 			if self.get("gateway_service"):
-				has_universals = False
-				for item in frappe.get_doc("Sales Order", self.order_id).items:
-					if frappe.db.get_value("Item", item.item_code, "item_group") == "Universal":
-						has_universals = True
-				if self.get("gateway_service") == "credit_gateway":
-					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Bill Me")
-				elif self.get("gateway_service") == "paypal":
-					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "PayPal")
-					frappe.db.set_value("Sales Order", self.order_id, "authorize_production", False)
-					frappe.db.set_value("Sales Order", self.order_id, "authorize_delivery", False)
-				else:
-					if self.get("gateway_service") == "authorizenet":
-						frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Card")
-					else:
-						frappe.db.set_value("Sales Order", self.order_id, "payment_method", self.get("gateway_service"))
+				authorize_production = authorize_delivery = False
+				payment_method = gateway_service = self.get("gateway_service")
+
+				if gateway_service == "credit_gateway":
+					payment_method = "Bill Me"
+				elif gateway_service == "paypal":
+					payment_method = "PayPal"
+				elif gateway_service == "affirm":
+					payment_method = "Affirm"
+				elif gateway_service == "authorizenet":
+					payment_method = "Card"
+
+					# client needs to avoid auto-authorization of universal orders
+					# for catching fraud before production and delivery
+					has_universals = False
+					for item in frappe.get_doc("Sales Order", self.order_id).items:
+						if frappe.db.get_value("Item", item.item_code, "item_group") == "Universal":
+							has_universals = True
+							break
 
 					if not has_universals:
-						frappe.db.set_value("Sales Order", self.order_id, "authorize_production", True)
-						frappe.db.set_value("Sales Order", self.order_id, "authorize_delivery", True)
+						authorize_production = True
+						authorize_delivery = True
+
+				frappe.db.set_value("Sales Order", self.order_id, "payment_method", payment_method)
+				frappe.db.set_value("Sales Order", self.order_id, "authorize_production", authorize_production)
+				frappe.db.set_value("Sales Order", self.order_id, "authorize_delivery", authorize_delivery)
 
 			# override redirection to orders page
 			if result:
