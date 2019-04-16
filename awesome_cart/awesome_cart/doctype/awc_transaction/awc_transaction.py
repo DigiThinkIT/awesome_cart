@@ -27,7 +27,7 @@ def call_hook(hook_name, **kwargs):
 		# don't allow hooks to break processing
 		try:
 			frappe.call(hook, **kwargs)
-		except Exception as hook_ex:
+		except Exception:
 			log("Error calling hook method: {}->{}".format(hook_name, hook))
 			log(frappe.get_traceback())
 
