@@ -23,15 +23,13 @@ LOG_LEVELS = {
 
 def call_hook(hook_name, **kwargs):
 	hooks = frappe.get_hooks(hook_name) or []
-	if hooks:
-		for hook in hooks:
-			# don't allow hooks to break processing
-			try:
-				frappe.call(hook, **kwargs)
-			except Exception as hook_ex:
-				log("Error calling hook method: {}->{}".format(hook_name, hook))
-				log(frappe.get_traceback())
-				pass
+	for hook in hooks:
+		# don't allow hooks to break processing
+		try:
+			frappe.call(hook, **kwargs)
+		except Exception as hook_ex:
+			log("Error calling hook method: {}->{}".format(hook_name, hook))
+			log(frappe.get_traceback())
 
 
 class AWCTransaction(Document):
@@ -75,11 +73,11 @@ class AWCTransaction(Document):
 			quotation.shipping_address_name = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
 			has_changes = True
 
-		if quotation.shipping_address_name:
+		if quotation.customer_address:
 			quotation.address_display = get_address_display(frappe.get_doc("Address", quotation.customer_address).as_dict())
 			has_changes = True
 
-		if quotation.shipping_address:
+		if quotation.shipping_address_name:
 			quotation.shipping_address = get_address_display(frappe.get_doc("Address", quotation.shipping_address_name).as_dict())
 			has_changes = True
 
