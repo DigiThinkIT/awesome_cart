@@ -21,13 +21,30 @@ LOG_LEVELS = {
 	"Debug": 3
 }
 
+def call_hook(hook_name, **kwargs):
+	hooks = frappe.get_hooks(hook_name) or []
+	if hooks:
+		for hook in hooks:
+			# don't allow hooks to break processing
+			try:
+				frappe.call(hook, **kwargs)
+			except Exception as hook_ex:
+				log("Error calling hook method: {}->{}".format(hook_name, hook))
+				log(frappe.get_traceback())
+				pass
+
+
 class AWCTransaction(Document):
 
 	def update_quotation(self):
 		quotation = frappe.get_doc("Quotation", self.order_id)
+		has_changes = False
+
 		# check if we have a billing address linked
 		if self.get('billing_address'):
-			quotation.customer_address = self.billing_address
+			if quotation.customer_address != self.billing_address:
+				quotation.customer_address = self.billing_address
+				has_changes = True
 		else:
 			# else create one from transaction data
 			quotation.customer_address = create_address(
@@ -46,19 +63,29 @@ class AWCTransaction(Document):
 				return_name=1,
 				flags={"ignore_permissions": 1}
 			)
+			has_changes = True
 
-		# check if we have a shipping address linked
-		quotation.shipping_address_name = self.shipping_address
+		if quotation.shipping_address_name != self.shipping_address:
+			# check if we have a shipping address linked
+			quotation.shipping_address_name = self.shipping_address
+			has_changes = True
 
 		# assign formatted address text
 		if not quotation.shipping_address_name:
 			quotation.shipping_address_name = frappe.get_value("AWC Settings", "AWC Settings", "shipping_address")
+			has_changes = True
 
-		quotation.address_display = get_address_display(frappe.get_doc("Address", quotation.customer_address).as_dict())
-		quotation.shipping_address = get_address_display(frappe.get_doc("Address", quotation.shipping_address_name).as_dict())
+		if quotation.shipping_address_name:
+			quotation.address_display = get_address_display(frappe.get_doc("Address", quotation.customer_address).as_dict())
+			has_changes = True
 
-		quotation.flags.ignore_permissions = 1
-		quotation.save()
+		if quotation.shipping_address:
+			quotation.shipping_address = get_address_display(frappe.get_doc("Address", quotation.shipping_address_name).as_dict())
+			has_changes = True
+
+		if has_changes:
+			quotation.flags.ignore_permissions = 1
+			quotation.save()
 
 		return quotation
 
@@ -85,6 +112,8 @@ class AWCTransaction(Document):
 						- RESPONSE --------------
 						{}""".format(ex, frappe.local.respone)
 						log(msg, trace=1)
+
+			call_hook("awc_transaction_on_payment_authorized", transaction=self, payment_status=payment_status)
 
 			# create sales order
 			so = convert_quotation_to_sales_order(quotation)
@@ -137,36 +166,15 @@ class AWCTransaction(Document):
 			else:
 				result = None
 
-			if self.get("gateway_service"):
-				has_universals = False
-				for item in frappe.get_doc("Sales Order", self.order_id).items:
-					if frappe.db.get_value("Item", item.item_code, "item_group") == "Universal":
-						has_universals = True
-				if self.get("gateway_service") == "credit_gateway":
-					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Bill Me")
-				elif self.get("gateway_service") == "paypal":
-					frappe.db.set_value("Sales Order", self.order_id, "payment_method", "PayPal")
-					frappe.db.set_value("Sales Order", self.order_id, "authorize_production", False)
-					frappe.db.set_value("Sales Order", self.order_id, "authorize_delivery", False)
-				else:
-					if self.get("gateway_service") == "authorizenet":
-						frappe.db.set_value("Sales Order", self.order_id, "payment_method", "Card")
-					else:
-						frappe.db.set_value("Sales Order", self.order_id, "payment_method", self.get("gateway_service"))
-
-					if not has_universals:
-						frappe.db.set_value("Sales Order", self.order_id, "authorize_production", True)
-						frappe.db.set_value("Sales Order", self.order_id, "authorize_delivery", True)
-
 			# override redirection to orders page
 			if result:
 				result = '/iems#filter=custom'
 
-			# this is here to remove duplication warning messages.
-			# TODO: Consider bring this to erpnext team to remove warning
+			# let other apps do work after order is generated
+			call_hook("awc_transaction_after_on_sales_order_created", transaction=self, order=so, pr_result=result)
+
+			# remove redirect alert on cart generate so's
 			if frappe.local.message_log:
-				for msg in frappe.local.message_log:
-					log(msg)
 				frappe.local.message_log = []
 
 			# don't kill processing if saving cleaning session address info breaks
