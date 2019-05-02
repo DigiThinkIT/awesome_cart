@@ -28,8 +28,14 @@ def call_hook(hook_name, **kwargs):
 		try:
 			frappe.call(hook, **kwargs)
 		except Exception:
-			log("Error calling hook method: {}->{}".format(hook_name, hook))
-			log(frappe.get_traceback())
+			# Hook inception, pass exception to hook listening for exception reporting(sentry)
+			error_hooks = frappe.get_hooks("error_capture_log") or []
+			if len(error_hooks) > 0:
+				for error_hook in error_hooks:
+					frappe.call(error_hook, async=True)
+			else:
+				log("Error calling hook method: {}->{}".format(hook_name, hook))
+				log(frappe.get_traceback())
 
 
 class AWCTransaction(Document):
