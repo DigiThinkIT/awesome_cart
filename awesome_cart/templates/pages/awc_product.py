@@ -13,11 +13,6 @@ def get_context(context):
 		cart_tag = None
 
 	awc_item, item = get_awc_item_by_route(route)
-	print("----------------------------------")
-	print(route)
-	print(awc_item)
-	print(item)
-	print(path_parts)
 
 	if awc_item:
 		for custom in awc_item.get('custom_data', []):
