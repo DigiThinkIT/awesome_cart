@@ -21,7 +21,6 @@ def get_context(context):
 				raise frappe.Redirect
 
 	if not item or not awc_item or not item.show_in_website:
-		print("No item found?")
 		frappe.local.flags.redirect_location = "404"
 		raise frappe.Redirect
 
