@@ -14,14 +14,15 @@ def get_context(context):
 
 	awc_item, item = get_awc_item_by_route(route)
 
+	if awc_item:
+		for custom in awc_item.get('custom_data', []):
+			if custom.key == 'redirect':
+				frappe.local.flags.redirect_location = custom.value
+				raise frappe.Redirect
+
 	if not item or not awc_item or not item.show_in_website:
 		frappe.local.flags.redirect_location = "404"
 		raise frappe.Redirect
-
-	for custom in awc_item.get('custom_data', []):
-		if custom.key == 'redirect':
-			frappe.local.flags.redirect_location = custom.value
-			raise frappe.Redirect
 
 	context["awc_item"] = awc_item
 	context["item"] = item
