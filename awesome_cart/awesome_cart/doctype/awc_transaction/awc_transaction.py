@@ -114,7 +114,7 @@ class AWCTransaction(Document):
 						Attempting to save again...
 						{}
 						- RESPONSE --------------
-						{}""".format(ex, frappe.local.respone)
+						{}""".format(ex, frappe.local.response)
 						log(msg, trace=1)
 
 			call_hook("awc_transaction_on_payment_authorized", transaction=self, payment_status=payment_status)
