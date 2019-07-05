@@ -1591,7 +1591,8 @@ def cart(data=None, action=None):
 			success = False
 			msg = "Please Login to Apply Coupon"
 			awc["discounts"] = None
-			del awc["totals"]["coupon"]
+			if "coupon" in awc["totals"]:
+				del awc["totals"]["coupon"]
 
 		save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
 
@@ -1604,7 +1605,8 @@ def cart(data=None, action=None):
 
 	elif action == "removeCoupon":
 		awc["discounts"] = None
-		del awc["totals"]["coupon"]
+		if "coupon" in awc["totals"]:
+			del awc["totals"]["coupon"]
 
 		if quotation:
 			quotation.discount_amount = 0
