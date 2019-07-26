@@ -1231,6 +1231,7 @@ def save_and_commit_quotation(quotation, is_dirty, awc_session, commit=False, sa
 			result = (False, ex)
 
 	collect_totals(quotation, None, awc_session)
+	call_awc_sync_hook(awc_session, quotation)
 
 	if save_session:
 		if quotation and len(awc_session.get('cart', {}).get('items', [])) > 0:
