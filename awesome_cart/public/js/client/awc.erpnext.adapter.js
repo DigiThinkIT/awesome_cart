@@ -393,8 +393,11 @@ awc.ErpnextAdapter.prototype.validate = function (gateway_request, gateway_servi
 								var result = resp.data;
 								window.dataLayer = window.dataLayer || []
 								dataLayer.push(result.message)
-								awc_checkout.showPage('#checkout-success');
-								window.location.href = data.redirect_to;
+								// added delay to ensure analytics is picking up data before redirect.
+								setTimeout(() => {
+									awc_checkout.showPage('#checkout-success');
+									window.location.href = data.redirect_to;
+								}, 2000);
 								return resp;
 							})
 							.catch(function (err) {
