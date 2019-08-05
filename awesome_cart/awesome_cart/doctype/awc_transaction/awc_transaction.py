@@ -121,6 +121,10 @@ class AWCTransaction(Document):
 
 			# create sales order
 			so = convert_quotation_to_sales_order(quotation)
+			self.order_id = so.name
+
+			# let other apps do work after order is generated
+			call_hook("awc_transaction_after_on_sales_order_created", transaction=self, order=so)
 
 			if self.flags.get("skip_payment_request", False):
 				so.submit()
@@ -159,7 +163,6 @@ class AWCTransaction(Document):
 				self.reference_doctype = "Payment Request"
 				self.reference_docname = preq.name
 
-			self.order_id = so.name
 			self.flags.ignore_permissions = 1
 			self.save()
 
@@ -175,7 +178,7 @@ class AWCTransaction(Document):
 				result = '/iems#filter=custom'
 
 			# let other apps do work after order is generated
-			call_hook("awc_transaction_after_on_sales_order_created", transaction=self, order=so, pr_result=result)
+			call_hook("awc_transaction_finalize", transaction=self, order=so)
 
 			# remove redirect alert on cart generate so's
 			if frappe.local.message_log:
