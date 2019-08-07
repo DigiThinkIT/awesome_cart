@@ -2,5 +2,5 @@
 from __future__ import unicode_literals
 import frappe
 
-__version__ = '3.4.0'
+__version__ = '3.4.2'
 __title__ = "Cart"
