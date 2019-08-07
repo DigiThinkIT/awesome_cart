@@ -1132,7 +1132,7 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 
 		force = True
 		is_pickup = True
-		address = ""
+		address = False
 		awc_session["shipping_rates_list"] = update_shipping_rate(None, awc_session, True)
 	elif awc_session.get("last_shipping_address") and not address:
 		address = awc_session["last_shipping_address"]
@@ -1162,9 +1162,8 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 
 		if address and address.get("shipping_address") != quotation.shipping_address_name:
 			quotation.shipping_address_name = address.get("shipping_address")
+			quotation.shipping_address = get_address_display(quotation.shipping_address_name)
 			save=True
-			if address:
-				quotation.shipping_address = get_address_display(quotation.shipping_address_name)
 
 		elif not address and quotation.shipping_address_name:
 			quotation.shipping_address_name = ""
@@ -1177,6 +1176,15 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 				quotation.fedex_shipping_method = rate_name_corrected
 				save=True
 
+		if address:
+			if quotation.contact_person:
+				contact_email = address.get("email_id", frappe.get_value("Contact", quotation.contact_person, "email_id"))
+			else:
+				contact_email = address.get("email_id")
+
+			if quotation.contact_email != contact_email:
+				quotation.contact_email = contact_email
+				save = True
 
 	if save:
 		save_and_commit_quotation(quotation, True, awc_session, commit=True)
@@ -1394,13 +1402,13 @@ def cart(data=None, action=None):
 					"address_title": data[0].get("address").get("title"),
 					"address_type": data[0].get("address").get("address_type", "Shipping"),
 					"address_contact": data[0].get("address").get("address_contact", ""),
+					"email_id": data[0].get("address").get("email_id", frappe.session.user),
 					"address_line1": data[0].get("address").get("address_1"),
 					"address_line2": data[0].get("address").get("address_2"),
 					"city": data[0].get("address").get("city"),
 					"state": data[0].get("address").get("state"),
 					"country": data[0].get("address").get("country"),
 					"phone": data[0].get("address").get("phone"),
-					"email_id": frappe.session.user,
 					"pincode": data[0].get("address").get("pincode"),
 					"links": [{"link_doctype" : "Customer", "link_name" : quotation.customer}]
 				})
@@ -1731,10 +1739,13 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	# make sure quotation email is contact person if we are a power user
 	quotation_is_dirty = sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty, save_quotation=False)
 
+	#if awc_session.get("selected_customer") and quotation.contact_person:
+	#	email = frappe.get_value("Contact", quotation.contact_person, "email_id")
+	#else:
+	email = quotation.contact_email
 	if awc_session.get("selected_customer") and quotation.contact_person:
-		email = frappe.get_value("Contact", quotation.contact_person, "email_id")
-	else:
-		email = quotation.contact_email
+		email = address.get("email_id", frappe.get_value("Contact", quotation.contact_person, "email_id"))
+		frappe.db.set_value("Quotation", quotation.name, "contact_email", email)
 
 	save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
 

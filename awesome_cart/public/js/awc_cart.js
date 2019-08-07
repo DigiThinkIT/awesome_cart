@@ -151,6 +151,7 @@ awc_checkout = {
 
 				$('#awc_ship__title').val($addr.find('span#title').text());
 				$('#awc_ship__contact').val($addr.find('span#contact').text());
+				$('#awc_ship__email_id').val($addr.find('span#contact_email').text());
 				$('#awc_ship__phone').val($addr.find('span#phone').text());
 				$('#awc_ship__line1').val($addr.find('span#line1').text());
 				$('#awc_ship__line2').val($addr.find('span#line2').text());
@@ -569,6 +570,7 @@ awc_checkout = {
 										'<br>',
 										'<span class="glyphicon glyphicon-user"></span>',
 										'<span id="contact">' + $('#awc_ship__contact').val() + '</span>',
+										'<span id="contact_email">' + $('#awc_ship__email_id').val() + '</span>',
 										'<br>',
 										'<span class="glyphicon glyphicon-map-marker pull-left"></span>',
 										'<div style="padding-left: 1.5em;">',
@@ -615,6 +617,7 @@ awc_checkout = {
 							address_is_residential: $('#awc_ship__is_residential').val(),
 							address_phone: $('#awc_ship__phone').val(),
 							address_contact: $('#awc_ship__contact').val(),
+							address_email_id: $('#awc_ship__email_id').val(),
 							address_line1: $('#awc_ship__line1').val(),
 							address_line2: $('#awc_ship__line2').val(),
 							address_city: $('#awc_ship__city').val(),
@@ -625,6 +628,7 @@ awc_checkout = {
 						$('#awc-shipping-addrs .edited span#title').text($('#awc_ship__title').val());
 						$('#awc-shipping-addrs .edited span#phone').text($('#awc_ship__phone').val());
 						$('#awc-shipping-addrs .edited span#contact').text($('#awc_ship__contact').val());
+						$('#awc-shipping-addrs .edited span#contact_email').text($('#awc_ship__email_id').val());
 						$('#awc-shipping-addrs .edited span#line1').text($('#awc_ship__line1').val());
 						$('#awc-shipping-addrs .edited span#line2').text($('#awc_ship__line2').val());
 						$('#awc-shipping-addrs .edited span#city').text($('#awc_ship__city').val());

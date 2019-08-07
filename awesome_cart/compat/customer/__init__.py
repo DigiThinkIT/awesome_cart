@@ -13,7 +13,8 @@ def total_addresses(customer_name):
 	return compat.erpnext._customer_total_addresses(customer_name)
 
 def fetch_addresses(customer_name, start, limit, order_by, fields=[
-	"address_title", "address_type", "address_line1",
+	"address_title", "address_type", 
+	"address_contact", "email_id", "address_line1",	
 	"address_line2", "city", "country", "state", "county", "pincode",
 	"is_primary_address", "is_shipping_address", "name"],
 	ignore_permissions=False):

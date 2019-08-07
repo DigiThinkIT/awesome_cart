@@ -16,6 +16,7 @@
           <div class="address">
             {% if ( address.address_title ) { %}<span class="glyphicon glyphicon-tag"></span><span id="title">{%= address.address_title %}</span><br>{% } %}
             {% if ( address.address_contact ) { %}<span class="glyphicon glyphicon-user"></span><span id="contact">{%= address.address_contact %}</span><br>{% } %}
+            {% if ( address.email_id ) { %}<span class="glyphicon glyphicon-envelope"></span><span id="email_id">{%= address.email_id %}</span><br>{% } %}
 			<span class="glyphicon glyphicon-map-marker pull-left"></span>
 			<div style="padding-left: 1.5em;">
 				<span id="line1" class="line">{%= address.address_line1 %}</span>
