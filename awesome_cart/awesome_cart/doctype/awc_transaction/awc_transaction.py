@@ -127,6 +127,8 @@ class AWCTransaction(Document):
 			call_hook("awc_transaction_after_on_sales_order_created", transaction=self, order=so)
 
 			if self.flags.get("skip_payment_request", False):
+				# avoid TimeStampMismatchError from hook events
+				so.reload()
 				so.submit()
 
 				self.reference_doctype = "Sales Order"
