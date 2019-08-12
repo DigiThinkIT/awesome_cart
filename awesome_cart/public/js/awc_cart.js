@@ -438,6 +438,7 @@ awc_checkout = {
 		$('#checkout-contact ul > li').click(function(e) {
 			let contact_name = $(this).attr('data-contact-name');
 			e.preventDefault();
+			$('#checkout-contact ul > li').not($(this)).removeClass('selected');
 			$(this).addClass('selected');
 			$('#checkout-panels').removeClass('locked');
 			$('#bc-shipping').click();
