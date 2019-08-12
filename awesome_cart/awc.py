@@ -11,7 +11,7 @@ from frappe.utils import cint, cstr, random_string, flt, get_datetime
 from erpnext.stock.get_item_details import apply_price_list_on_item
 
 from compat.customer import get_current_customer
-from compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotation
+from compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotation, get_party
 from compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing_rule_for_item
 from compat.addresses import get_address_display
 from .session import *
@@ -25,7 +25,8 @@ def get_user_quotation(awc_session):
 	if awc_session.get("selected_customer"):
 		party = frappe.get_doc("Customer", awc_session["selected_customer"])
 
-	return get_cart_quotation(party=party)
+	result = get_cart_quotation(party=party)
+	return result
 
 def find_index(arr, fn):
 	for i, item in enumerate(arr):
@@ -244,10 +245,11 @@ def _get_cart_quotation(awc_session=None):
 		awc_session = get_awc_session()
 
 	cart_info = get_user_quotation(awc_session)
-	return cart_info.get('doc')
+	quotation = cart_info.get('doc')
+	return quotation
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
-def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None, skip_related=False):
+def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None, skip_related=False, quotation_name=None, price_list=None):
 	"""Get's product in awcjs format by its sku and optionally detailed data."""
 
 	if not awc_session:
@@ -274,10 +276,14 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None, skip_r
 
 	price_list = None
 
-	if is_logged_in():
-		if not quotation:
-			quotation = _get_cart_quotation()
-		price_list = quotation.get("selling_price_list")
+	if is_logged_in() and not price_list:
+		if not quotation_name:
+			quotation_name = get_cart_quotation_name(awc_session)
+
+		if not quotation and not quotation_name:
+			quotation_name = _get_cart_quotation().name
+
+		price_list = frappe.db.get_value("Quotation", quotation_name, "selling_price_list")
 
 	try:
 		item = frappe.get_doc("Item", sku)
@@ -371,11 +377,13 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None, skip_r
 							sku=frappe.db.get_value("Item", r.item_name, "item_code"), \
 							detailed=True, \
 							awc_session=awc_session, \
-							quotation=quotation,
+							quotation=None,
 							skip_related=True).get("data") \
 						for r in awc_item.recomendations \
 						if frappe.db.get_value("Item", r.item_name, "item_code") != sku
-					] if x is not None ]
+					] if x is not None ],
+							quotation_name=quotation_name,
+							price_list=price_list
 				))
 
 	data = { "success": True, "data": product }
@@ -409,6 +417,24 @@ def get_related_products_by_sku(sku, awc_session, customer):
 
 	return result
 
+def get_cart_quotation_name(awc_session=None):
+	party_name = None
+
+	if awc_session.get("selected_customer"):
+		party_name = awc_session["selected_customer"]
+
+	if not party_name:
+		party_name = get_party().name
+
+	quotation_names = frappe.get_all("Quotation", fields=["name"], filters=
+		{"Customer": party_name, "order_type": "Shopping Cart", "docstatus": 0},
+		order_by="modified desc", limit=1, limit_page_length=1)
+
+	if len(quotation_names) > 0:
+		return quotation_names[0]
+
+	return None
+
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", start=0, limit=None):
 	"""Fetches a list of products filtered by tags"""
@@ -434,11 +460,12 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 	payload = {
 		"success": False
 	}
+
 	try:
 		price_list = None
 		if is_logged_in():
-			quotation = _get_cart_quotation()
-			price_list = quotation.get("selling_price_list")
+			quotation_name = get_cart_quotation_name(awc_session)
+			price_list = frappe.db.get_value("Quotation", quotation_name, "selling_price_list")
 
 		tags = tags.split(',')  # split tag string into list
 		# Convert order_by and order_dir values to acceptable values or defaults
@@ -1132,7 +1159,7 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 
 		force = True
 		is_pickup = True
-		address = ""
+		address = False
 		awc_session["shipping_rates_list"] = update_shipping_rate(None, awc_session, True)
 	elif awc_session.get("last_shipping_address") and not address:
 		address = awc_session["last_shipping_address"]
@@ -1162,9 +1189,8 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 
 		if address and address.get("shipping_address") != quotation.shipping_address_name:
 			quotation.shipping_address_name = address.get("shipping_address")
+			quotation.shipping_address = get_address_display(quotation.shipping_address_name)
 			save=True
-			if address:
-				quotation.shipping_address = get_address_display(quotation.shipping_address_name)
 
 		elif not address and quotation.shipping_address_name:
 			quotation.shipping_address_name = ""
@@ -1177,9 +1203,9 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 				quotation.fedex_shipping_method = rate_name_corrected
 				save=True
 
-
 	if save:
 		save_and_commit_quotation(quotation, True, awc_session, commit=True)
+
 	else:
 		collect_totals(quotation, None, awc_session)
 
@@ -1394,13 +1420,13 @@ def cart(data=None, action=None):
 					"address_title": data[0].get("address").get("title"),
 					"address_type": data[0].get("address").get("address_type", "Shipping"),
 					"address_contact": data[0].get("address").get("address_contact", ""),
+					"email_id": data[0].get("address").get("email_id", frappe.session.user),
 					"address_line1": data[0].get("address").get("address_1"),
 					"address_line2": data[0].get("address").get("address_2"),
 					"city": data[0].get("address").get("city"),
 					"state": data[0].get("address").get("state"),
 					"country": data[0].get("address").get("country"),
 					"phone": data[0].get("address").get("phone"),
-					"email_id": frappe.session.user,
 					"pincode": data[0].get("address").get("pincode"),
 					"links": [{"link_doctype" : "Customer", "link_name" : quotation.customer}]
 				})
@@ -1693,7 +1719,7 @@ def update_shipping_rate(address, awc_session, is_pickup=False):
 	return rates
 
 @frappe.whitelist()
-def create_transaction(gateway_service, billing_address, shipping_address, instructions=""):
+def create_transaction(gateway_service, billing_address, shipping_address, instructions="", contact_name=""):
 	if billing_address and isinstance(billing_address, basestring):
 		billing_address = json.loads(billing_address)
 
@@ -1705,9 +1731,6 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		"error": "Unknown Internal Error"
 	}
 
-	# fetch customer
-	customer = get_current_customer()
-
 	# fetch awc
 	awc_session = get_awc_session()
 	awc = awc_session.get("cart")
@@ -1716,27 +1739,31 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	cart_info = get_user_quotation(awc_session)
 	quotation = cart_info.get('doc')
 
-	quotation_is_dirty = False
+	# track selected contact and assign it
+	if contact_name:
+		contact = frappe.get_all('Contact',
+			fields=['first_name', 'last_name', 'email_id'],
+			filters={"name": contact_name}
+		)[0]
+
+		frappe.db.set_value('Quotation', quotation.name, 'contact_person', contact_name)
+		frappe.db.set_value('Quotation', quotation.name, 'contact_display', '%s %s' % (contact.get('first_name'), contact.get('last_name')))
+		frappe.db.set_value('Quotation', quotation.name, 'contact_email', contact.get('email_id'))
+
 	# assign instructions to quotation
 	if instructions:
-		quotation.instructions = instructions
-		quotation_is_dirty = True
+		frappe.db.set_value('Quotation', quotation.name, 'instructions', instructions)
 
 	# set billilng address
 	if billing_address.get("billing_address") and quotation.customer_address != billing_address.get("billing_address"):
-		quotation.customer_address = billing_address.get("billing_address")
-		quotation.address_display = get_address_display(quotation.customer_address)
-		quotation_is_dirty = True
+		frappe.db.set_value('Quotation', quotation.name, 'customer_address', billing_address.get("billing_address"))
+		frappe.db.set_value('Quotation', quotation.name, 'address_display', get_address_display(quotation.customer_address))
 
 	# make sure quotation email is contact person if we are a power user
-	quotation_is_dirty = sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty, save_quotation=False)
+	save_and_commit_quotation(quotation, False, awc_session, commit=True, save_session=True)
+	quotation.reload()
 
-	if awc_session.get("selected_customer") and quotation.contact_person:
-		email = frappe.get_value("Contact", quotation.contact_person, "email_id")
-	else:
-		email = quotation.contact_email
-
-	save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
+	email = quotation.contact_email
 
 	# create awc transaction to process payments first
 	# sales order and friends will be generated from this data
@@ -1756,10 +1783,6 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		"shipping_address": shipping_address.get("shipping_address"),
 		"billing_address": billing_address.get("billing_address")
 	}
-
-	if shipping_address.get("ship_method"):
-		# retrieve quoted chargesfee
-		rates = awc_session.get("shipping_rates")
 
 	data.update({ "billing_%s" % key: value for key, value in billing_address.iteritems() })
 	data.update({ "shipping_%s" % key: value for key, value in shipping_address.iteritems() })

@@ -11,6 +11,7 @@ from awesome_cart import awc
 from awesome_cart.compat.frappe import login_context
 from awesome_cart.compat.customer import get_current_customer
 from awesome_cart.session import get_awc_session
+from awesome_cart.power import has_role
 
 from widgets_collection import login
 
@@ -49,7 +50,7 @@ def get_context(context):
 	context["countries"] = [default_country_doc] + context["countries"]
 
 	context["shipping_rate_api"] = frappe.get_hooks("shipping_rate_api")[0]
-	context["selected_customer"] = awc_session.get("selected_customer")
+	context["selected_customer"] = awc_session.get("selected_customer", False)
 
 	# ensures clearing address and method selection when visiting checkout page as
 	# shipping address widget won't pre-select them.
@@ -91,6 +92,41 @@ def get_context(context):
 	if frappe.response.get("awc_alert"):
 		context["awc_alert"] = frappe.response.get("awc_alert")
 
+	user_doc = frappe.get_doc("User", frappe.session.user)
+
+	context['enable_contacts'] = False
+
+	if context["selected_customer"] and (user_doc.get("is_power_user") or \
+		has_role([
+			"Administrator",
+			"Sales User",
+			"Sales Manager",
+			"System Manager"
+		], user_doc.name)):
+
+		# find olddest is_primary or oldest contact
+		context['customer_contacts'] = frappe.db.sql("""
+			SELECT
+				c.name as name,
+				c.email_id as email_id,
+				c.first_name as first_name,
+				c.last_name as last_name,
+				c.is_primary_contact as is_primary_contact
+			FROM
+				`tabContact` c
+			LEFT JOIN
+				`tabDynamic Link` dl ON dl.parent=c.name
+			WHERE
+				dl.link_doctype='Customer' AND
+				dl.link_name=%(customer_name)s
+			ORDER BY 
+				c.is_primary_contact DESC,
+				c.creation asc
+		""",
+		{ "customer_name": context["selected_customer"]},
+		as_dict=True)
+
+		context['enable_contacts'] = True if len(context['customer_contacts']) > 1 else False
 
 	if context.is_logged:
 		# load gateway provider into context
