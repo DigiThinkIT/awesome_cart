@@ -122,8 +122,8 @@ def get_context(context):
 			ORDER BY 
 				c.is_primary_contact DESC,
 				c.creation asc
-		""", 
-		{ "customer_name": context["selected_customer"]}, 
+		""",
+		{ "customer_name": context["selected_customer"]},
 		as_dict=True)
 
 		context['enable_contacts'] = True if len(context['customer_contacts']) > 1 else False

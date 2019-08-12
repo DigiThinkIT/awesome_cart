@@ -48,7 +48,7 @@ def get_customer_primary_contact(customer_name):
 		ORDER BY 
 			c.is_primary_contact DESC,
 			c.creation asc
-	""", 
+	""",
 	{ "customer_name": customer_name},
 	as_dict=True)
 
@@ -67,7 +67,7 @@ def get_customer_primary_contact(customer_name):
 			"%s %s" % (
 				frappe.db.get_value("Contact", primary_contact, "first_name") or "",
 				frappe.db.get_value("Contact", primary_contact, "last_name") or ""
-			) 
+			)
 
 	# else return first contact on query result
 	if len(contacts) > 0:
