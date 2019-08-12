@@ -49,7 +49,7 @@ def get_customer_primary_contact(customer_name):
 			c.is_primary_contact DESC,
 			c.creation asc
 	""", 
-	{ "customer_name": customer_name}, 
+	{ "customer_name": customer_name},
 	as_dict=True)
 
 	# Check if current session user is in the contact list and return that contact info
@@ -65,7 +65,7 @@ def get_customer_primary_contact(customer_name):
 		return primary_contact, \
 			frappe.db.get_value("Contact", primary_contact, "email_id"), \
 			"%s %s" % (
-				frappe.db.get_value("Contact", primary_contact, "first_name") or "", 
+				frappe.db.get_value("Contact", primary_contact, "first_name") or "",
 				frappe.db.get_value("Contact", primary_contact, "last_name") or ""
 			) 
 
