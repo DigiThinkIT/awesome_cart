@@ -9,8 +9,6 @@ import frappe
 from erpnext.shopping_cart.cart import get_cart_quotation
 
 from awesome_cart import cart
-from awesome_cart.templates.pages import gateway
-from awesome_cart.dbug import log, json_default
 
 def get_context(context):
 
