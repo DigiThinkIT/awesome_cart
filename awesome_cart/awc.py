@@ -282,7 +282,7 @@ def get_product_by_sku(sku, detailed=0, awc_session=None, quotation=None, skip_r
 
 		if not quotation and not quotation_name:
 			quotation_name = _get_cart_quotation().name
-		
+
 		price_list = frappe.db.get_value("Quotation", quotation_name, "selling_price_list")
 
 	try:
@@ -1731,9 +1731,6 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		"error": "Unknown Internal Error"
 	}
 
-	# fetch customer
-	customer = get_current_customer()
-
 	# fetch awc
 	awc_session = get_awc_session()
 	awc = awc_session.get("cart")
@@ -1744,8 +1741,8 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 
 	# track selected contact and assign it
 	if contact_name:
-		contact = frappe.get_all('Contact', 
-			fields=['first_name', 'last_name', 'email_id'], 
+		contact = frappe.get_all('Contact',
+			fields=['first_name', 'last_name', 'email_id'],
 			filters={"name": contact_name}
 		)[0]
 
@@ -1753,7 +1750,6 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		frappe.db.set_value('Quotation', quotation.name, 'contact_display', '%s %s' % (contact.get('first_name'), contact.get('last_name')))
 		frappe.db.set_value('Quotation', quotation.name, 'contact_email', contact.get('email_id'))
 
-	quotation_is_dirty = False
 	# assign instructions to quotation
 	if instructions:
 		frappe.db.set_value('Quotation', quotation.name, 'instructions', instructions)
@@ -1764,7 +1760,6 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		frappe.db.set_value('Quotation', quotation.name, 'address_display', get_address_display(quotation.customer_address))
 
 	# make sure quotation email is contact person if we are a power user
-	#quotation_is_dirty = sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty, save_quotation=False)
 	save_and_commit_quotation(quotation, False, awc_session, commit=True, save_session=True)
 	quotation.reload()
 
@@ -1788,10 +1783,6 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 		"shipping_address": shipping_address.get("shipping_address"),
 		"billing_address": billing_address.get("billing_address")
 	}
-
-	if shipping_address.get("ship_method"):
-		# retrieve quoted chargesfee
-		rates = awc_session.get("shipping_rates")
 
 	data.update({ "billing_%s" % key: value for key, value in billing_address.iteritems() })
 	data.update({ "shipping_%s" % key: value for key, value in shipping_address.iteritems() })
