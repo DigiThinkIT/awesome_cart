@@ -72,7 +72,7 @@ def get_customer_primary_contact(customer_name):
 	# else return first contact on query result
 	if len(contacts) > 0:
 		return contacts[0].get("name"), \
-			contacts[0].get_("email_id"), \
+			contacts[0].get("email_id"), \
 			"%s %s" % (contacts[0].get("first_name", ""), contacts[0].get("last_name", ""))
 
 	frappe.throw("This customer has no primary contact!. Please add one before you continue.")
@@ -110,19 +110,6 @@ def _override_get_cart_quotation(party=None):
 		qdoc.run_method("set_missing_values")
 
 		apply_cart_settings(party, qdoc)
-
-	contact_modified = False
-	if qdoc.contact_person != contact_person:
-		frappe.db.set_value("Quotation", qdoc.name, "contact_person", contact_person)
-		contact_modified = True
-
-	if qdoc.contact_email != contact_email:
-		frappe.db.set_value("Quotation", qdoc.name, "contact_email", contact_email)
-		contact_modified = True
-
-	if contact_modified:
-		frappe.db.set_value("Quotation", qdoc.name, "contact_display", contact_display)
-		qdoc.reload()
 
 	return qdoc
 

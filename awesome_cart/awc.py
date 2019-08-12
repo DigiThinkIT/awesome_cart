@@ -1719,7 +1719,7 @@ def update_shipping_rate(address, awc_session, is_pickup=False):
 	return rates
 
 @frappe.whitelist()
-def create_transaction(gateway_service, billing_address, shipping_address, instructions=""):
+def create_transaction(gateway_service, billing_address, shipping_address, instructions="", contact_name=""):
 	if billing_address and isinstance(billing_address, basestring):
 		billing_address = json.loads(billing_address)
 
@@ -1742,23 +1742,33 @@ def create_transaction(gateway_service, billing_address, shipping_address, instr
 	cart_info = get_user_quotation(awc_session)
 	quotation = cart_info.get('doc')
 
+	# track selected contact and assign it
+	if contact_name:
+		contact = frappe.get_all('Contact', 
+			fields=['first_name', 'last_name', 'email_id'], 
+			filters={"name": contact_name}
+		)[0]
+
+		frappe.db.set_value('Quotation', quotation.name, 'contact_person', contact_name)
+		frappe.db.set_value('Quotation', quotation.name, 'contact_display', '%s %s' % (contact.get('first_name'), contact.get('last_name')))
+		frappe.db.set_value('Quotation', quotation.name, 'contact_email', contact.get('email_id'))
+
 	quotation_is_dirty = False
 	# assign instructions to quotation
 	if instructions:
-		quotation.instructions = instructions
-		quotation_is_dirty = True
+		frappe.db.set_value('Quotation', quotation.name, 'instructions', instructions)
 
 	# set billilng address
 	if billing_address.get("billing_address") and quotation.customer_address != billing_address.get("billing_address"):
-		quotation.customer_address = billing_address.get("billing_address")
-		quotation.address_display = get_address_display(quotation.customer_address)
-		quotation_is_dirty = True
+		frappe.db.set_value('Quotation', quotation.name, 'customer_address', billing_address.get("billing_address"))
+		frappe.db.set_value('Quotation', quotation.name, 'address_display', get_address_display(quotation.customer_address))
 
 	# make sure quotation email is contact person if we are a power user
-	quotation_is_dirty = sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty, save_quotation=False)
+	#quotation_is_dirty = sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty, save_quotation=False)
+	save_and_commit_quotation(quotation, False, awc_session, commit=True, save_session=True)
+	quotation.reload()
 
 	email = quotation.contact_email
-	save_and_commit_quotation(quotation, quotation_is_dirty, awc_session, commit=True)
 
 	# create awc transaction to process payments first
 	# sales order and friends will be generated from this data

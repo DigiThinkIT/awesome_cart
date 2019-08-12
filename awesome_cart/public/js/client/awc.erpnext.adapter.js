@@ -366,7 +366,8 @@ awc.ErpnextAdapter.prototype.validate = function (gateway_request, gateway_servi
 			gateway_service: gateway_service,
 			billing_address: awc_checkout.billing_address,
 			shipping_address: awc_checkout.shipping_address,
-			instructions: $("#order-instructions").val()
+			instructions: $("#order-instructions").val(),
+			contact_name: awc_checkout.contact_name
 		}, 1, "Validating Order")
 		.then(function (resp) {
 			var result = resp.data.message;
