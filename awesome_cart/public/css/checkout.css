@@ -86,3 +86,28 @@
 .awc-selected {
 	border: 2px solid black;
 }
+
+.confirm-box .content .label {
+	text-align: left;
+	min-width: 10rem;
+	color: black;
+}
+
+.confirm-box .content .label::after {
+	text-align: left;
+	content: ":";
+	color: black;
+}
+.confirm-box .content .address_container {
+	margin-top: 1rem;
+	text-align: center;
+}
+
+.confirm-box .content .address {
+	display: inline-block;
+	border: 1px solid;
+	padding: .5rem;
+	margin: 0;
+	text-align: left;
+	min-width: 50%;
+}

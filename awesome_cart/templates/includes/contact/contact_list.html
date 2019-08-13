@@ -1,0 +1,18 @@
+<h4>Pick a Contact for this Order</h4>
+<ul>
+  {% for contact in customer_contacts %}
+
+  <li data-contact-name="{{ contact.name }}">
+    <div class="select"></div>
+    <div class="info">
+      {% if contact.is_primary_contact %}
+      <div class="is_primary_contact">PRIMARY</div>
+      {% endif %}
+      <div><span class="glyphicon glyphicon-user"></span>{{ contact.first_name or '' }} {{ contact.last_name or '' }}</div>
+      <div><span class="glyphicon glyphicon-envelope"></span>{{ contact.email_id }}</div>
+    </div>
+  </li>
+
+  {% endfor %}
+</ul>
+<br>

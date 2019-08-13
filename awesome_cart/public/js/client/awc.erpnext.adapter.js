@@ -366,7 +366,8 @@ awc.ErpnextAdapter.prototype.validate = function (gateway_request, gateway_servi
 			gateway_service: gateway_service,
 			billing_address: awc_checkout.billing_address,
 			shipping_address: awc_checkout.shipping_address,
-			instructions: $("#order-instructions").val()
+			instructions: $("#order-instructions").val(),
+			contact_name: awc_checkout.contact_name
 		}, 1, "Validating Order")
 		.then(function (resp) {
 			var result = resp.data.message;
@@ -547,8 +548,6 @@ var AwcShippingProvider = Class.extend({
 		var $method_form = $('#awc-shipping-method');
 		$method_form.empty();
 
-		console.log("Update shipping rates display", rates);
-
 		if (rates.length > 0) {
 			var last_selected_method = base.data.ship_method;
 
@@ -609,8 +608,6 @@ var AwcShippingProvider = Class.extend({
 			validate = true;
 		}
 		var base = this;
-
-		console.log("update_shipping_rates", rates);
 
 		if (base._shipping_methods) {
 			if (awc._.isEqual(base._shipping_methods, rates)) {
@@ -687,6 +684,7 @@ var AwcShippingProvider = Class.extend({
 			address_data.title = $form.find('input[name="title"]').val();
 			address_data.phone = $form.find('input[name="phone"]').val();
 			address_data.address_contact = $form.find('input[name="address_contact"]').val();
+			address_data.email_id = $form.find('input[name="email_id"]').val();
 			address_data.address_1 = $form.find('input[name="address_1"]').val();
 			address_data.address_2 = $form.find('input[name="address_2"]').val();
 			address_data.city = $form.find('input[name="city"]').val();
@@ -701,6 +699,7 @@ var AwcShippingProvider = Class.extend({
 			address_data.title = $('#awc-shipping-addrs .awc-selected span#title').text();
 			address_data.phone = $('#awc-shipping-addrs .awc-selected span#phone').text();
 			address_data.address_contact = $('#awc-shipping-addrs .awc-selected span#contact').text();
+			address_data.email_id = $('#awc-shipping-addrs .awc-selected span#email_id').text();
 			address_data.address_1 = $('#awc-shipping-addrs .awc-selected span#line1').text();
 			address_data.address_2 = $('#awc-shipping-addrs .awc-selected span#line2').text();
 			address_data.city = $('#awc-shipping-addrs .awc-selected span#city').text();
@@ -719,6 +718,7 @@ var AwcShippingProvider = Class.extend({
 			address_contact: this.data.address_contact,
 			address_1: this.data.address_1,
 			address_2: this.data.address_2,
+			email_id: this.data.email_id,
 			city: this.data.city,
 			state: this.data.state,
 			pincode: this.data.pincode,
@@ -812,26 +812,32 @@ var AwcShippingProvider = Class.extend({
 		return result;
 	},
 	getSummary: function () {
-		var base = this;
+		const base = this;
 		// NOTE: lazy way of setting up address dom.
 		// consider moving to templates(will require checking script load order)
-		var ln = function (name, nl) {
-			if (nl === undefined) {
-				nl = true;
-			}
+		const ln = function (name, nl) {
+			if (nl === undefined) { nl = true; }
 
-			var txt = "";
 			if (name in base.data && base.data[name]) {
-				txt = base.data[name];
-				if (nl) {
-					txt += "<br>";
-				}
+				return `${base.data[name]}${nl?"<br>":""}`;
 			}
 
-			return txt;
-		}
+			return ''
+		};
 
-		if ( this.data.ship_method == "PICK UP" ) {
+		const lbl = function(label, name) {
+			if (name in base.data && base.data[name]) {
+				return `
+					<div class="field row">
+						<span class="label col-xs-12 col-sm-3">${label}</span><span class="value col-xs-12 col-sm-9">${base.data[name]}</span>
+					</div>
+				`;
+			}
+
+			return '';
+		};
+
+		if (this.data.ship_method == "PICK UP") {
 			return '<div class="row">' +
 				'<p>Pick Up at our Orlando, FL Facility</p>';
 		}
@@ -850,18 +856,24 @@ var AwcShippingProvider = Class.extend({
 				}
 			}
 
-			return '<div class="row">' +
-				'<address class="col-sm-12">' +
-				ln("address_title") +
-				ln("address_contact") +
-				ln("address_1") +
-				ln("address_2") +
-				ln("city", 0) + ", " + ln("state", 0) + " " + ln("pincode") +
-				ln("country") +
-				'</address>' +
-				'</div>';
-			/*+
-				  ship_method;*/
+			return `
+				<div class="row"
+					<div class="col-sm-12">
+						${lbl("Address", "address_title")}
+						${lbl("Contact Person", "address_contact")}
+						${lbl("Contact Email", "email_id")}
+					</div>
+				</div>
+				<div class="row address_container">
+					<address class="address">
+						${ln("address_1")}
+						${ln("address_2")}
+						${ln("city", 0)}, ${ln("state", 0)} ${ln("pincode")}
+						${ln("country")}
+					</address>
+				</div>
+			`;
+
 		} else {
 			return '<p class="error">Shipping address incomplete. Please go back and review.</p>';
 		}

@@ -40,16 +40,25 @@
 					{% include "templates/widgets/login/widget.html" with context %}
 				</div>
 {% else %}
-				<div id="checkout-panels">
+				<div id="checkout-panels" class="{{ ' locked' if enable_contacts else '' }}">
 					<div class="header">
 						<div class="title">Checkout</div>
 						<ul id="checkout-breadcrumb">
-								<a href="" id="bc-shipping" class="breadcrumb active">Shipping</a>
-								<a href="" id="bc-shipping-method" class="breadcrumb">Shipping Method</a>
-								<a href="" id="bc-billing" class="breadcrumb">Billing</a>
-								<a href="" id="bc-checkout" class="breadcrumb">Checkout</a>
+							{% if enable_contacts %}
+							<a href="" id="bc-contact" class="breadcrumb active">Contact</a>
+							{% endif %}
+							<a href="" id="bc-shipping" class="breadcrumb{{ '' if enable_contacts else ' active' }}">Shipping</a>
+							<a href="" id="bc-shipping-method" class="breadcrumb">Shipping Method</a>
+							<a href="" id="bc-billing" class="breadcrumb">Billing</a>
+							<a href="" id="bc-checkout" class="breadcrumb">Checkout</a>
 						</ul>
 					</div>
+
+					{% if enable_contacts %}
+					<div id="checkout-contact" data-bc="#bc-contact" class="panel">
+						{% include "templates/includes/contact/contact_list.html" with context %}
+					</div>
+					{% endif %}
 
 					<div id="checkout-shipping-address" data-bc="#bc-shipping" class="panel">
 						<div id="awc-shipping-addrs"></div>
