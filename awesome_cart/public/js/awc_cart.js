@@ -84,11 +84,7 @@ awc_checkout = {
 			awc_checkout.billing_address = billing_validation_response.address
 		}
 
-		// disable checkout until terms and condition box is checked
-		/*if (!$('#confirm-form input[name="accept_terms"]').is(':checked')) {
-			checkout_enabled = false;
-		}*/
-
+		// Enable/disable checkout continue button on validation
 		$('#checkout-continue-terms').prop('disabled', !checkout_enabled);
 
 		awc_checkout.gateway_provider.enable(checkout_enabled);
