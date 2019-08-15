@@ -111,3 +111,52 @@
 	text-align: left;
 	min-width: 50%;
 }
+
+.checkout-step {
+	max-height: 100vh;
+	overflow: hidden;
+	transition: max-height 300ms linear;
+}
+.panel.active-state-confirm .checkout-step,
+.panel.active-state-terms .checkout-step {
+	transition: max-height 300ms linear;
+}
+
+.panel.active-state-confirm .state-confirm {
+}
+
+.panel.active-state-confirm .state-terms {
+	max-height: 0;
+}
+
+.panel.active-state-terms .state-confirm {
+	max-height: 0;
+}
+
+.panel.active-state-terms .state-terms {
+}
+
+#checkout-continue-terms:disabled {
+	background-color: #333;
+	color: #888;
+}
+
+.panel .agreement-label {
+	margin-top: 3rem;
+	font-weight: bold;
+	text-align: center;
+	color: black;
+}
+
+.panel .terms h2 {
+	font-size: 1.5rem;
+	text-align: left;
+}
+
+.panel .terms {
+	height: 50vh;
+	overflow: auto;
+	border: 1px solid #888;
+	padding: 1rem;
+	border-radius: .5rem;
+}

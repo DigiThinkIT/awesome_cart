@@ -18,6 +18,11 @@ awc_checkout = {
 		}
 
 		awc_checkout._page_change_id = setTimeout((function(page) {
+			// reset terms box when nav away to other tabs
+			$('#checkout-confirmation')
+			.removeClass('active-state-terms')
+			.addClass('active-state-confirm');
+
 			awc_checkout.validate();
 			$('.panel').slideUp('fast');
 			$(page).slideDown('fast');
@@ -79,10 +84,8 @@ awc_checkout = {
 			awc_checkout.billing_address = billing_validation_response.address
 		}
 
-		// disable checkout until terms and condition box is checked
-		if (!$('#confirm-form input[name="accept_terms"]').is(':checked')) {
-			checkout_enabled = false;
-		}
+		// Enable/disable checkout continue button on validation
+		$('#checkout-continue-terms').prop('disabled', !checkout_enabled);
 
 		awc_checkout.gateway_provider.enable(checkout_enabled);
 
@@ -531,14 +534,20 @@ awc_checkout = {
 				// checkout error back button
 				$('#checkout-error .btn-primary')
 					.click(function() {
+						$('#checkout-confirmation')
+						.removeClass('active-state-terms')
+						.addClass('active-state-confirm');
+
 						awc_checkout.showPage('#checkout-billing');
 						$('html, body').animate({ scrollTop: $('#awc-forms').offset().top - 60 }, 'slow');
 					})
 
 				// checkout accept terms
-				$('#checkout-confirmation input[name="accept_terms"]')
-					.change(function() {
-						awc_checkout.validate();
+				$('#checkout-continue-terms')
+					.click(function() {
+						$('#checkout-confirmation')
+							.removeClass('active-state-confirm')
+							.addClass('active-state-terms');
 					});
 
 
