@@ -97,46 +97,53 @@
 							{% endif %}
 					</div>
 
-					<div id="checkout-confirmation" data-bc="#bc-checkout" class="panel">
-						<p>Please review your information before once more before completing checkout</p>
+					<div id="checkout-confirmation" data-bc="#bc-checkout" class="panel active-state-confirm">
+						<div class="checkout-step state-confirm">
+							<p>Please review your information before once more before completing checkout</p>
 
-						<div class="confirm-box dti-form" id="checkout-confirm-shipping">
-							<h4>Shipping Information<button class="btn btn-default btn-primary">Edit</button></h4>
-							<div class="content"></div>
-
-						</div>
-
-						<div class="confirm-box dti-form" id="checkout-confirm-billing">
-							<h4>Billing Information<button class="btn btn-default btn-primary">Edit</button></h4>
-							<div class="content"></div>
-
-						</div>
-
-						<div class="confirm-box dti-form" id="checkout-confirm-totals">
-							{% if selected_customer %}
-							<h4 class="selected-customer"><span>Totals For:</span><span class="value">{{ selected_customer }}</span></h4>
-							{% else %}
-							<h4>Your Totals:</h4>
-							{% endif %}
-							<div class="content">
-								<div class="sub-total">Subtotal: <span class="value"></span></div>
-								<div class="other-totals">
-								</div>
-								<div class="grand-total">Total: <span class="value"></span></div>
+							<div class="confirm-box dti-form" id="checkout-confirm-shipping">
+								<h4>Shipping Information<button class="btn btn-default btn-primary">Edit</button></h4>
+								<div class="content"></div>
 							</div>
-						</div>
 
-						<div class="confirm-box awc-form" id="checkout-confirm-instructions">
-							<div class="field">
-								<label for="order-instructions">Special Instructions</label>
-								<textarea id="order-instructions" name="order-instructions" placeholder="Special Instructions"></textarea>
+							<div class="confirm-box dti-form" id="checkout-confirm-billing">
+								<h4>Billing Information<button class="btn btn-default btn-primary">Edit</button></h4>
+								<div class="content"></div>
+							</div>
+
+							<div class="confirm-box dti-form" id="checkout-confirm-totals">
+								{% if selected_customer %}
+								<h4 class="selected-customer"><span>Totals For:</span><span class="value">{{ selected_customer }}</span></h4>
+								{% else %}
+								<h4>Your Totals:</h4>
+								{% endif %}
+								<div class="content">
+									<div class="sub-total">Subtotal: <span class="value"></span></div>
+									<div class="other-totals">
+									</div>
+									<div class="grand-total">Total: <span class="value"></span></div>
+								</div>
+							</div>
+
+							<div class="confirm-box awc-form" id="checkout-confirm-instructions">
+								<div class="field">
+									<label for="order-instructions">Special Instructions</label>
+									<textarea id="order-instructions" name="order-instructions" placeholder="Special Instructions"></textarea>
+								</div>
 							</div>
 						</div>
 
 						<div class="dti-form" id="confirm-form">
-							<label style="cursor: pointer"><input name="accept_terms" type="checkbox" value="1"/><span> I agree with the <a href="policies" rel="nofollow" target="_blank">Terms and Conditions</a></span></label>
+							<!-- <label style="cursor: pointer"><input name="accept_terms" type="checkbox" value="1"/><span> I agree with the <a href="policies" rel="nofollow" target="_blank">Terms and Conditions</a></span></label> -->
 							{% if gateway_provider %}
-								{{ gateway_provider.submit }}
+								<div class="checkout-step state-confirm">
+									<Button disabled id="checkout-continue-terms" class="btn btn-primary">Continue</Button>
+								</div>
+								<div class="checkout-step state-terms">
+									{% include "templates/includes/integrations/awc-checkout-terms.html" with context %}
+
+									{{ gateway_provider.submit }}
+								</div>
 							{% else %}
 								<div class="alert">No Gateway Provider Found!</div>
 							{% endif %}
