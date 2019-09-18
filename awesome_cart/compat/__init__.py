@@ -14,7 +14,7 @@ def match_version(version, versions):
 	v = tuple(int(y) for y in version.split('.'))
 	ret_version = None
 	for ver in versions:
-		if ver <= v and ver > ret_version:
+		if ver <= v and ver > (ret_version or tuple()):
 			ret_version = ver
 
 	return ret_version
