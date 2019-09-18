@@ -10,10 +10,10 @@ from frappe import _dict, _
 from frappe.utils import cint, cstr, random_string, flt, get_datetime
 from erpnext.stock.get_item_details import apply_price_list_on_item
 
-from compat.customer import get_current_customer
-from compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotation, get_party
-from compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing_rule_for_item
-from compat.addresses import get_address_display
+from .compat.customer import get_current_customer
+from .compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotation, get_party
+from .compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing_rule_for_item
+from .compat.addresses import get_address_display
 from .session import *
 from .utils import is_coupon_valid
 from .awesome_cart.doctype.awc_coupon.awc_coupon import calculate_coupon_discount
