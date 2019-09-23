@@ -281,7 +281,7 @@ def register(email, password, password_check, first_name, last_name):
 			user.save()
 
 			frappe.local.login_manager.login_as(email)
-	                frappe.set_user(email)
+			frappe.set_user(email)
 
 			customer = None
 			contact = frappe.get_doc("Contact", {
