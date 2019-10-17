@@ -132,7 +132,7 @@ def get_awc_item_by_route(route):
 
 def get_awc_item_custom_data(name):
 	"""Returns a dictionary of custom key/values in the awc item"""
-	if isinstance(name, str) or isinstance(name, unicode):
+	if isinstance(name, str):
 		awc_item = frappe.get_doc("AWC Item", name)
 	else:
 		awc_item = name
@@ -1237,7 +1237,7 @@ def epoch():
 	return datetime.datetime(1970, 1, 1)
 
 def timestamp(dt):
-	if isinstance(dt, unicode) or isinstance(dt, str):
+	if isinstance(dt, str):
 		dt = get_datetime(dt)
 
 	return (dt - epoch()).total_seconds()
