@@ -132,7 +132,7 @@ def get_awc_item_by_route(route):
 
 def get_awc_item_custom_data(name):
 	"""Returns a dictionary of custom key/values in the awc item"""
-	if isinstance(name, str) or isinstance(name, unicode):
+	if isinstance(name, str):
 		awc_item = frappe.get_doc("AWC Item", name)
 	else:
 		awc_item = name
@@ -1237,7 +1237,7 @@ def epoch():
 	return datetime.datetime(1970, 1, 1)
 
 def timestamp(dt):
-	if isinstance(dt, unicode) or isinstance(dt, str):
+	if isinstance(dt, str):
 		dt = get_datetime(dt)
 
 	return (dt - epoch()).total_seconds()
@@ -1364,7 +1364,7 @@ def cart_sku_qty(sku, awc_session):
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def cart(data=None, action=None):
-	if data and isinstance(data, basestring):
+	if data and isinstance(data, str):
 		try:
 			data = json.loads(data)
 		except ex:
@@ -1720,10 +1720,10 @@ def update_shipping_rate(address, awc_session, is_pickup=False):
 
 @frappe.whitelist()
 def create_transaction(gateway_service, billing_address, shipping_address, instructions="", contact_name=""):
-	if billing_address and isinstance(billing_address, basestring):
+	if billing_address and isinstance(billing_address, str):
 		billing_address = json.loads(billing_address)
 
-	if shipping_address and isinstance(shipping_address, basestring):
+	if shipping_address and isinstance(shipping_address, str):
 		shipping_address = json.loads(shipping_address)
 
 	result = {

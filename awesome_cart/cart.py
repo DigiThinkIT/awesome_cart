@@ -333,7 +333,7 @@ def start_checkout(amount, currency="USD", date=None):
 
 	validate_transaction_currency(currency)
 
-	if not isinstance(data, basestring):
+	if not isinstance(data, str):
 		date = frappe.as_json(data or "{}")
 
 	jdata = json.loads(data)
