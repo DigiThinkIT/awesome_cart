@@ -191,9 +191,9 @@ class CreditGatewaySettings(Document):
 
 		params = []
 		if redirect_to:
-			params.append(urllib.urlencode({"redirect_to": redirect_to}))
+			params.append(urllib.parse.urlencode({"redirect_to": redirect_to}))
 		if redirect_message:
-			params.append(urllib.urlencode({"redirect_message": redirect_message}))
+			params.append(urllib.parse.urlencode({"redirect_message": redirect_message}))
 
 		if len(params) > 0:
 			redirect_url += "?" + "&".join(params)
@@ -221,7 +221,7 @@ def process(options):
 	data = {}
 
 	# handles string json as well as dict argument
-	if isinstance(options, basestring):
+	if isinstance(options, str):
 		options = json.loads(options)
 
 	data.update(options)

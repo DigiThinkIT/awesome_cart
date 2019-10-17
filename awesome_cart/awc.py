@@ -1364,7 +1364,7 @@ def cart_sku_qty(sku, awc_session):
 
 @frappe.whitelist(allow_guest=True, xss_safe=True)
 def cart(data=None, action=None):
-	if data and isinstance(data, basestring):
+	if data and isinstance(data, str):
 		try:
 			data = json.loads(data)
 		except ex:
@@ -1720,10 +1720,10 @@ def update_shipping_rate(address, awc_session, is_pickup=False):
 
 @frappe.whitelist()
 def create_transaction(gateway_service, billing_address, shipping_address, instructions="", contact_name=""):
-	if billing_address and isinstance(billing_address, basestring):
+	if billing_address and isinstance(billing_address, str):
 		billing_address = json.loads(billing_address)
 
-	if shipping_address and isinstance(shipping_address, basestring):
+	if shipping_address and isinstance(shipping_address, str):
 		shipping_address = json.loads(shipping_address)
 
 	result = {
