@@ -90,10 +90,13 @@ def clear_awc_session(awc_session=None, cart_only=False):
 		awc_session["totals"] = { "sub_total": 0, "grand_total": 0, "other": [] }
 
 def hash_key(key, prefix=''):
-	if prefix:
-		return "{}|{}".format(prefix,  hashlib.sha512(key).hexdigest())
+	key = key.encode("utf-8")
+	key_hash = hashlib.sha512(key).hexdigest()
 
-	return hashlib.sha512(key).hexdigest()
+	if prefix:
+		return "{}|{}".format(prefix, key_hash)
+
+	return key_hash
 
 def set_cache(key, value, expires_in_sec=1800, session=None, prefix=''):
 	if not session:
