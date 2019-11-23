@@ -382,6 +382,13 @@ def is_coupon_valid(coupon_code, customer, now=None):
 				["<=", ["float", "{order_total}"], insert_item.get("insert_max")]
 			]
 
+		if insert_item.get("stock_limit"):
+			insert_logic += [
+				">", 
+				["ITEM_STOCK_QTY", sku],
+				0
+			]
+
 		if insert_logic:
 			options.update({
 				"insert_logic": json.dumps(insert_logic)

@@ -1,5 +1,7 @@
-from frappe.utils import flt, cint
+import frappe
 import json
+
+from frappe.utils import flt, cint
 
 # Very simple zscript based on zbrush script language which requires no tokenization or parsing.
 # Simply this is used to evaluate truthy values from nested function calls.
@@ -19,6 +21,26 @@ import json
 #     [ "-", 6, 3 ]
 #   ]
 
+def get_item_stock_count(item_code):
+  result = frappe.db.sql('''
+    select
+      sum(b.actual_qty) as qty
+    from
+      tabBin b, tabItem i
+    where
+      b.item_code = i.name
+      and
+      (b.projected_qty != 0 or b.reserved_qty != 0 or b.reserved_qty_for_production != 0 or b.actual_qty != 0)
+      and
+      b.item_code=%s
+    group by
+      b.actual_qty asc
+  ''', [item_code], as_dict=True)
+
+  if len(result) > 0:
+    return result[0].get('qty')
+
+  return float("inf")
 
 COMMANDS = {
   "and": lambda *args: all(args),
@@ -44,7 +66,8 @@ COMMANDS = {
   "split": lambda delimiter, text: text.split(delimiter),
   "json_in": json.loads,
   "json_out": json.dumps,
-  "get": lambda d, k: d.get(k)
+  "get": lambda d, k: d.get(k),
+  "ITEM_STOCK_QTY": get_item_stock_count
 }
 
 def run(script, context):
