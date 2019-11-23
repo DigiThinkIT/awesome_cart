@@ -1577,7 +1577,7 @@ def cart(data=None, action=None):
 	elif action == "addToCart":
 
 		quotation_is_dirty, removed_ids = add_to_cart(data, awc_session, quotation)
-		if quotation.coupon_code:
+		if quotation and quotation.coupon_code:
 			coupon_success, coupon_msg, quotation_is_dirty, coupon_is_valid, coupon_removed_ids = apply_coupon(awc, awc_session, quotation, quotation.coupon_code, quotation_is_dirty)
 			removed_ids = removed_ids + list(set(coupon_removed_ids) - set(removed_ids))
 
@@ -1594,7 +1594,7 @@ def cart(data=None, action=None):
 		removed_ids = []
 
 		success, removed_ids, awc_items = remove_from_cart(data, awc["items"])
-		if quotation.coupon_code:
+		if quotation and quotation.coupon_code:
 			coupon_success, coupon_msg, quotation_is_dirty, coupon_is_valid, coupon_removed_ids = apply_coupon(awc, awc_session, quotation, quotation.coupon_code, quotation_is_dirty)
 			removed_ids = removed_ids + list(set(coupon_removed_ids) - set(removed_ids))
 
