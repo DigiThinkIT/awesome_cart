@@ -1309,12 +1309,13 @@ def add_to_cart(data, awc_session, quotation, allow_qty_lock=False):
 	quotation_is_dirty = False
 	awc = awc_session.get("cart")
 	to_remove = []
-	icontext = insert_context(awc, quotation)
+	if quotation:
+		icontext = insert_context(awc, quotation)
 
 	for item in data:
 
 		insert_logic = item.get("options", {}).get("insert_logic")
-		if insert_logic:
+		if quotation and insert_logic:
 			if not zscript.run(insert_logic, icontext):
 				continue # skip adding items that don't pass logic test
 
