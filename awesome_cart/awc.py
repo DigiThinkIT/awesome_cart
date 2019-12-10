@@ -670,7 +670,7 @@ def insert_context(awc, quotation, extra=None):
 		"coupon_code": quotation.coupon_code if quotation else "",
 		"insert_ids": json.dumps(insert_ids)
 	}
-	
+
 	if extra:
 		context.update(extra)
 
@@ -757,7 +757,7 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 
 				if idx > -1:
 					item = quotation.items[idx]
-						
+
 					# make sure product exists
 					if product_found and keep_item:
 
@@ -1762,9 +1762,9 @@ def apply_coupon(awc, awc_session, quotation, coupon, quotation_is_dirty):
 					awc["items"] = awc_items
 					removed_ids += list(set(removed_quotation_item_ids) - set(removed_ids))
 
-			sucess = True
+			success = True
 	else:
-		sucess = False
+		success = False
 		awc["discounts"] = None
 		quotation.coupon_code = None
 		if "coupon" in awc["totals"]:
@@ -1787,7 +1787,7 @@ def apply_coupon(awc, awc_session, quotation, coupon, quotation_is_dirty):
 		awc["items"] = [ i for i in awc.get("items", []) if i.get("id") not in removed_ids ]
 		quotation.set("items", quotation_items)
 
-	return (sucess, msg, quotation_is_dirty, is_valid, removed_ids)
+	return (success, msg, quotation_is_dirty, is_valid, removed_ids)
 
 def find_item_by_insert_id(awc_items, id):
 	for item in awc_items:
