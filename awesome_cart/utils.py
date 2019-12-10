@@ -136,7 +136,7 @@ def is_coupon_valid(coupon_code):
 
 	frappe.response["is_coupon_valid"] = result.get("is_valid", False)
 	frappe.response["coupon_response_code"] = result.get("code")
-	frappe.response["coupon_insert_items"] = result.get("insert_items")
+	frappe.response["coupon_insert_items"] = result.get("insert_items", [])
 
 	if not result.get("is_valid"):
 		return result.get("msg")
