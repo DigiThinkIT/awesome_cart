@@ -1,26 +1,25 @@
 from __future__ import unicode_literals
 
-import json
-import traceback
-import frappe
 import datetime
 import json
+import traceback
 import uuid
 
-from frappe import _dict, _
-from frappe.utils import cint, cstr, random_string, flt, get_datetime
+import frappe
+from dti_devtools.debug import log, pretty_json
 from erpnext.stock.get_item_details import apply_price_list_on_item
+from frappe import _, _dict
+from frappe.utils import cint, cstr, flt, get_datetime, random_string
 
-from .compat.customer import get_current_customer
-from .compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotation, get_party
-from .compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing_rule_for_item
-from .compat.addresses import get_address_display
-from .session import *
-from .utils import is_coupon_valid
-from .awesome_cart.doctype.awc_coupon.awc_coupon import calculate_coupon_discount
-import zscript
+from awesome_cart.compat.customer import get_current_customer
+from awesome_cart.compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotation, get_party
+from awesome_cart.compat.erpnext.shopping_cart import get_shopping_cart_settings, get_pricing_rule_for_item
+from awesome_cart.compat.addresses import get_address_display
+from awesome_cart.session import *
+from awesome_cart.utils import is_coupon_valid
+from awesome_cart.awesome_cart.doctype.awc_coupon.awc_coupon import calculate_coupon_discount
+from awesome_cart import zscript
 
-from dti_devtools.debug import pretty_json, log
 
 def get_user_quotation(awc_session):
 	party = None

@@ -15,8 +15,8 @@ from frappe.utils import flt, cint
 # See the COMMANDS map below
 #
 # Example:
-#   [ 
-#     "==", 
+#   [
+#     "==",
 #     [ "+", 1, 2 ],
 #     [ "-", 6, 3 ]
 #   ]
@@ -83,7 +83,7 @@ def run(script, context):
 def execCommand(args, context, depth=0):
   pad = " " * depth * 2
   cmd = args[0]
-  
+
   arg_values = []
   for arg in args[1:]:
     if isinstance(arg, basestring):
@@ -92,5 +92,5 @@ def execCommand(args, context, depth=0):
       arg_values += [execCommand(arg, context, depth+1)]
     else:
       arg_values += [arg]
-  
+
   return COMMANDS[cmd](*arg_values)

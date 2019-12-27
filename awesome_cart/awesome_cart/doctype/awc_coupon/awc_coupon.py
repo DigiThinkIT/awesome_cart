@@ -364,7 +364,7 @@ def is_coupon_valid(coupon_code, customer, now=None):
 		# Defines a custom insert logic to later test and remove item depending on this logic result.
 		if insert_item.get("insert_logic") == "Between":
 			insert_logic = [
-				"and", 
+				"and",
 				["==", "{coupon_code}", coupon_code],
 				[">=", ["float", "{order_total}"], insert_item.get("insert_min")],
 				["<=", ["float", "{order_total}"], insert_item.get("insert_max")]
@@ -384,7 +384,7 @@ def is_coupon_valid(coupon_code, customer, now=None):
 
 		if insert_item.get("stock_limit"):
 			insert_logic += [
-				">", 
+				">",
 				["ITEM_STOCK_QTY", sku],
 				0
 			]
