@@ -81,7 +81,7 @@ def run(script, context):
   return execCommand(script_obj, context)
 
 def execCommand(args, context, depth=0):
-  pad = " " * depth * 2
+  # pad = " " * depth * 2
   cmd = args[0]
 
   arg_values = []

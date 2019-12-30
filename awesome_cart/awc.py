@@ -6,10 +6,9 @@ import traceback
 import uuid
 
 import frappe
-from dti_devtools.debug import log, pretty_json
-from erpnext.stock.get_item_details import apply_price_list_on_item
-from frappe import _, _dict
-from frappe.utils import cint, cstr, flt, get_datetime, random_string
+from dti_devtools.debug import log
+from frappe import _
+from frappe.utils import cint, flt, get_datetime
 
 from awesome_cart.compat.customer import get_current_customer
 from awesome_cart.compat.shopping_cart import apply_cart_settings, set_taxes, get_cart_quotation, get_party
@@ -169,7 +168,7 @@ def build_awc_options_from_varients(item):
 	if item.get('variant_of'):
 		return {'variants': [], 'hashes': {}}
 
-	context = _dict()
+	context = frappe._dict()
 	context = item.get_context(context)
 
 	options = {'variants': [], 'hashes': {}}
@@ -1788,9 +1787,9 @@ def apply_coupon(awc, awc_session, quotation, coupon, quotation_is_dirty):
 
 	return (success, msg, quotation_is_dirty, is_valid, removed_ids)
 
-def find_item_by_insert_id(awc_items, id):
+def find_item_by_insert_id(awc_items, item_id):
 	for item in awc_items:
-		if item.get("options", {}).get("insert_id") == id:
+		if item.get("options", {}).get("insert_id") == item_id:
 			return item
 	return False
 
