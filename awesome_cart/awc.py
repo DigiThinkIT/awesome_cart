@@ -1189,9 +1189,10 @@ def calculate_shipping(rate_name, address, awc_session, quotation, save=True, fo
 	is_pickup = False
 	if rate_name == "PICK UP":
 		if quotation:
-			quotation.shipping_address_name = ""
-			quotation.shipping_address = ""
-			save=True
+			shipping_address_name = frappe.db.get_single_value("Awc Settings", "shipping_address")
+			quotation.shipping_address_name = shipping_address_name
+			quotation.shipping_address = get_address_display(shipping_address_name)
+			save = True
 
 		force = True
 		is_pickup = True
