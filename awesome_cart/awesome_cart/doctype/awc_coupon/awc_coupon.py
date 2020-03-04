@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 import frappe
+import json
 
 from frappe import _
 from frappe.model.document import Document
@@ -348,12 +349,62 @@ def is_coupon_valid(coupon_code, customer, now=None):
 
 	items_to_insert = []
 	for insert_item in coupon_doc.insert_items:
-		items_to_insert.append({
-			"sku": frappe.db.get_value("Item", insert_item.item_name, "item_code"),
+		insert_logic = False
+		sku = frappe.db.get_value("Item", insert_item.item_name, "item_code")
+		insert_id= "%s|%s|%s" % (coupon_code, sku, insert_item.qty)
+		options = {
+			"insert_id": insert_id
+		}
+		insert_data = {
+			"sku": sku,
 			"qty": insert_item.qty,
-			"lock_qty": insert_item.get("lock_qty", False),
-			"total_is_greater_than": insert_item.get("total_is_greater_than", 0)
-		})
+			"lock_qty": insert_item.get("lock_qty", False)
+		}
+
+		# Defines a custom insert logic to later test and remove item depending on this logic result.
+		if insert_item.get("insert_logic") == "Between":
+			insert_logic = [
+				"and",
+				["==", "{coupon_code}", coupon_code],
+				[">=", ["float", "{order_total}"], insert_item.get("insert_min")],
+				["<=", ["float", "{order_total}"], insert_item.get("insert_max")]
+			]
+		elif insert_item.get("insert_logic") == "Minimum":
+			insert_logic = [
+				"and",
+				["==", "{coupon_code}", coupon_code],
+				[">=", ["float", "{order_total}"], insert_item.get("insert_min")]
+			]
+		elif insert_item.get("insert_logic") == "Maximum":
+			insert_logic = [
+				"and",
+				["==", "{coupon_code}", coupon_code],
+				["<=", ["float", "{order_total}"], insert_item.get("insert_max")]
+			]
+
+		if insert_item.get("stock_limit"):
+			insert_logic += [
+				">",
+				["ITEM_STOCK_QTY", sku],
+				0
+			]
+
+		if insert_logic:
+			options.update({
+				"insert_logic": json.dumps(insert_logic)
+			})
+
+		if insert_item.get("price_override"):
+			options.update({
+				"custom": {
+					"rate": insert_item.get("insert_price")
+				}
+			})
+
+		if len(options.keys()) > 0:
+			insert_data.update({ "options": options })
+
+		items_to_insert.append(insert_data)
 
 	return {
 		"is_valid": True,
