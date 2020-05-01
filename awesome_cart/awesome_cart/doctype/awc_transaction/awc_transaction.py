@@ -11,8 +11,6 @@ from awesome_cart.compat.addresses import get_address_display, create_address
 
 from awesome_cart import awc
 
-from dti_devtools.debug import log, pretty_json
-
 # simple log level translation table to match ints
 LOG_LEVELS = {
 	"None": 0,
@@ -33,9 +31,6 @@ def call_hook(hook_name, **kwargs):
 			if len(error_hooks) > 0:
 				for error_hook in error_hooks:
 					frappe.call(error_hook, async=True)
-			else:
-				log("Error calling hook method: {}->{}".format(hook_name, hook))
-				log(frappe.get_traceback())
 
 
 class AWCTransaction(Document):
@@ -107,15 +102,6 @@ class AWCTransaction(Document):
 					tries = tries - 1
 					if tries <= 0:
 						raise ex
-					else:
-						msg = """
-						--------------------------------------------------------------
-						Caught error while trying to save quotation in awc transaction
-						Attempting to save again...
-						{}
-						- RESPONSE --------------
-						{}""".format(ex, frappe.local.response)
-						log(msg, trace=1)
 
 			call_hook("awc_transaction_on_payment_authorized", transaction=self, payment_status=payment_status)
 
@@ -191,12 +177,10 @@ class AWCTransaction(Document):
 				# clears awc session data
 				awc.clear_awc_session()
 			except Exception as awc_ex:
-				log(frappe.get_traceback())
 				pass
 
 			return result
 		except Exception as ex:
-			log(frappe.get_traceback())
 			raise ex
 
 	def max_log_level(self, level):

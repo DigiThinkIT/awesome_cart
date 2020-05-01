@@ -6,7 +6,6 @@ import traceback
 import uuid
 
 import frappe
-from dti_devtools.debug import log
 from frappe import _
 from frappe.utils import cint, flt, get_datetime
 
@@ -580,10 +579,8 @@ def fetch_products(tags="", terms="", order_by="order_weight", order_dir="asc", 
 		payload["total_records"] = result_count
 		payload["data"] = products
 	except Exception as ex:
-		log("ERROR")
 		payload["success"] = False
 		payload["message"] = traceback.format_exc(ex)
-		log(payload["message"])
 
 	set_cache(cache_key, payload, session=awc_session, prefix=cache_prefix)
 
@@ -695,10 +692,6 @@ def sync_awc_and_quotation(awc_session, quotation, quotation_is_dirty=False, sav
 	# and we require a quotation item name to reference in awc
 	if quotation and quotation.name == None:
 		save_and_commit_quotation(quotation, True, awc_session, commit=False, save_session=False)
-
-	if not awc:
-		# abnormal, there should be a cart instance on the session
-		log(awc_session, trace=1)
 
 	awc_is_dirty = False
 	awc_items_to_remove = []
@@ -1287,7 +1280,6 @@ def save_and_commit_quotation(quotation, is_dirty, awc_session, commit=False, sa
 
 			result = (True, None)
 		except Exception as ex:
-			log(traceback.format_exc())
 			result = (False, ex)
 
 	collect_totals(quotation, None, awc_session)
@@ -1416,11 +1408,6 @@ def cart(data=None, action=None):
 		try:
 			data = json.loads(data)
 		except ex:
-			log("REMOTE ADDR: {0}".format(frappe.request.get("remote_addr", "NO REMOTE ADDRESS?")))
-			log("URL: {0}".format(frappe.request.get("url", "NO URL DATA")))
-			log("Action: {0}".format(action))
-			log("Data: {0}".format(data))
-			log(traceback.format_exc())
 			data = None
 
 	# make sure we can handle bulk actions
@@ -1809,7 +1796,6 @@ def get_shipping_rate(address):
 	try:
 		address = json.loads(address)
 	except Exception as ex:
-		log(ex)
 		return []
 
 	awc_session = get_awc_session()
@@ -1855,7 +1841,6 @@ def update_shipping_rate(address, awc_session, is_pickup=False):
 			rates = []
 
 	except Exception as ex:
-		log(traceback.format_exc())
 		rates = []
 
 	if address:

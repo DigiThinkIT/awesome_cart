@@ -13,10 +13,9 @@ from awesome_cart.compat.customer import get_current_customer
 from awesome_cart.session import get_awc_session
 from awesome_cart.power import has_role
 
-from widgets_collection import login
-
 no_cache = 1
 no_sitemap = 1
+
 
 def get_context(context):
 	"""This is a controller extension for erpnext.templates.pages.cart"""
@@ -86,8 +85,19 @@ def get_context(context):
 	context["upsell"] = dict(related_products=upsell)
 
 	# flag to display login form
-	context.is_logged = awc.is_logged_in()
-	login.apply_context(context)
+	context.is_logged = frappe.session.user != "Guest"
+	# get settings from site config
+	context["disable_signup"] = cint(frappe.db.get_single_value("Website Settings", "disable_signup"))
+
+	for provider in ("google", "github", "facebook", "frappe"):
+		if get_oauth_keys(provider):
+			context["{provider}_login".format(provider=provider)] = get_oauth2_authorize_url(provider, redirect_to="/")
+			context["social_login"] = True
+
+	ldap_settings = LDAPSettings.get_ldap_client_settings()
+	context["ldap_settings"] = ldap_settings
+
+	return context
 
 	if frappe.response.get("awc_alert"):
 		context["awc_alert"] = frappe.response.get("awc_alert")
@@ -119,7 +129,7 @@ def get_context(context):
 			WHERE
 				dl.link_doctype='Customer' AND
 				dl.link_name=%(customer_name)s
-			ORDER BY 
+			ORDER BY
 				c.is_primary_contact DESC,
 				c.creation asc
 		""",
