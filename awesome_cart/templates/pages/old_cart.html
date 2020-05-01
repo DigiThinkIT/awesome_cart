@@ -5,12 +5,6 @@
 {% block header %}{% endblock %}
 
 {% block style %}
-	{# Only load login widget if not logged in #}
-	{% if not is_logged %}
-		<style>
-			{% include "templates/widgets/login/css/widget.css" %}
-		</style>
-	{% endif %}
 	{%- if gateway_provider %}
 		{%- for style in gateway_provider.styles %}
 			<link type="text/css" rel="stylesheet" href="{{ style }}"/>
@@ -35,11 +29,7 @@
 			<div id="awc-forms">
 
 {# Only load login widget if not logged in #}
-{% if not is_logged %}
-				<div  id="checkout-login">
-					{% include "templates/widgets/login/widget.html" with context %}
-				</div>
-{% else %}
+{% if is_logged %}
 				<div id="checkout-panels" class="{{ ' locked' if enable_contacts else '' }}">
 					<div class="header">
 						<div class="title">Checkout</div>
@@ -232,8 +222,6 @@ frappe.ready(function() {
 {# Only load login widget if not logged in #}
 {% if not is_logged %}
 <script type="text/javascript">
-	{% include "templates/widgets/login/js/widget.js" with context %}
-
 	// bypass redirect to keep user on checkout page
 	frappe.on_login_redirect_handler = function(url) {
 		window.location.href = "/cart";

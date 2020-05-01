@@ -13,7 +13,6 @@ from .session import clear_awc_session, clear_cache_keys
 from .compat.customer import get_current_customer
 from .awesome_cart.doctype.awc_coupon.awc_coupon import is_coupon_valid as _is_coupon_valid
 
-from dti_devtools.debug import log, pretty_json
 
 def update_context(context):
 
