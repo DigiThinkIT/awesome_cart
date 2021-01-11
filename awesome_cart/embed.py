@@ -1,25 +1,6 @@
 from __future__ import unicode_literals
 import frappe
 import json
-from dbug import log, deprecated
-
-deprecated("""This Module is deprecated from an earlier version of the cart.
-			  It is safe to remove once all other references are gone""")
-"""
-def get_gateway_forms():
-	hooks = frappe.get_hooks("awc_setup_gateway_forms") or []
-	forms = dict()
-	for fn in hooks:
-		if isinstance(fn, list):
-			for list_fn in fn:
-				forms = frappe.get_attr(fn)()
-				forms[form["name"]] = form
-		else:
-			form = frappe.get_attr(fn)()
-			forms[form["name"]] = form
-
-	return forms
-"""
 
 def get_gateway_plugins():
 	hooks = frappe.get_hooks("awc_gateways") or []
@@ -35,8 +16,6 @@ def get_gateway_plugins():
 				'template': value.get('template')[-1],
 				'icon': value.get('icon')[-1]
 			}
-
-	log(json.dumps(plugins, indent=2))
 
 	return plugins
 
