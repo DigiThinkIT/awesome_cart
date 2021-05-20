@@ -6,9 +6,6 @@ no_cache = 1
 no_sitemap = 1
 
 import frappe
-from erpnext.shopping_cart.cart import get_cart_quotation
-
-from awesome_cart import cart
 
 def get_context(context):
 
@@ -24,7 +21,6 @@ def get_context(context):
 	inv_item = frappe.get_list("Sales Invoice Item", fields=["parent"], filters={"sales_order": so_name})[0]
 	inv_name = inv_item.get('parent')
 
-	settings = frappe.db.get("Awc Settings")
 	context.no_cache = 1
 	context.no_sitemap = 1
 	context["inv_name"] = inv_name
